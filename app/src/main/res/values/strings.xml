@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- App authentication -->
+    <string name="app_id">1000001426</string>
+    <string name="app_key">RUFiR_DffNpiONMASGzOw07ppJ6yLx6l</string>
+
+    <!-- Main strings -->
+    <string name="app_name">Coyote Reader</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <!-- errors -->
+    <string name="error_fetch_data">Error retrieving data from server</string>
+
+    <!-- preferences -->
+    <string name="auth_prefs">AuthPrefsFile</string>
+    <string name="auth_token">authToken</string>
+    <string name="pref_alpha">Sort feeds alphabetically</string>
+    <string name="pref_alpha_summ">If unchecked, use manual sort order</string>
+    <string name="pref_unread">Show unread items only</string>
+    <string name="pref_confirm">Confirm mark all read</string>
+
+    <!-- Menu items -->
+    <string name="action_settings">Settings</string>
+    <string name="action_logout">Logout</string>
+    <string name="action_refresh">Refresh</string>
+
+    <!-- image descriptions -->
+    <string name="tag_row_image_description">Subscription icon</string>
+    <string name="feed_row_image_description">Feed icon</string>
+
+</resources>
