@@ -26,7 +26,9 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
+import com.wilee8.coyotereader2.containers.FeedItem;
 import com.wilee8.coyotereader2.containers.TagItem;
+import com.wilee8.coyotereader2.gson.Category;
 import com.wilee8.coyotereader2.gson.GsonRequest;
 import com.wilee8.coyotereader2.gson.StreamPref;
 import com.wilee8.coyotereader2.gson.StreamPrefs;
@@ -41,7 +43,10 @@ import org.parceler.Parcels;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import rx.Observable;
@@ -494,6 +499,11 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 							tagItem.setResId(R.drawable.ic_folder_grey600_48dp);
 
+							// Get feeds for this tag
+							if(!tagItem.getIsFeed()) {
+								getTagFeeds(tagId, tagItem.getFeeds());
+							}
+
 							mNavList.add(tagItem);
 						}
 
@@ -543,6 +553,109 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 			FragmentManager fragmentManager = getSupportFragmentManager();
 			fragmentManager.beginTransaction().replace(R.id.frame0, navFragment).commit();
 		}
+	}
+
+	private void getTagFeeds(String tagId, ArrayList<FeedItem> feedList) {
+		ArrayList<Subscription> subscriptions = mSubscriptionList.getSubscriptions();
+		ArrayList<StreamPref> preferences = mStreamPrefs.getStreamPrefs().get(tagId);
+
+		String subscriptionOrderingString = "";
+
+		if (!mSortAlpha) {
+			for (int i = 0; i < preferences.size(); i++) {
+				StreamPref pref = preferences.get(i);
+				if (pref.getId().matches("subscription-ordering")) {
+					subscriptionOrderingString = pref.getValue();
+				}
+			}
+		}
+
+		ArrayList<String> subscriptionOrdering = new ArrayList<>();
+
+		if (!mSortAlpha) {
+			for (int i = 0; i < subscriptionOrderingString.length() / 8; i++) {
+				subscriptionOrdering.add(subscriptionOrderingString.substring(i * 8, (i * 8) + 8));
+			}
+
+			// Populate view data with blank items so we can replace them in
+			// sort order
+			FeedItem blank = new FeedItem();
+			// <= if we need room for All Items row
+			//for (int i = 0; i <= subscriptionOrdering.size(); i++) {
+			for (int i = 0; i < subscriptionOrdering.size(); i++) {
+				feedList.add(blank);
+			}
+		}
+
+		// add tag feeds to the list
+		for (int i = 0; i < subscriptions.size(); i++) {
+			Subscription sub = subscriptions.get(i);
+
+			ArrayList<Category> categories = sub.getCategories();
+
+			for (int j = 0; j < categories.size(); j++) {
+				Category category = categories.get(j);
+				String subCategory = category.getId();
+				if (subCategory.matches(tagId)) {
+					// add to mViewData
+					FeedItem feedItem = new FeedItem();
+
+					String feedId = sub.getId();
+					feedItem.setFeedId(feedId);
+					feedItem.setFeedTitle(sub.getTitle());
+					feedItem.setFeedIconUrl(sub.getIconUrl());
+
+					try {
+						feedItem.setUnreadCount(mUnreadCounts.getUnreadCount(feedId));
+					} catch (InvalidParameterException e) {
+						feedItem.setUnreadCount(0);
+					}
+
+					if (mSortAlpha) {
+						feedList.add(feedItem);
+					} else {
+						// Get subscription ordering
+						String ordering = sub.getSortId();
+						for (int k = 0; k < subscriptionOrdering.size(); k++) {
+							if (ordering.matches(subscriptionOrdering.get(k))) {
+								feedList.set(k + 1, feedItem);
+							}
+						}
+					}
+
+					break;
+				}
+			}
+		}
+
+		// alphabetize the list if needed
+		if (mSortAlpha) {
+			Collections.sort(feedList, new Comparator<FeedItem>() {
+
+				@Override
+				public int compare(FeedItem lhs, FeedItem rhs) {
+					Locale locale = getResources().getConfiguration().locale;
+					return lhs.getFeedTitle().toLowerCase(locale).compareTo(rhs.getFeedTitle().toLowerCase(locale));
+				}
+			});
+		}
+
+		// set all items at the start
+//		FeedItem feedItemHeader = new FeedItem();
+//		feedItemHeader.setFeedTitle("All Items");
+//		feedItemHeader.setFeedId(tagId);
+//		feedItemHeader.setFeedIconUrl(null);
+//		try {
+//			feedItemHeader.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
+//		} catch (InvalidParameterException e) {
+//			feedItemHeader.setUnreadCount(0);
+//		}
+//
+//		if (mSortAlpha) {
+//			feedList.add(0, feedItemHeader);
+//		} else {
+//			feedList.set(0, feedItemHeader);
+//		}
 	}
 
 	@Override

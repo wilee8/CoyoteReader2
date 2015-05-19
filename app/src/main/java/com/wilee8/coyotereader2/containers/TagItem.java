@@ -2,18 +2,24 @@ package com.wilee8.coyotereader2.containers;
 
 import org.parceler.Parcel;
 
+import java.util.ArrayList;
+
 @Parcel
 public class TagItem {
-	private String  id;
-	private String  name;
-	private int     unreadCount;
-	private Boolean isFeed;
-	private int     resId;
-	private String  iconUrl;
+	private String              id;
+	private String              name;
+	private int                 unreadCount;
+	private Boolean             isFeed;
+	private int                 resId;
+	private String              iconUrl;
+	private ArrayList<FeedItem> feeds;
+	private Boolean             isExpanded;
 
 	public TagItem() {
 		unreadCount = 0;
 		resId = 0;
+		feeds = new ArrayList<>();
+		isExpanded = false;
 	}
 
 	public String getId() {
@@ -62,5 +68,21 @@ public class TagItem {
 
 	public void setIconUrl(String iconUrl) {
 		this.iconUrl = iconUrl;
+	}
+
+	public ArrayList<FeedItem> getFeeds() {
+		return feeds;
+	}
+
+	public void setFeeds(ArrayList<FeedItem> mFeeds) {
+		this.feeds = mFeeds;
+	}
+
+	public Boolean getIsExpanded() {
+		return isExpanded;
+	}
+
+	public void setIsExpanded(Boolean isExpanded) {
+		this.isExpanded = isExpanded;
 	}
 }

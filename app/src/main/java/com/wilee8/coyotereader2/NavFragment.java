@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.RequestQueue;
@@ -33,7 +34,7 @@ public class NavFragment extends Fragment {
 	private Activity    mContext;
 	private ImageLoader mImageLoader;
 
-	private NavAdapter   mAdapter;
+	private NavAdapter mAdapter;
 
 	private ArrayList<TagItem> mNavList;
 
@@ -150,6 +151,16 @@ public class NavFragment extends Fragment {
 
 			NavViewHolder navViewHolder = (NavViewHolder) viewHolder;
 
+			if (!tagItem.getIsFeed()) {
+				if(tagItem.getIsExpanded()) {
+					navViewHolder.tagExpand.setImageDrawable(
+						mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_up_grey600_48dp));
+				} else {
+					navViewHolder.tagExpand.setImageDrawable(
+						mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_down_grey600_48dp));
+				}
+			}
+
 			switch (getItemViewType(position)) {
 				case VIEW_TYPE_REMOTE_URL:
 					String iconUrl = tagItem.getIconUrl();
@@ -161,9 +172,11 @@ public class NavFragment extends Fragment {
 				case VIEW_TYPE_LOCAL_RESOURCE:
 					LocalViewHolder localViewHolder = (LocalViewHolder) viewHolder;
 					if (tagItem.getResId() == 0) {
-						localViewHolder.tagIcon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.clear_favicon));
+						localViewHolder.tagIcon.setImageDrawable(
+							mContext.getResources().getDrawable(R.drawable.clear_favicon));
 					} else {
-						localViewHolder.tagIcon.setImageDrawable(mContext.getResources().getDrawable(tagItem.getResId()));
+						localViewHolder.tagIcon.setImageDrawable(
+							mContext.getResources().getDrawable(tagItem.getResId()));
 					}
 
 					break;
@@ -190,7 +203,7 @@ public class NavFragment extends Fragment {
 				navViewHolder.tagCardView.setCardBackgroundColor(getResources().getColor(R.color.cardview_light_background));
 			}
 
-			navViewHolder.itemView.setOnClickListener(new NavClickListener(position));
+			navViewHolder.tagSelectAll.setOnClickListener(new NavClickListener(position));
 		}
 
 		@Override
@@ -200,12 +213,16 @@ public class NavFragment extends Fragment {
 	}
 
 	private class NavViewHolder extends RecyclerView.ViewHolder {
-		public TextView tagName;
-		public TextView tagUnreadCount;
-		public CardView tagCardView;
+		public ImageView      tagExpand;
+		public RelativeLayout tagSelectAll;
+		public TextView       tagName;
+		public TextView       tagUnreadCount;
+		public CardView       tagCardView;
 
 		public NavViewHolder(View itemView) {
 			super(itemView);
+			tagExpand = (ImageView) itemView.findViewById(R.id.tagExpand);
+			tagSelectAll = (RelativeLayout) itemView.findViewById(R.id.tagSelectAll);
 			tagName = (TextView) itemView.findViewById(R.id.tagName);
 			tagUnreadCount = (TextView) itemView.findViewById(R.id.tagUnreadCount);
 			tagCardView = (CardView) itemView.findViewById(R.id.tagCardView);
@@ -240,7 +257,8 @@ public class NavFragment extends Fragment {
 
 		@Override
 		public void onClick(View view) {
-			CardView newView = (CardView) view;
+			RelativeLayout thisView = (RelativeLayout) view;
+			CardView newView = (CardView) thisView.getParent();
 			newView.setCardBackgroundColor(getResources().getColor(R.color.accent));
 			int oldSelected = mSelected;
 			mSelected = mPosition;
