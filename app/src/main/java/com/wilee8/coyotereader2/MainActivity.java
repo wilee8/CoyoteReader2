@@ -26,7 +26,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
-import com.wilee8.coyotereader2.containers.FeedItem;
 import com.wilee8.coyotereader2.containers.TagItem;
 import com.wilee8.coyotereader2.gson.Category;
 import com.wilee8.coyotereader2.gson.GsonRequest;
@@ -458,6 +457,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							tagItemAllItems.setUnreadCount(0);
 						}
 						tagItemAllItems.setIsFeed(true);
+						tagItemAllItems.setIsTopLevel(true);
 
 						tagItemAllItems.setResId(R.drawable.clear_favicon);
 
@@ -475,6 +475,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							tagItemStarred.setUnreadCount(0);
 						}
 						tagItemStarred.setIsFeed(true);
+						tagItemStarred.setIsTopLevel(true);
 
 						tagItemStarred.setResId(R.drawable.ic_star_grey600_48dp);
 
@@ -496,12 +497,17 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 							tagItem.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
 							tagItem.setIsFeed(false);
+							tagItem.setIsTopLevel(true);
 
 							tagItem.setResId(R.drawable.ic_folder_grey600_48dp);
 
 							// Get feeds for this tag
 							if(!tagItem.getIsFeed()) {
+								ArrayList<TagItem> subFeedList = new ArrayList<>();
+								tagItem.setFeeds(subFeedList);
 								getTagFeeds(tagId, tagItem.getFeeds());
+							} else {
+								tagItem.setFeeds(null);
 							}
 
 							mNavList.add(tagItem);
@@ -522,6 +528,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 								tagItem.setName(subscription.getTitle());
 								tagItem.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
 								tagItem.setIsFeed(true);
+								tagItem.setIsTopLevel(true);
 								tagItem.setIconUrl(subscription.getIconUrl());
 
 								mNavList.add(tagItem);
@@ -555,7 +562,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		}
 	}
 
-	private void getTagFeeds(String tagId, ArrayList<FeedItem> feedList) {
+	private void getTagFeeds(String tagId, ArrayList<TagItem> feedList) {
 		ArrayList<Subscription> subscriptions = mSubscriptionList.getSubscriptions();
 		ArrayList<StreamPref> preferences = mStreamPrefs.getStreamPrefs().get(tagId);
 
@@ -579,7 +586,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 			// Populate view data with blank items so we can replace them in
 			// sort order
-			FeedItem blank = new FeedItem();
+			TagItem blank = new TagItem();
 			// <= if we need room for All Items row
 			//for (int i = 0; i <= subscriptionOrdering.size(); i++) {
 			for (int i = 0; i < subscriptionOrdering.size(); i++) {
@@ -598,12 +605,15 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 				String subCategory = category.getId();
 				if (subCategory.matches(tagId)) {
 					// add to mViewData
-					FeedItem feedItem = new FeedItem();
+					TagItem feedItem = new TagItem();
 
 					String feedId = sub.getId();
-					feedItem.setFeedId(feedId);
-					feedItem.setFeedTitle(sub.getTitle());
-					feedItem.setFeedIconUrl(sub.getIconUrl());
+					feedItem.setId(feedId);
+					feedItem.setName(sub.getTitle());
+					feedItem.setIconUrl(sub.getIconUrl());
+					feedItem.setIsFeed(true);
+					feedItem.setIsTopLevel(false);
+					feedItem.setFeeds(null);
 
 					try {
 						feedItem.setUnreadCount(mUnreadCounts.getUnreadCount(feedId));
@@ -630,32 +640,15 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 		// alphabetize the list if needed
 		if (mSortAlpha) {
-			Collections.sort(feedList, new Comparator<FeedItem>() {
+			Collections.sort(feedList, new Comparator<TagItem>() {
 
 				@Override
-				public int compare(FeedItem lhs, FeedItem rhs) {
+				public int compare(TagItem lhs, TagItem rhs) {
 					Locale locale = getResources().getConfiguration().locale;
-					return lhs.getFeedTitle().toLowerCase(locale).compareTo(rhs.getFeedTitle().toLowerCase(locale));
+					return lhs.getName().toLowerCase(locale).compareTo(rhs.getName().toLowerCase(locale));
 				}
 			});
 		}
-
-		// set all items at the start
-//		FeedItem feedItemHeader = new FeedItem();
-//		feedItemHeader.setFeedTitle("All Items");
-//		feedItemHeader.setFeedId(tagId);
-//		feedItemHeader.setFeedIconUrl(null);
-//		try {
-//			feedItemHeader.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
-//		} catch (InvalidParameterException e) {
-//			feedItemHeader.setUnreadCount(0);
-//		}
-//
-//		if (mSortAlpha) {
-//			feedList.add(0, feedItemHeader);
-//		} else {
-//			feedList.set(0, feedItemHeader);
-//		}
 	}
 
 	@Override

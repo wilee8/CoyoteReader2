@@ -203,7 +203,10 @@ public class NavFragment extends Fragment {
 				navViewHolder.tagCardView.setCardBackgroundColor(getResources().getColor(R.color.cardview_light_background));
 			}
 
-			navViewHolder.tagSelectAll.setOnClickListener(new NavClickListener(position));
+			navViewHolder.tagSelectAll.setOnClickListener(new NavSelectClickListener(tagItem));
+			if(!tagItem.getIsFeed()) {
+				navViewHolder.tagExpand.setOnClickListener(new NavExpandClickListener(tagItem));
+			}
 		}
 
 		@Override
@@ -247,12 +250,12 @@ public class NavFragment extends Fragment {
 		}
 	}
 
-	private class NavClickListener implements OnClickListener {
+	private class NavSelectClickListener implements OnClickListener {
 
-		private int mPosition;
+		private TagItem thisItem;
 
-		public NavClickListener(int position) {
-			mPosition = position;
+		public NavSelectClickListener(TagItem item) {
+			thisItem = item;
 		}
 
 		@Override
@@ -261,15 +264,28 @@ public class NavFragment extends Fragment {
 			CardView newView = (CardView) thisView.getParent();
 			newView.setCardBackgroundColor(getResources().getColor(R.color.accent));
 			int oldSelected = mSelected;
-			mSelected = mPosition;
+			mSelected = mNavList.indexOf(thisItem);
 
 			if (oldSelected != -1) {
 				mAdapter.notifyItemChanged(oldSelected);
 			}
 
-			TagItem item = mNavList.get(mPosition);
+			mCallback.selectNav(thisItem.getId(), thisItem.getIsFeed(), thisItem.getName());
+		}
+	}
 
-			mCallback.selectNav(item.getId(), item.getIsFeed(), item.getName());
+	private class NavExpandClickListener implements OnClickListener {
+
+		private TagItem thisItem;
+
+		public NavExpandClickListener(TagItem item) {
+			thisItem = item;
+		}
+
+		@Override
+		public void onClick(View view) {
+			thisItem.setIsExpanded(!thisItem.getIsExpanded());
+			mAdapter.notifyItemChanged(mNavList.indexOf(thisItem));
 		}
 	}
 }

@@ -6,19 +6,19 @@ import java.util.ArrayList;
 
 @Parcel
 public class TagItem {
-	private String              id;
-	private String              name;
-	private int                 unreadCount;
-	private Boolean             isFeed;
-	private int                 resId;
-	private String              iconUrl;
-	private ArrayList<FeedItem> feeds;
-	private Boolean             isExpanded;
+	private String             id;
+	private String             name;
+	private int                unreadCount;
+	private Boolean            isFeed;
+	private int                resId;
+	private String             iconUrl;
+	private ArrayList<TagItem> feeds;
+	private Boolean            isExpanded;
+	private Boolean            isTopLevel;
 
 	public TagItem() {
 		unreadCount = 0;
 		resId = 0;
-		feeds = new ArrayList<>();
 		isExpanded = false;
 	}
 
@@ -70,11 +70,11 @@ public class TagItem {
 		this.iconUrl = iconUrl;
 	}
 
-	public ArrayList<FeedItem> getFeeds() {
+	public ArrayList<TagItem> getFeeds() {
 		return feeds;
 	}
 
-	public void setFeeds(ArrayList<FeedItem> mFeeds) {
+	public void setFeeds(ArrayList<TagItem> mFeeds) {
 		this.feeds = mFeeds;
 	}
 
@@ -84,5 +84,13 @@ public class TagItem {
 
 	public void setIsExpanded(Boolean isExpanded) {
 		this.isExpanded = isExpanded;
+	}
+
+	public Boolean getIsTopLevel() {
+		return isTopLevel;
+	}
+
+	public void setIsTopLevel(Boolean isTopLevel) {
+		this.isTopLevel = isTopLevel;
 	}
 }
