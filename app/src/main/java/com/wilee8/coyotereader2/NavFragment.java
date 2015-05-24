@@ -108,24 +108,29 @@ public class NavFragment extends Fragment {
 	}
 
 	public interface NavFragmentListener {
-		public ArrayList<TagItem> getNavList();
+		ArrayList<TagItem> getNavList();
 
-		public RequestQueue getRequestQueue();
+		RequestQueue getRequestQueue();
 
-		public void selectNav(String id, Boolean isFeed, String title);
+		void selectNav(String id, Boolean isFeed, String title);
 	}
 
 	private class NavAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 		public static final int VIEW_TYPE_LOCAL_RESOURCE = 0;
 		public static final int VIEW_TYPE_REMOTE_URL     = 1;
+		public static final int VIEW_TYPE_SUB_FEED       = 2;
 
 		@Override
 		public int getItemViewType(int position) {
 			TagItem tagItem = mNavList.get(position);
 			String iconUrl = tagItem.getIconUrl();
 
-			if ((tagItem.getResId() == 0) && (iconUrl != null) && (!iconUrl.matches("ICON_PATH/feed.png"))) {
+			if (!tagItem.getIsTopLevel()) {
+				return VIEW_TYPE_SUB_FEED;
+			} else if ((tagItem.getResId() == 0) &&
+				(iconUrl != null) &&
+				(!iconUrl.matches("ICON_PATH/feed.png"))) {
 				// use networkimageview to display favicon from url
 				return VIEW_TYPE_REMOTE_URL;
 			} else {
@@ -136,11 +141,16 @@ public class NavFragment extends Fragment {
 
 		@Override
 		public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-			if (viewType == VIEW_TYPE_LOCAL_RESOURCE) {
+			if (viewType == VIEW_TYPE_SUB_FEED) {
+				return new SubfeedViewHolder(LayoutInflater.from(mContext).
+					inflate(R.layout.row_nav_card_subfeed, parent, false));
+			} else if (viewType == VIEW_TYPE_LOCAL_RESOURCE) {
 				// use networkimageview to display favicon url
-				return new LocalViewHolder(LayoutInflater.from(mContext).inflate(R.layout.row_nav_card, parent, false));
+				return new LocalViewHolder(LayoutInflater.from(mContext).
+					inflate(R.layout.row_nav_card, parent, false));
 			} else {
-				return new NetworkViewHolder(LayoutInflater.from(mContext).inflate(R.layout.row_nav_card_network, parent, false));
+				return new NetworkViewHolder(LayoutInflater.from(mContext).
+					inflate(R.layout.row_nav_card_network, parent, false));
 			}
 		}
 
@@ -151,19 +161,30 @@ public class NavFragment extends Fragment {
 
 			NavViewHolder navViewHolder = (NavViewHolder) viewHolder;
 
-			if (!tagItem.getIsFeed()) {
-				if(tagItem.getIsExpanded()) {
-					navViewHolder.tagExpand.setImageDrawable(
-						mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_up_grey600_48dp));
+			if (tagItem.getIsTopLevel()) {
+				if (!tagItem.getIsFeed()) {
+					if (tagItem.getIsExpanded()) {
+						navViewHolder.tagExpand.setImageDrawable(
+							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_up_grey600_48dp));
+					} else {
+						navViewHolder.tagExpand.setImageDrawable(
+							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_down_grey600_48dp));
+					}
 				} else {
-					navViewHolder.tagExpand.setImageDrawable(
-						mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_down_grey600_48dp));
+					navViewHolder.tagExpand.setImageDrawable(null);
 				}
 			}
 
 			switch (getItemViewType(position)) {
-				case VIEW_TYPE_REMOTE_URL:
+				case VIEW_TYPE_SUB_FEED:
 					String iconUrl = tagItem.getIconUrl();
+					SubfeedViewHolder subfeedViewHolder = (SubfeedViewHolder) viewHolder;
+					subfeedViewHolder.tagIcon.setImageUrl(iconUrl, mImageLoader);
+
+					break;
+
+				case VIEW_TYPE_REMOTE_URL:
+					iconUrl = tagItem.getIconUrl();
 					NetworkViewHolder networkViewHolder = (NetworkViewHolder) viewHolder;
 					networkViewHolder.tagIcon.setImageUrl(iconUrl, mImageLoader);
 
@@ -250,6 +271,14 @@ public class NavFragment extends Fragment {
 		}
 	}
 
+	private class SubfeedViewHolder extends NavViewHolder {
+		public NetworkImageView tagIcon;
+
+		public SubfeedViewHolder(View itemView) {
+			super(itemView);
+			tagIcon = (NetworkImageView) itemView.findViewById(R.id.tagIcon);
+		}
+	}
 	private class NavSelectClickListener implements OnClickListener {
 
 		private TagItem thisItem;
@@ -284,8 +313,54 @@ public class NavFragment extends Fragment {
 
 		@Override
 		public void onClick(View view) {
+			int index = mNavList.indexOf(thisItem);
+
+			if(thisItem.getIsExpanded()) {
+				// expanded, remove all sub feeds so we can close
+				int count = 0;
+				while(!mNavList.get(index + 1).getIsTopLevel()) {
+					mNavList.remove(index + 1);
+					mAdapter.notifyItemRemoved(index + 1);
+					count++;
+				}
+
+				// adjust selected item if shifted
+				if(mSelected > index) {
+					if(mSelected > (index + count)) {
+						// selected item not removed, adjust value
+						int oldSelected = mSelected;
+						mSelected = mSelected - count;
+
+						mAdapter.notifyItemChanged(oldSelected);
+						mAdapter.notifyItemChanged(mSelected);
+					} else {
+						// selected item was removed, nothing selected any more
+						int oldSelected = mSelected;
+						mSelected = -1;
+
+						mAdapter.notifyItemChanged(oldSelected);
+					}
+				}
+			} else {
+				// closed, add all sub feeds so we can expand
+				ArrayList<TagItem> thisFeedList = thisItem.getFeeds();
+				mNavList.addAll(index + 1, thisFeedList);
+				mAdapter.notifyItemRangeInserted(index + 1, thisFeedList.size());
+
+				// adjust selected item if shifted
+				if(mSelected > index) {
+					// selected item shifted, adjust value
+					int oldSelected = mSelected;
+					mSelected = mSelected + thisFeedList.size();
+
+					mAdapter.notifyItemChanged(oldSelected);
+					mAdapter.notifyItemChanged(mSelected);
+				}
+			}
+
+			// toggle expand button
 			thisItem.setIsExpanded(!thisItem.getIsExpanded());
-			mAdapter.notifyItemChanged(mNavList.indexOf(thisItem));
+			mAdapter.notifyItemChanged(index);
 		}
 	}
 }
