@@ -55,7 +55,6 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends ActionBarActivity implements NavFragment.NavFragmentListener,
-															   TagFragment.TagFragmentListener,
 															   FeedFragment.FeedFragmentListener {
 
 	private SharedPreferences mAuthPreferences;
@@ -502,7 +501,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							tagItem.setResId(R.drawable.ic_folder_grey600_48dp);
 
 							// Get feeds for this tag
-							if(!tagItem.getIsFeed()) {
+							if (!tagItem.getIsFeed()) {
 								ArrayList<TagItem> subFeedList = new ArrayList<>();
 								tagItem.setFeeds(subFeedList);
 								getTagFeeds(tagId, tagItem.getFeeds());
@@ -835,20 +834,14 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 	}
 
 	@Override
-	public void selectNav(String id, Boolean isFeed, String title) {
+	public void selectNav(String id, String title) {
 		// NavFragment only ever shows up in frame0
 		// Open selected tag in frame1
 
 		Bundle args = new Bundle();
 		args.putString("id", id);
 
-		Fragment fragment;
-		if (isFeed) {
-			fragment = new FeedFragment();
-		} else {
-			fragment = new TagFragment();
-		}
-
+		FeedFragment fragment = new FeedFragment();
 		fragment.setArguments(args);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -889,27 +882,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 		removeRefreshButton();
-	}
-
-	@Override
-	public int getUnreadCount(String feedId) {
-		return mUnreadCounts.getUnreadCount(feedId);
-	}
-
-	@Override
-	public SubscriptionList getSubscriptionList() {
-		return mSubscriptionList;
-	}
-
-	@Override
-	public ArrayList<StreamPref> getPreferences(String id) {
-		Map<String, ArrayList<StreamPref>> streamPrefs = mStreamPrefs.getStreamPrefs();
-		return streamPrefs.get(id);
-	}
-
-	@Override
-	public Boolean getSortAlpha() {
-		return mSortAlpha;
 	}
 
 	private void addRefreshButton() {

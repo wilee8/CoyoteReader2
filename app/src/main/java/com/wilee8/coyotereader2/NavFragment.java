@@ -112,7 +112,7 @@ public class NavFragment extends Fragment {
 
 		RequestQueue getRequestQueue();
 
-		void selectNav(String id, Boolean isFeed, String title);
+		void selectNav(String id, String title);
 	}
 
 	private class NavAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -299,7 +299,7 @@ public class NavFragment extends Fragment {
 				mAdapter.notifyItemChanged(oldSelected);
 			}
 
-			mCallback.selectNav(thisItem.getId(), thisItem.getIsFeed(), thisItem.getName());
+			mCallback.selectNav(thisItem.getId(), thisItem.getName());
 		}
 	}
 
