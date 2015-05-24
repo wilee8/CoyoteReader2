@@ -12,7 +12,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -103,7 +102,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		mAuthPreferences = getSharedPreferences(getString(R.string.auth_prefs), MODE_PRIVATE);
 		mAuthToken = mAuthPreferences.getString(getString(R.string.auth_token), "");
 
-		if (mAuthToken.equals("")) {
+		if ((mAuthToken == null) || (mAuthToken.equals(""))) {
 			// logout and skip the rest of this function
 			logout();
 			return;
@@ -264,7 +263,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 				this,
 				Observable.create(new FetchDataObserver())
 					.skip(NUMBER_MAIN_REQUESTS - 1)
-					.lift(new ProcessDataOperator<Void>())
+					.lift(new ProcessDataOperator())
 					.subscribeOn(Schedulers.io()))
 				.subscribe(initFinishedSubscriber);
 		}
@@ -291,7 +290,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							@Override
 							public void onResponse(UnreadCounts response) {
 								mUnreadCounts = response;
-								Log.d("coyotereader", "return json: unreadcounts");
 								subscriber.onNext(null);
 							}
 						}, new Response.ErrorListener() {
@@ -318,7 +316,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							@Override
 							public void onResponse(TagList response) {
 								mTagList = response;
-								Log.d("coyotereader", "return json: taglist");
 								subscriber.onNext(null);
 							}
 						}, new Response.ErrorListener() {
@@ -346,7 +343,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							@Override
 							public void onResponse(SubscriptionList response) {
 								mSubscriptionList = response;
-								Log.d("coyotereader", "return json: subscriptionlist");
 								subscriber.onNext(null);
 							}
 						}, new Response.ErrorListener() {
@@ -374,7 +370,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							@Override
 							public void onResponse(UserInfo response) {
 								mUserId = response.getUserId();
-								Log.d("coyotereader", "return json: userid");
 								subscriber.onNext(null);
 							}
 						}, new Response.ErrorListener() {
@@ -401,7 +396,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 							@Override
 							public void onResponse(StreamPrefs response) {
 								mStreamPrefs = response;
-								Log.d("coyotereader", "return json: streamprefs");
 								subscriber.onNext(null);
 							}
 						}, new Response.ErrorListener() {
@@ -420,7 +414,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		}
 	}
 
-	private class ProcessDataOperator<Void> implements Observable.Operator<Void, Void> {
+	private class ProcessDataOperator implements Observable.Operator<Void, Void> {
 		@Override
 		public Subscriber<? super Void> call(final Subscriber<? super Void> s) {
 			return new Subscriber<Void>(s) {
@@ -441,7 +435,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 				@Override
 				public void onNext(Void aVoid) {
 					if (!s.isUnsubscribed()) {
-						Log.d("coyotereader", "Processing data");
 						mNavList = new ArrayList<>();
 
 						// set all items at the start
@@ -817,7 +810,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
 		Observable.create(new FetchDataObserver())
 			.skip(NUMBER_MAIN_REQUESTS - 1)
-			.lift(new ProcessDataOperator<Void>())
+			.lift(new ProcessDataOperator())
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
 			.subscribe(initFinishedSubscriber);
