@@ -28,6 +28,7 @@ import com.android.volley.toolbox.Volley;
 import com.wilee8.coyotereader2.containers.TagItem;
 import com.wilee8.coyotereader2.gson.Category;
 import com.wilee8.coyotereader2.gson.GsonRequest;
+import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamPref;
 import com.wilee8.coyotereader2.gson.StreamPrefs;
 import com.wilee8.coyotereader2.gson.Subscription;
@@ -73,13 +74,14 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 	private StreamPrefs        mStreamPrefs;
 	private ArrayList<TagItem> mNavList;
 
+	private ArrayList<Item> mItems;
+
 	private Toolbar mToolbar;
 
 	private Boolean   mDualPane;
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
 
-	private static int FRAME_COUNT = 4;
 	private static int FRAME_IDS[] = {R.id.frame0, R.id.frame1, R.id.frame2, R.id.frame3};
 	private FrameLayout[] mFrames;
 	private String        mTitles[];
@@ -178,8 +180,14 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 			if (savedInstanceState.containsKey("mTitles")) {
 				mTitles = savedInstanceState.getStringArray("mTitles");
 			} else {
-				mTitles = new String[FRAME_COUNT];
+				mTitles = new String[FRAME_IDS.length];
 				mTitles[0] = getResources().getString(R.string.app_name);
+			}
+
+			if(savedInstanceState.containsKey("mItems")) {
+				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
+			} else {
+				mItems = null;
 			}
 		} else {
 			needToFetchData = true;
@@ -190,8 +198,9 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 			mUserId = null;
 			mStreamPrefs = null;
 			mNavList = null;
-			mTitles = new String[FRAME_COUNT];
+			mTitles = new String[FRAME_IDS.length];
 			mTitles[0] = getResources().getString(R.string.app_name);
+			mItems = null;
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
@@ -200,9 +209,9 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 		mShowRefresh = (mContentFrame == 0);
 
-		mFrames = new FrameLayout[FRAME_COUNT];
+		mFrames = new FrameLayout[FRAME_IDS.length];
 
-		for (int i = 0; i < FRAME_COUNT; i++) {
+		for (int i = 0; i < FRAME_IDS.length; i++) {
 			mFrames[i] = (FrameLayout) findViewById(FRAME_IDS[i]);
 		}
 
@@ -228,7 +237,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 			mFrames[mContentFrame].setVisibility(View.VISIBLE);
 
 			// everything right of the content frame is gone
-			for (int i = mContentFrame + 1; i < FRAME_COUNT; i++) {
+			for (int i = mContentFrame + 1; i < FRAME_IDS.length; i++) {
 				mFrames[i].setVisibility(View.GONE);
 			}
 		} else {
@@ -245,7 +254,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 			mFrames[mContentFrame].setVisibility(View.VISIBLE);
 
 			// everything right of the content frame is gone
-			for (int i = mContentFrame + 1; i < FRAME_COUNT; i++) {
+			for (int i = mContentFrame + 1; i < FRAME_IDS.length; i++) {
 				mFrames[i].setVisibility(View.GONE);
 			}
 		}
@@ -842,7 +851,17 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		}
 
 		FragmentManager fragmentManager = getSupportFragmentManager();
-		fragmentManager.beginTransaction().replace(FRAME_IDS[1], fragment).commit();
+		Fragment oldFragment = fragmentManager.findFragmentById(FRAME_IDS[1]);
+		if (oldFragment == null) {
+			fragmentManager.beginTransaction()
+				.replace(FRAME_IDS[1], fragment)
+				.commit();
+		} else {
+			fragmentManager.beginTransaction()
+				.remove(oldFragment)
+				.replace(FRAME_IDS[1], fragment)
+				.commit();
+		}
 
 		if (mDualPane) {
 			if (mContentFrame == 0) {
@@ -875,6 +894,28 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 		removeRefreshButton();
+	}
+
+	@Override
+	public String getAuthToken() {
+		return mAuthToken;
+	}
+
+	@Override
+	public Boolean getUnreadOnly() {
+		return mShowUnreadOnly;
+	}
+
+	@Override
+	public RequestQueue getQueue() {
+		return mQueue;
+	}
+
+	@Override
+	public void clearStreamContents() {
+		if(mItems != null) {
+			mItems.clear();
+		}
 	}
 
 	private void addRefreshButton() {
