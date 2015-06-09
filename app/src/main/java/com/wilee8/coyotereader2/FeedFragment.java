@@ -17,7 +17,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.gson.GsonRequest;
+import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamContents;
+
+import org.parceler.Parcels;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -61,6 +64,7 @@ public class FeedFragment extends Fragment {
 
 		if (savedInstanceState != null) {
 			if (savedInstanceState.containsKey("mItems")) {
+				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 				mSelected = savedInstanceState.getInt("mSelected", -1);
 				mContinuation = savedInstanceState.getString("mContinuation", null);
 			} else {
@@ -98,13 +102,13 @@ public class FeedFragment extends Fragment {
 
 		PublishSubject<String> emitterSubject = PublishSubject.create();
 		emitter = new SerializedSubject<>(emitterSubject);
-		AddItems addItems = new AddItems();
+		UpdateItems updateItems = new UpdateItems();
 
 		AppObservable.bindActivity(mContext,
 								   emitter
 									   .lift(new FetchItems())
 									   .subscribeOn(Schedulers.io()))
-			.subscribe(addItems);
+			.subscribe(updateItems);
 
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
 		mProgress = (ProgressBar) view.findViewById(R.id.progressbar_loading);
@@ -130,13 +134,15 @@ public class FeedFragment extends Fragment {
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
+		outState.putParcelable("mItems", Parcels.wrap(mItems));
+		outState.putString("mContinuation", mContinuation);
 		outState.putInt("mSelected", mSelected);
 	}
 
-	private class FetchItems implements Observable.Operator<String, String> {
+	private class FetchItems implements Observable.Operator<Void, String> {
 
 		@Override
-		public Subscriber<? super String> call(final Subscriber<? super String> subscriber) {
+		public Subscriber<? super String> call(final Subscriber<? super Void> subscriber) {
 			return new Subscriber<String>() {
 				@Override
 				public void onCompleted() {
@@ -192,7 +198,15 @@ public class FeedFragment extends Fragment {
 								@Override
 								public void onResponse(StreamContents response) {
 									//TODO parse the response
-									System.out.println(response.getContinuation());
+
+									// function will take all articles in response and add them to mItems
+									addArticles(response);
+
+									subscriber.onNext(null);
+
+									if(mContinuation == null) {
+										subscriber.onCompleted();
+									}
 								}
 							}, new Response.ErrorListener() {
 							@Override
@@ -202,17 +216,16 @@ public class FeedFragment extends Fragment {
 						});
 
 					mQueue.add(streamRequest);
-
 				}
 			};
 		}
 	}
 
-	private class AddItems extends Subscriber<String> {
+	private class UpdateItems extends Subscriber<Void> {
 
 		@Override
 		public void onCompleted() {
-
+			unsubscribe();
 		}
 
 		@Override
@@ -221,9 +234,45 @@ public class FeedFragment extends Fragment {
 		}
 
 		@Override
-		public void onNext(String s) {
+		public void onNext(Void aVoid) {
 
 		}
+	}
+
+	private void addArticles(StreamContents contents) {
+		mContinuation = contents.getContinuation();
+
+		// if footer is present, remove so we can append all
+		ArticleItem lastItem = mItems.get(mItems.size() - 1);
+		if (lastItem.getIsFooter()) {
+			mItems.remove(mItems.size() - 1);
+		}
+
+		ArrayList<Item> items = contents.getItems();
+		for(int i = 0; i < items.size(); i++) {
+			ArticleItem article = new ArticleItem();
+			Item item = items.get(i);
+
+			article.setId(item.getId());
+			article.setTitle(item.getTitle());
+			article.setCategories(item.getCategories());
+			article.setSummary(item.getSummary().getContent());
+			article.setAuthor(item.getAuthor());
+			article.setCanonical(item.getCanonical().get(0).getHref());
+			article.setOrigin(item.getOrigin().getHtmlUrl());
+			article.setIsFooter(false);
+
+			mItems.add(article);
+		}
+
+		// add footer if necessary
+		if(mContinuation != null) {
+			ArticleItem footer = new ArticleItem();
+			footer.setIsFooter(true);
+			// no other fields matter
+			mItems.add(footer);
+		}
+
 	}
 
 	public interface FeedFragmentListener {
