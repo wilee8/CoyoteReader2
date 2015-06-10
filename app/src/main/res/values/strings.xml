@@ -28,5 +28,6 @@
     <!-- image descriptions -->
     <string name="tag_row_image_description">Subscription icon</string>
     <string name="feed_row_image_description">Feed icon</string>
+    <string name="item_star_image_description">Favorites</string>
 
 </resources>

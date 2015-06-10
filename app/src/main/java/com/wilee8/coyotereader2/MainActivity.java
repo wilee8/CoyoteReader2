@@ -25,10 +25,10 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
+import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.TagItem;
 import com.wilee8.coyotereader2.gson.Category;
 import com.wilee8.coyotereader2.gson.GsonRequest;
-import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamPref;
 import com.wilee8.coyotereader2.gson.StreamPrefs;
 import com.wilee8.coyotereader2.gson.Subscription;
@@ -74,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 	private StreamPrefs        mStreamPrefs;
 	private ArrayList<TagItem> mNavList;
 
-	private ArrayList<Item> mItems;
+	private ArrayList<ArticleItem> mItems;
 
 	private Toolbar mToolbar;
 
@@ -184,7 +184,7 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 				mTitles[0] = getResources().getString(R.string.app_name);
 			}
 
-			if(savedInstanceState.containsKey("mItems")) {
+			if (savedInstanceState.containsKey("mItems")) {
 				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 			} else {
 				mItems = null;
@@ -779,6 +779,10 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		if (mNavList != null) {
 			outState.putParcelable("mNavList", Parcels.wrap(mNavList));
 		}
+
+		if (mItems != null) {
+			outState.putParcelable("mItems", Parcels.wrap(mItems));
+		}
 	}
 
 	public void logout(MenuItem item) {
@@ -913,9 +917,19 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 	@Override
 	public void clearStreamContents() {
-		if(mItems != null) {
+		if (mItems != null) {
 			mItems.clear();
 		}
+	}
+
+	@Override
+	public void setFeedContents(ArrayList<ArticleItem> items) {
+		mItems = items;
+	}
+
+	@Override
+	public String getUserId() {
+		return mUserId;
 	}
 
 	private void addRefreshButton() {

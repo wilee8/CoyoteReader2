@@ -4,13 +4,18 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -30,8 +35,6 @@ import java.util.Map;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.app.AppObservable;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 import rx.subjects.Subject;
@@ -48,11 +51,11 @@ public class FeedFragment extends Fragment {
 	private String                  mFeedId;
 	private String                  mContinuation;
 	private Subject<String, String> emitter;
+	private Boolean                 mFetchInProgress;
 
 	private ArrayList<ArticleItem> mItems;
 	private FeedAdapter            mAdapter;
 	private ProgressBar            mProgress;
-	private RecyclerView           mItemRecyclerView;
 
 	private int mSelected;
 
@@ -67,17 +70,20 @@ public class FeedFragment extends Fragment {
 				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 				mSelected = savedInstanceState.getInt("mSelected", -1);
 				mContinuation = savedInstanceState.getString("mContinuation", null);
+				mFetchInProgress = savedInstanceState.getBoolean("mFetchInProgress", false);
 			} else {
 				mItems = new ArrayList<>();
 				mCallback.clearStreamContents();
 				mSelected = -1;
 				mContinuation = null;
+				mFetchInProgress = false;
 			}
 		} else {
 			mItems = new ArrayList<>();
 			mCallback.clearStreamContents();
 			mSelected = -1;
 			mContinuation = null;
+			mFetchInProgress = false;
 		}
 	}
 
@@ -104,25 +110,30 @@ public class FeedFragment extends Fragment {
 		emitter = new SerializedSubject<>(emitterSubject);
 		UpdateItems updateItems = new UpdateItems();
 
-		AppObservable.bindActivity(mContext,
-								   emitter
-									   .lift(new FetchItems())
-									   .subscribeOn(Schedulers.io()))
+//		AppObservable.bindActivity(mContext,
+//								   emitter
+//									   .lift(new FetchItems())
+//									   .subscribeOn(Schedulers.io()))
+//			.subscribe(updateItems);
+
+		emitter
+			.lift(new FetchItems())
 			.subscribe(updateItems);
 
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
 		mProgress = (ProgressBar) view.findViewById(R.id.progressbar_loading);
-		mItemRecyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
+		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
 
-		mItemRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
-		mItemRecyclerView.setItemAnimator(new DefaultItemAnimator());
+		recyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+		recyclerView.setItemAnimator(new DefaultItemAnimator());
 
 		mAdapter = new FeedAdapter();
-		mItemRecyclerView.setAdapter(mAdapter);
+		recyclerView.setAdapter(mAdapter);
 
-		if(mItems.size() == 0) {
+		if (mItems.size() == 0) {
 			mProgress.setVisibility(View.VISIBLE);
 
+			mFetchInProgress = true;
 			emitter.onNext(mContinuation);
 		} else {
 
@@ -139,10 +150,10 @@ public class FeedFragment extends Fragment {
 		outState.putInt("mSelected", mSelected);
 	}
 
-	private class FetchItems implements Observable.Operator<Void, String> {
+	private class FetchItems implements Observable.Operator<Integer, String> {
 
 		@Override
-		public Subscriber<? super String> call(final Subscriber<? super Void> subscriber) {
+		public Subscriber<? super String> call(final Subscriber<? super Integer> subscriber) {
 			return new Subscriber<String>() {
 				@Override
 				public void onCompleted() {
@@ -197,14 +208,12 @@ public class FeedFragment extends Fragment {
 							new Response.Listener<StreamContents>() {
 								@Override
 								public void onResponse(StreamContents response) {
-									//TODO parse the response
-
 									// function will take all articles in response and add them to mItems
-									addArticles(response);
+									int firstNewIndex = addArticles(response);
 
-									subscriber.onNext(null);
+									subscriber.onNext(firstNewIndex);
 
-									if(mContinuation == null) {
+									if (mContinuation == null) {
 										subscriber.onCompleted();
 									}
 								}
@@ -221,7 +230,7 @@ public class FeedFragment extends Fragment {
 		}
 	}
 
-	private class UpdateItems extends Subscriber<Void> {
+	private class UpdateItems extends Subscriber<Integer> {
 
 		@Override
 		public void onCompleted() {
@@ -230,26 +239,37 @@ public class FeedFragment extends Fragment {
 
 		@Override
 		public void onError(Throwable e) {
-
+			Toast.makeText(mContext, R.string.error_fetch_data, Toast.LENGTH_SHORT).show();
 		}
 
 		@Override
-		public void onNext(Void aVoid) {
+		public void onNext(Integer integer) {
+			mCallback.setFeedContents(mItems);
 
+			mProgress.setVisibility(View.GONE);
+
+			mAdapter.notifyItemRangeChanged(integer, mItems.size() - integer);
+
+			mFetchInProgress = false;
 		}
 	}
 
-	private void addArticles(StreamContents contents) {
+	// function returns the index of the first new item
+	private int addArticles(StreamContents contents) {
 		mContinuation = contents.getContinuation();
 
-		// if footer is present, remove so we can append all
-		ArticleItem lastItem = mItems.get(mItems.size() - 1);
-		if (lastItem.getIsFooter()) {
-			mItems.remove(mItems.size() - 1);
+		if(mItems.size() != 0) {
+			// if footer is present, remove so we can append all
+			ArticleItem lastItem = mItems.get(mItems.size() - 1);
+			if (lastItem.getIsFooter()) {
+				mItems.remove(mItems.size() - 1);
+			}
 		}
 
+		int firstNewIndex = mItems.size();
+
 		ArrayList<Item> items = contents.getItems();
-		for(int i = 0; i < items.size(); i++) {
+		for (int i = 0; i < items.size(); i++) {
 			ArticleItem article = new ArticleItem();
 			Item item = items.get(i);
 
@@ -259,20 +279,21 @@ public class FeedFragment extends Fragment {
 			article.setSummary(item.getSummary().getContent());
 			article.setAuthor(item.getAuthor());
 			article.setCanonical(item.getCanonical().get(0).getHref());
-			article.setOrigin(item.getOrigin().getHtmlUrl());
+			article.setOrigin(item.getOrigin().getTitle());
 			article.setIsFooter(false);
 
 			mItems.add(article);
 		}
 
 		// add footer if necessary
-		if(mContinuation != null) {
+		if (mContinuation != null) {
 			ArticleItem footer = new ArticleItem();
 			footer.setIsFooter(true);
 			// no other fields matter
 			mItems.add(footer);
 		}
 
+		return firstNewIndex;
 	}
 
 	public interface FeedFragmentListener {
@@ -283,6 +304,10 @@ public class FeedFragment extends Fragment {
 		RequestQueue getQueue();
 
 		void clearStreamContents();
+
+		void setFeedContents(ArrayList<ArticleItem> items);
+
+		String getUserId();
 	}
 
 	private class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -291,18 +316,105 @@ public class FeedFragment extends Fragment {
 		private static final int VIEW_TYPE_FOOTER = 1;
 
 		@Override
+		public int getItemViewType(int position) {
+			ArticleItem item = mItems.get(position);
+
+			if (item.getIsFooter()) {
+				return VIEW_TYPE_FOOTER;
+			} else {
+				return VIEW_TYPE_NORMAL;
+			}
+		}
+
+		@Override
 		public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-			return null;
+			if (viewType == VIEW_TYPE_NORMAL) {
+				return new ArticleViewHolder(LayoutInflater.from(mContext).
+					inflate(R.layout.row_feed_card, parent, false));
+			} else {
+				return new FooterViewHolder(LayoutInflater.from(mContext).
+					inflate(R.layout.row_feed_footer, parent, false));
+			}
 		}
 
 		@Override
 		public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+			ArticleItem item = mItems.get(position);
 
+			if (getItemViewType(position) == VIEW_TYPE_FOOTER) {
+				// nothing to do, since footer just shows progress bar
+				return;
+			}
+
+			ArticleViewHolder viewHolder = (ArticleViewHolder) holder;
+			Boolean unread = true;
+			Boolean starred = false;
+
+			ArrayList<String> categories = item.getCategories();
+
+			for (int i = 0; i < categories.size(); i++) {
+				String category = categories.get(i);
+				if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/read")) {
+					unread = false;
+				}
+				if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/starred")) {
+					starred = true;
+				}
+			}
+
+			if (unread) {
+				viewHolder.articleInfo.setText(
+					Html.fromHtml("<b>" + item.getTitle() + "</b> - " + item.getOrigin()));
+			} else {
+				viewHolder.articleInfo.setText(
+					Html.fromHtml(item.getTitle() + " - " + item.getOrigin()));
+			}
+
+			if (starred) {
+				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
+					R.drawable.ic_star_grey600_48dp));
+			} else {
+				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
+					R.drawable.ic_star_outline_grey600_48dp));
+			}
+
+//			holder.itemData.setOnClickListener(new ArticleClickListener(position));
+//			holder.itemStar.setOnClickListener(new StarClickListener(position));
+
+			if ((mSelected != -1) && (position == mSelected)) {
+				viewHolder.articleCardView.setCardBackgroundColor(
+					getResources().getColor(R.color.accent));
+			} else {
+				viewHolder.articleCardView.setCardBackgroundColor(
+					getResources().getColor(R.color.cardview_light_background));
+			}
 		}
 
 		@Override
 		public int getItemCount() {
-			return 0;
+			return mItems.size();
+		}
+	}
+
+	private class FooterViewHolder extends RecyclerView.ViewHolder {
+
+		public FooterViewHolder(View itemView) {
+			super(itemView);
+			// footer is just progress bar, so no fields to set
+		}
+	}
+
+	private class ArticleViewHolder extends RecyclerView.ViewHolder {
+
+		public CardView  articleCardView;
+		public ImageView articleStar;
+		public TextView  articleInfo;
+
+		public ArticleViewHolder(View itemView) {
+			super(itemView);
+			articleCardView = (CardView) itemView.findViewById(R.id.articleCardView);
+			articleStar = (ImageView) itemView.findViewById(R.id.articleStar);
+			articleInfo = (TextView) itemView.findViewById(R.id.articleInfo);
 		}
 	}
 }
