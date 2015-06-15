@@ -35,6 +35,10 @@ import java.util.Map;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
+import rx.android.app.AppObservable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 import rx.subjects.Subject;
@@ -51,6 +55,7 @@ public class FeedFragment extends Fragment {
 	private String                  mFeedId;
 	private String                  mContinuation;
 	private Subject<String, String> emitter;
+	private Subscription            mEmitterSubscription;
 	private Boolean                 mFetchInProgress;
 
 	private ArrayList<ArticleItem> mItems;
@@ -110,14 +115,11 @@ public class FeedFragment extends Fragment {
 		emitter = new SerializedSubject<>(emitterSubject);
 		UpdateItems updateItems = new UpdateItems();
 
-//		AppObservable.bindActivity(mContext,
-//								   emitter
-//									   .lift(new FetchItems())
-//									   .subscribeOn(Schedulers.io()))
-//			.subscribe(updateItems);
-
-		emitter
-			.lift(new FetchItems())
+		mEmitterSubscription = AppObservable.bindFragment(this,
+														  emitter
+															  .lift(new FetchItems())
+															  .subscribeOn(Schedulers.io())
+															  .observeOn(AndroidSchedulers.mainThread()))
 			.subscribe(updateItems);
 
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
@@ -139,6 +141,15 @@ public class FeedFragment extends Fragment {
 
 		}
 		return view;
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		if (mEmitterSubscription != null) {
+			mEmitterSubscription.unsubscribe();
+		}
 	}
 
 	@Override
@@ -258,7 +269,7 @@ public class FeedFragment extends Fragment {
 	private int addArticles(StreamContents contents) {
 		mContinuation = contents.getContinuation();
 
-		if(mItems.size() != 0) {
+		if (mItems.size() != 0) {
 			// if footer is present, remove so we can append all
 			ArticleItem lastItem = mItems.get(mItems.size() - 1);
 			if (lastItem.getIsFooter()) {
@@ -342,7 +353,7 @@ public class FeedFragment extends Fragment {
 			ArticleItem item = mItems.get(position);
 
 			if (getItemViewType(position) == VIEW_TYPE_FOOTER) {
-				// nothing to do, since footer just shows progress bar
+				// if we're binding the footer, we should start loading the remaining items
 				return;
 			}
 
