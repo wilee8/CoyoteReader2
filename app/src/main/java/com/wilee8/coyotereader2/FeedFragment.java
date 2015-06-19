@@ -3,6 +3,7 @@ package com.wilee8.coyotereader2;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -15,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -250,7 +250,11 @@ public class FeedFragment extends Fragment {
 
 		@Override
 		public void onError(Throwable e) {
-			Toast.makeText(mContext, R.string.error_fetch_data, Toast.LENGTH_SHORT).show();
+			Snackbar
+				.make(mContext.findViewById(R.id.sceneRoot),
+					  R.string.error_fetch_data,
+					  Snackbar.LENGTH_SHORT)
+				.show();
 		}
 
 		@Override

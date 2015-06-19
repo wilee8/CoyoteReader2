@@ -1,15 +1,16 @@
 package com.wilee8.coyotereader2;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.TransitionManager;
 import android.view.Menu;
@@ -19,7 +20,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -54,12 +54,11 @@ import rx.android.app.AppObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class MainActivity extends ActionBarActivity implements NavFragment.NavFragmentListener,
+public class MainActivity extends AppCompatActivity implements NavFragment.NavFragmentListener,
 															   FeedFragment.FeedFragmentListener {
 
 	private SharedPreferences mAuthPreferences;
 	private String            mAuthToken;
-	private Context           mContext;
 
 	private SharedPreferences mSettings;
 	private Boolean           mSortAlpha;
@@ -98,8 +97,6 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		mContext = this;
-
 		// Get the saved login credentials
 		mAuthPreferences = getSharedPreferences(getString(R.string.auth_prefs), MODE_PRIVATE);
 		mAuthToken = mAuthPreferences.getString(getString(R.string.auth_token), "");
@@ -128,7 +125,10 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		if (mToolbar != null) {
 			setSupportActionBar(mToolbar);
 		}
-		getSupportActionBar().setDisplayShowHomeEnabled(true);
+		ActionBar ab = getSupportActionBar();
+		if(ab != null) {
+			ab.setDisplayShowHomeEnabled(true);
+		}
 
 		Boolean needToFetchData = false;
 
@@ -551,7 +551,11 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 		@Override
 		public void onError(Throwable throwable) {
 			mQueue.cancelAll(mainActivityQueueTag);
-			Toast.makeText(mContext, R.string.error_fetch_data, Toast.LENGTH_SHORT).show();
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_fetch_data,
+					  Snackbar.LENGTH_SHORT)
+				.show();
 		}
 
 		@Override
@@ -697,7 +701,10 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 		if (mContentFrame == 0) {
 			addRefreshButton();
-			getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+			ActionBar ab = getSupportActionBar();
+			if(ab != null) {
+				ab.setDisplayHomeAsUpEnabled(false);
+			}
 		}
 	}
 
@@ -895,7 +902,10 @@ public class MainActivity extends ActionBarActivity implements NavFragment.NavFr
 
 		mTitles[mContentFrame] = title;
 		mToolbar.setTitle(title);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		ActionBar ab = getSupportActionBar();
+		if(ab != null) {
+			ab.setDisplayHomeAsUpEnabled(true);
+		}
 
 		removeRefreshButton();
 	}
