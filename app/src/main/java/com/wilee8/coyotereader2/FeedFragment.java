@@ -36,9 +36,6 @@ import java.util.Map;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
-import rx.android.app.AppObservable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 import rx.subjects.Subject;
@@ -60,6 +57,7 @@ public class FeedFragment extends Fragment {
 
 	private ArrayList<ArticleItem> mItems;
 	private FeedAdapter            mAdapter;
+	private LinearLayoutManager    mLayoutManager;
 	private ProgressBar            mProgress;
 
 	private int mSelected;
@@ -115,22 +113,28 @@ public class FeedFragment extends Fragment {
 		emitter = new SerializedSubject<>(emitterSubject);
 		UpdateItems updateItems = new UpdateItems();
 
-		mEmitterSubscription = AppObservable.bindFragment(this,
-														  emitter
-															  .lift(new FetchItems())
-															  .subscribeOn(Schedulers.io())
-															  .observeOn(AndroidSchedulers.mainThread()))
+//		mEmitterSubscription = AppObservable.bindFragment(this,
+//														  emitter
+//															  .lift(new FetchItems())
+//															  .subscribeOn(Schedulers.io())
+//															  .observeOn(AndroidSchedulers.mainThread()))
+//			.subscribe(updateItems);
+
+		mEmitterSubscription = emitter
+			.lift(new FetchItems())
 			.subscribe(updateItems);
 
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
 		mProgress = (ProgressBar) view.findViewById(R.id.progressbar_loading);
 		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
 
-		recyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+		mLayoutManager = new LinearLayoutManager(mContext);
+		recyclerView.setLayoutManager(mLayoutManager);
 		recyclerView.setItemAnimator(new DefaultItemAnimator());
 
 		mAdapter = new FeedAdapter();
 		recyclerView.setAdapter(mAdapter);
+		recyclerView.addOnScrollListener(new RecyclerScrollListener());
 
 		if (mItems.size() == 0) {
 			mProgress.setVisibility(View.VISIBLE);
@@ -352,6 +356,7 @@ public class FeedFragment extends Fragment {
 			}
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 			ArticleItem item = mItems.get(position);
@@ -430,6 +435,23 @@ public class FeedFragment extends Fragment {
 			articleCardView = (CardView) itemView.findViewById(R.id.articleCardView);
 			articleStar = (ImageView) itemView.findViewById(R.id.articleStar);
 			articleInfo = (TextView) itemView.findViewById(R.id.articleInfo);
+		}
+	}
+
+	private class RecyclerScrollListener extends RecyclerView.OnScrollListener {
+		@Override
+		public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+			if (!mFetchInProgress) {
+				if (mItems.size() != 0) {
+					int totalItemcount = mLayoutManager.getItemCount();
+					int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
+
+					if(lastVisibleItem >= (totalItemcount - 1)) {
+						mFetchInProgress = true;
+						emitter.onNext(mContinuation);
+					}
+				}
+			}
 		}
 	}
 }

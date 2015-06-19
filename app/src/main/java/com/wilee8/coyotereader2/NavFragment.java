@@ -154,6 +154,7 @@ public class NavFragment extends Fragment {
 			}
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
 
