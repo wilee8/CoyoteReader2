@@ -141,9 +141,8 @@ public class FeedFragment extends Fragment {
 
 			mFetchInProgress = true;
 			emitter.onNext(mContinuation);
-		} else {
-
 		}
+
 		return view;
 	}
 
@@ -327,6 +326,8 @@ public class FeedFragment extends Fragment {
 		void setFeedContents(ArrayList<ArticleItem> items);
 
 		String getUserId();
+
+		void selectArticle(int position);
 	}
 
 	private class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -398,7 +399,7 @@ public class FeedFragment extends Fragment {
 					R.drawable.ic_star_outline_grey600_48dp));
 			}
 
-//			holder.itemData.setOnClickListener(new ArticleClickListener(position));
+			viewHolder.articleInfo.setOnClickListener(new FeedSelectClickListener(position));
 //			holder.itemStar.setOnClickListener(new StarClickListener(position));
 
 			if ((mSelected != -1) && (position == mSelected)) {
@@ -452,6 +453,30 @@ public class FeedFragment extends Fragment {
 					}
 				}
 			}
+		}
+	}
+
+	private class FeedSelectClickListener implements View.OnClickListener {
+
+		int mPosition;
+
+		public FeedSelectClickListener(int position) {
+			mPosition = position;
+		}
+
+		@Override
+		public void onClick(View view) {
+			TextView thisView = (TextView) view;
+			CardView newView = (CardView) thisView.getParent().getParent();
+			newView.setCardBackgroundColor(getResources().getColor(R.color.accent));
+			int oldSelected = mSelected;
+			mSelected = mPosition;
+
+			if (oldSelected != -1) {
+				mAdapter.notifyItemChanged(oldSelected);
+			}
+
+			mCallback.selectArticle(mPosition);
 		}
 	}
 }

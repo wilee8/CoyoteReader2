@@ -11,6 +11,7 @@
 
     <!-- errors -->
     <string name="error_fetch_data">Error retrieving data from server</string>
+    <string name="error_null_items">Error loading article list, reload feed</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>

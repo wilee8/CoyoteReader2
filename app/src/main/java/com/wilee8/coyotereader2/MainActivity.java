@@ -55,7 +55,8 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements NavFragment.NavFragmentListener,
-															   FeedFragment.FeedFragmentListener {
+															   FeedFragment.FeedFragmentListener,
+															   ArticlePagerFragment.ArticlePagerFragmentListener {
 
 	private SharedPreferences mAuthPreferences;
 	private String            mAuthToken;
@@ -940,6 +941,72 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	@Override
 	public String getUserId() {
 		return mUserId;
+	}
+
+	@Override
+	public void selectArticle(int position) {
+		if (mItems == null) {
+			// should never happen if we get to this point
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_null_items,
+					  Snackbar.LENGTH_SHORT)
+				.show();
+		}
+
+		Bundle args = new Bundle();
+		args.putInt("position", position);
+
+		// article is always selected in frame 1
+		if(mDualPane) {
+			if(mContentFrame == 1) {
+				// selection made in main content frame
+				// need to shift frames
+				Fragment fragment = new ArticlePagerFragment();
+				fragment.setArguments(args);
+
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				fragmentManager.beginTransaction().replace(FRAME_IDS[2], fragment).commit();
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+					TransitionManager.beginDelayedTransition(mSceneRoot);
+				}
+
+				// hide sidebar
+				mFrames[0].setVisibility(View.GONE);
+
+				// change weight of content frame
+				LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
+				mFrames[1].setLayoutParams(lp);
+
+				// unhide frame to the right of content frame
+				lp = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 2.0f);
+				mFrames[2].setLayoutParams(lp);
+				mFrames[2].setVisibility(View.VISIBLE);
+
+				mContentFrame++;
+			} else {
+				// selection made in side bar
+				// just change article in main content frame
+			}
+		} else {
+			Fragment fragment = new ArticlePagerFragment();
+			fragment.setArguments(args);
+
+			FragmentManager fragmentManager = getSupportFragmentManager();
+			fragmentManager.beginTransaction().replace(FRAME_IDS[2], fragment).commit();
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+				TransitionManager.beginDelayedTransition(mSceneRoot);
+			}
+
+			// hide content frame
+			mFrames[1].setVisibility(View.GONE);
+
+			// unhide frame to the right of content frame
+			mFrames[2].setVisibility(View.VISIBLE);
+
+			mContentFrame++;
+		}
+		// TODO update item
 	}
 
 	private void addRefreshButton() {
