@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
 
-	private static int FRAME_IDS[] = {R.id.frame0, R.id.frame1, R.id.frame2, R.id.frame3};
+	private static int FRAME_IDS[] = {R.id.frame0, R.id.frame1, R.id.frame2};
 	private FrameLayout[] mFrames;
 	private String        mTitles[];
 
