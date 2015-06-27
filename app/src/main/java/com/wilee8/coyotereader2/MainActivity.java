@@ -56,7 +56,8 @@ import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements NavFragment.NavFragmentListener,
 															   FeedFragment.FeedFragmentListener,
-															   ArticlePagerFragment.ArticlePagerFragmentListener {
+															   ArticlePagerFragment.ArticlePagerFragmentListener,
+															   ArticleFragment.ArticleFragmentListener {
 
 	private SharedPreferences mAuthPreferences;
 	private String            mAuthToken;
@@ -187,9 +188,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 			if (savedInstanceState.containsKey("mItems")) {
 				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
-			} else {
-				mItems = null;
 			}
+			// else punt so we don't write over data from FeedFragment
 		} else {
 			needToFetchData = true;
 			mContentFrame = 0;
@@ -201,7 +201,6 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			mNavList = null;
 			mTitles = new String[FRAME_IDS.length];
 			mTitles[0] = getResources().getString(R.string.app_name);
-			mItems = null;
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
@@ -936,6 +935,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	@Override
 	public void setFeedContents(ArrayList<ArticleItem> items) {
 		mItems = items;
+
+		//TODO update item pager
 	}
 
 	@Override
@@ -1007,6 +1008,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			mContentFrame++;
 		}
 		// TODO update item
+	}
+
+	@Override
+	public ArrayList<ArticleItem> getItems() {
+		return mItems;
 	}
 
 	private void addRefreshButton() {
