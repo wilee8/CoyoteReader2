@@ -479,4 +479,26 @@ public class FeedFragment extends Fragment {
 			mCallback.selectArticle(mPosition);
 		}
 	}
+
+	public void changeSelected(int position) {
+		int oldSelected = mSelected;
+		mSelected = position;
+
+		mAdapter.notifyItemChanged(mSelected);
+		if (oldSelected != -1) {
+			mAdapter.notifyItemChanged(oldSelected);
+		}
+
+		mLayoutManager.scrollToPosition(position);
+
+		// this function is called if the article pager changed to a new article
+		// pager needs to fetch items ahead of end to get next article fragments ready
+		int totalItemcount = mLayoutManager.getItemCount();
+		int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
+
+		if(lastVisibleItem >= (totalItemcount - 4)) {
+			mFetchInProgress = true;
+			emitter.onNext(mContinuation);
+		}
+	}
 }

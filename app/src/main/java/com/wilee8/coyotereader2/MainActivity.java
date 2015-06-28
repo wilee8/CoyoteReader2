@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			setSupportActionBar(mToolbar);
 		}
 		ActionBar ab = getSupportActionBar();
-		if(ab != null) {
+		if (ab != null) {
 			ab.setDisplayShowHomeEnabled(true);
 		}
 
@@ -702,7 +702,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		if (mContentFrame == 0) {
 			addRefreshButton();
 			ActionBar ab = getSupportActionBar();
-			if(ab != null) {
+			if (ab != null) {
 				ab.setDisplayHomeAsUpEnabled(false);
 			}
 		}
@@ -903,7 +903,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mTitles[mContentFrame] = title;
 		mToolbar.setTitle(title);
 		ActionBar ab = getSupportActionBar();
-		if(ab != null) {
+		if (ab != null) {
 			ab.setDisplayHomeAsUpEnabled(true);
 		}
 
@@ -937,7 +937,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mItems = items;
 
 		// Update article pager - only exists if pager is content frame
-		if(mContentFrame == 2) {
+		if (mContentFrame == 2) {
 			ArticlePagerFragment fragment =
 				(ArticlePagerFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[mContentFrame]);
 			fragment.updateItems();
@@ -964,8 +964,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		args.putInt("position", position);
 
 		// article is always selected in frame 1
-		if(mDualPane) {
-			if(mContentFrame == 1) {
+		if (mDualPane) {
+			if (mContentFrame == 1) {
 				// selection made in main content frame
 				// need to shift frames
 				Fragment fragment = new ArticlePagerFragment();
@@ -1018,15 +1018,26 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		// for some reason the PageChangeListener isn't called if and only if the 0th element is selected
 		// call the callback function if this is the case
-		// TODO
-//		if (position == 0) {
-//			onItemFragmentSelected(position);
-//		}
+		if (position == 0) {
+			onArticleSelected(position);
+		}
 	}
 
 	@Override
 	public ArrayList<ArticleItem> getItems() {
 		return mItems;
+	}
+
+	@Override
+	public void onArticleSelected(int position) {
+		ArticleItem item = mItems.get(position);
+
+		// update FeedFragment position
+		FeedFragment fragment =
+			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
+		fragment.changeSelected(position);
+
+		//TODO mark item as read
 	}
 
 	private void addRefreshButton() {

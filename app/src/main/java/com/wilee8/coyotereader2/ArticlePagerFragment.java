@@ -43,7 +43,7 @@ public class ArticlePagerFragment extends Fragment {
 		mPager = (ViewPager) rootView.findViewById(R.id.pager);
 		// For some reason using page transformers causes other fragments to render incorrectly until refreshed
 		mPager.setPageTransformer(true, new ZoomOutPageTransformer());
-		//TODO mPager.setOnPageChangeListener(new ItemOnPageChangeListener());
+		mPager.addOnPageChangeListener(new ArticleOnPageChangeListener());
 
 		mItems = mCallback.getItems();
 		mPagerAdapter = new ArticlePagerAdapter(getChildFragmentManager());
@@ -63,6 +63,8 @@ public class ArticlePagerFragment extends Fragment {
 
 	public interface ArticlePagerFragmentListener {
 		ArrayList<ArticleItem> getItems();
+
+		void onArticleSelected(int position);
 	}
 
 	private class ArticlePagerAdapter extends FragmentStatePagerAdapter {
@@ -131,5 +133,16 @@ public class ArticlePagerFragment extends Fragment {
 		public Fragment returnExistingElement(int position) {
 			return mFragmentList[position];
 		}
+	}
+
+	private class ArticleOnPageChangeListener extends ViewPager.SimpleOnPageChangeListener {
+
+		@Override
+		public void onPageSelected(int position) {
+			super.onPageSelected(position);
+
+			mCallback.onArticleSelected(position);
+		}
+
 	}
 }
