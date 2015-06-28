@@ -53,6 +53,14 @@ public class ArticlePagerFragment extends Fragment {
 		return rootView;
 	}
 
+	public void updateItems() {
+		mPagerAdapter.notifyDataSetChanged();
+	}
+
+	public void changeSelected(int position) {
+		mPager.setCurrentItem(position);
+	}
+
 	public interface ArticlePagerFragmentListener {
 		ArrayList<ArticleItem> getItems();
 	}

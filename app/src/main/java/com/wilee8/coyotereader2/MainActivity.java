@@ -936,7 +936,12 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	public void setFeedContents(ArrayList<ArticleItem> items) {
 		mItems = items;
 
-		//TODO update item pager
+		// Update article pager - only exists if pager is content frame
+		if(mContentFrame == 2) {
+			ArticlePagerFragment fragment =
+				(ArticlePagerFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[mContentFrame]);
+			fragment.updateItems();
+		}
 	}
 
 	@Override
@@ -988,6 +993,9 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			} else {
 				// selection made in side bar
 				// just change article in main content frame
+				ArticlePagerFragment fragment =
+					(ArticlePagerFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[mContentFrame]);
+				fragment.changeSelected(position);
 			}
 		} else {
 			Fragment fragment = new ArticlePagerFragment();
@@ -1007,7 +1015,13 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 			mContentFrame++;
 		}
-		// TODO update item
+
+		// for some reason the PageChangeListener isn't called if and only if the 0th element is selected
+		// call the callback function if this is the case
+		// TODO
+//		if (position == 0) {
+//			onItemFragmentSelected(position);
+//		}
 	}
 
 	@Override
