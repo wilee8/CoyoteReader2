@@ -17,6 +17,11 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.app.AppObservable;
+import rx.schedulers.Schedulers;
+
 public class ArticlePagerFragment extends Fragment {
 
 	private ArticlePagerFragmentListener mCallback;
@@ -46,9 +51,13 @@ public class ArticlePagerFragment extends Fragment {
 		mPager.addOnPageChangeListener(new ArticleOnPageChangeListener());
 
 		mItems = mCallback.getItems();
-		mPagerAdapter = new ArticlePagerAdapter(getChildFragmentManager());
-		mPager.setAdapter(mPagerAdapter);
-		mPager.setCurrentItem(getArguments().getInt("position", 0));
+		int position = getArguments().getInt("position", 0);
+		DataProcessedSubscriber subscriber = new DataProcessedSubscriber();
+		AppObservable.bindFragment(
+			this,
+			Observable.create(new ProcessDataObservable(position))
+				.subscribeOn(Schedulers.io()))
+			.subscribe(subscriber);
 
 		return rootView;
 	}
@@ -112,9 +121,6 @@ public class ArticlePagerFragment extends Fragment {
 			ArticleFragment newFragmentList[] = new ArticleFragment[newSize];
 
 			// copy old elements to new array
-//			for (int i = 0; i < oldSize; i++) {
-//				newFragmentList[i] = mFragmentList[i];
-//			}
 			System.arraycopy(mFragmentList, 0, newFragmentList, 0, oldSize);
 
 			for (int i = oldSize; i < newSize; i++) {
@@ -143,6 +149,40 @@ public class ArticlePagerFragment extends Fragment {
 
 			mCallback.onArticleSelected(position);
 		}
+	}
 
+	private class ProcessDataObservable implements Observable.OnSubscribe<Integer> {
+
+		private int position;
+
+		public ProcessDataObservable(int position) {
+			this.position = position;
+		}
+
+		@Override
+		public void call(Subscriber<? super Integer> subscriber) {
+			mPagerAdapter = new ArticlePagerAdapter(getChildFragmentManager());
+			subscriber.onNext(position);
+			subscriber.onCompleted();
+		}
+	}
+
+	private class DataProcessedSubscriber extends Subscriber<Integer> {
+
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+
+		}
+
+		@Override
+		public void onNext(Integer integer) {
+			mPager.setAdapter(mPagerAdapter);
+			mPager.setCurrentItem(integer);
+		}
 	}
 }
