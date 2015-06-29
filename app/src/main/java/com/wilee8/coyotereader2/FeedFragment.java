@@ -468,13 +468,16 @@ public class FeedFragment extends Fragment {
 		public void onClick(View view) {
 			TextView thisView = (TextView) view;
 			CardView newView = (CardView) thisView.getParent().getParent();
-			newView.setCardBackgroundColor(getResources().getColor(R.color.accent));
 			int oldSelected = mSelected;
 			mSelected = mPosition;
 
+			// adapter should reset views with new backgrounds
 			if (oldSelected != -1) {
 				mAdapter.notifyItemChanged(oldSelected);
 			}
+
+			mAdapter.notifyItemChanged(mSelected);
+
 
 			mCallback.selectArticle(mPosition);
 		}

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.app.AppObservable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class ArticlePagerFragment extends Fragment {
@@ -53,10 +53,10 @@ public class ArticlePagerFragment extends Fragment {
 		mItems = mCallback.getItems();
 		int position = getArguments().getInt("position", 0);
 		DataProcessedSubscriber subscriber = new DataProcessedSubscriber();
-		AppObservable.bindFragment(
-			this,
-			Observable.create(new ProcessDataObservable(position))
-				.subscribeOn(Schedulers.io()))
+
+		Observable.create(new ProcessDataObservable(position))
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
 			.subscribe(subscriber);
 
 		return rootView;
@@ -162,6 +162,7 @@ public class ArticlePagerFragment extends Fragment {
 		@Override
 		public void call(Subscriber<? super Integer> subscriber) {
 			mPagerAdapter = new ArticlePagerAdapter(getChildFragmentManager());
+			mPager.setAdapter(mPagerAdapter);
 			subscriber.onNext(position);
 			subscriber.onCompleted();
 		}
@@ -181,7 +182,6 @@ public class ArticlePagerFragment extends Fragment {
 
 		@Override
 		public void onNext(Integer integer) {
-			mPager.setAdapter(mPagerAdapter);
 			mPager.setCurrentItem(integer);
 		}
 	}
