@@ -554,7 +554,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
 					  R.string.error_fetch_data,
-					  Snackbar.LENGTH_SHORT)
+					  Snackbar.LENGTH_LONG)
+				.setAction(R.string.action_refresh, new SnackbarRefreshOnClickListener())
 				.show();
 		}
 
@@ -653,6 +654,13 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 					return lhs.getName().toLowerCase(locale).compareTo(rhs.getName().toLowerCase(locale));
 				}
 			});
+		}
+	}
+
+	private class SnackbarRefreshOnClickListener implements View.OnClickListener {
+		@Override
+		public void onClick(View view) {
+			refreshOnClick();
 		}
 	}
 
