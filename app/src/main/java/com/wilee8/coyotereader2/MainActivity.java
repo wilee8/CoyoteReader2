@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 	private ArrayList<ArticleItem> mItems;
 
-	private Toolbar mToolbar;
+	private ActionBar mActionBar;
 
 	private Boolean   mDualPane;
 	private int       mContentFrame;
@@ -123,13 +123,14 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		setContentView(R.layout.activity_main);
 
-		mToolbar = (Toolbar) findViewById(R.id.toolbar);
-		if (mToolbar != null) {
-			setSupportActionBar(mToolbar);
+		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		if (toolbar != null) {
+			setSupportActionBar(toolbar);
 		}
-		ActionBar ab = getSupportActionBar();
-		if (ab != null) {
-			ab.setDisplayShowHomeEnabled(true);
+		mActionBar = getSupportActionBar();
+		if (mActionBar != null) {
+			mActionBar.setDisplayShowHomeEnabled(true);
+			mActionBar.setDisplayShowTitleEnabled(true);
 		}
 
 		Boolean needToFetchData = false;
@@ -258,6 +259,12 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				mFrames[i].setVisibility(View.GONE);
 			}
 		}
+
+		if ((mActionBar != null) && (mContentFrame > 0)) {
+			mActionBar.setDisplayHomeAsUpEnabled(true);
+		}
+
+		mActionBar.setTitle(mTitles[mContentFrame]);
 
 		mQueue = Volley.newRequestQueue(this);
 
@@ -704,7 +711,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 			mContentFrame--;
 
-			mToolbar.setTitle(mTitles[mContentFrame]);
+			mActionBar.setTitle(mTitles[mContentFrame]);
 		}
 
 		if (mContentFrame == 0) {
@@ -797,6 +804,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		if (mItems != null) {
 			outState.putParcelable("mItems", Parcels.wrap(mItems));
+		}
+
+		if (mTitles != null) {
+			outState.putStringArray("mTitles", mTitles);
 		}
 	}
 
@@ -909,7 +920,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		}
 
 		mTitles[mContentFrame] = title;
-		mToolbar.setTitle(title);
+		mActionBar.setTitle(title);
 		ActionBar ab = getSupportActionBar();
 		if (ab != null) {
 			ab.setDisplayHomeAsUpEnabled(true);
