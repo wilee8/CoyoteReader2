@@ -104,11 +104,6 @@ public class ArticleFragment extends Fragment{
 			authorFrame.setVisibility(View.VISIBLE);
 		}
 
-		// Set summary
-		String imageCss = "<style>img{display: inline;max-width: 95%;display: block;margin-left: auto;margin-right: auto;}</style>" +
-			"<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
-		mSummaryFrame.loadDataWithBaseURL(null, imageCss + mItem.getSummary(), "text/html", "UTF-8", null);
-
 		WebSettings ws = mSummaryFrame.getSettings();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			ws.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
@@ -123,8 +118,6 @@ public class ArticleFragment extends Fragment{
 		ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
 		mSummaryFrame.setBackgroundColor(getResources().getColor(R.color.cardview_light_background));
-
-		mSummaryFrame.reload();
 
 		if ((savedInstanceState != null) && savedInstanceState.containsKey("progress")) {
 			float progress = savedInstanceState.getFloat("progress");
@@ -141,6 +134,12 @@ public class ArticleFragment extends Fragment{
 				mSummaryFrame.setOnLongClickListener(new WebComicOnLongClickListener(s));
 			}
 		}
+
+		// Set summary
+		String imageCss = "<style>img{display: inline;max-width: 95%;display: block;margin-left: auto;margin-right: auto;}</style>" +
+			"<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
+		mSummaryFrame.loadUrl("about:blank");
+		mSummaryFrame.loadData(imageCss + mItem.getSummary(), "text/html; charset=UTF-8", null);
 
 		return rootView;
 	}
