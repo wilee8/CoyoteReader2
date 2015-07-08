@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -220,13 +220,13 @@ public class NavFragment extends Fragment {
 			}
 
 			if (position == mSelected) {
-				navViewHolder.tagCardView.setCardBackgroundColor(getResources().getColor(R.color.accent));
+				navViewHolder.tagRow.setBackgroundColor(getResources().getColor(R.color.accent));
 			} else {
-				navViewHolder.tagCardView.setCardBackgroundColor(getResources().getColor(R.color.cardview_light_background));
+				navViewHolder.tagRow.setBackgroundColor(getResources().getColor(R.color.background_material_light));
 			}
 
-			navViewHolder.tagSelectAll.setOnClickListener(new NavSelectClickListener(tagItem));
-			if(!tagItem.getIsFeed()) {
+			navViewHolder.tagFrame.setOnClickListener(new NavSelectClickListener(tagItem));
+			if (!tagItem.getIsFeed()) {
 				navViewHolder.tagExpand.setOnClickListener(new NavExpandClickListener(tagItem));
 			}
 		}
@@ -239,18 +239,18 @@ public class NavFragment extends Fragment {
 
 	private class NavViewHolder extends RecyclerView.ViewHolder {
 		public ImageView      tagExpand;
-		public RelativeLayout tagSelectAll;
 		public TextView       tagName;
 		public TextView       tagUnreadCount;
-		public CardView       tagCardView;
+		public RelativeLayout tagFrame;
+		public LinearLayout   tagRow;
 
 		public NavViewHolder(View itemView) {
 			super(itemView);
 			tagExpand = (ImageView) itemView.findViewById(R.id.tagExpand);
-			tagSelectAll = (RelativeLayout) itemView.findViewById(R.id.tagSelectAll);
 			tagName = (TextView) itemView.findViewById(R.id.tagName);
 			tagUnreadCount = (TextView) itemView.findViewById(R.id.tagUnreadCount);
-			tagCardView = (CardView) itemView.findViewById(R.id.tagCardView);
+			tagFrame = (RelativeLayout) itemView.findViewById(R.id.tagFrame);
+			tagRow = (LinearLayout) itemView.findViewById(R.id.tagRow);
 		}
 	}
 
@@ -280,6 +280,7 @@ public class NavFragment extends Fragment {
 			tagIcon = (NetworkImageView) itemView.findViewById(R.id.tagIcon);
 		}
 	}
+
 	private class NavSelectClickListener implements OnClickListener {
 
 		private TagItem thisItem;
@@ -291,8 +292,9 @@ public class NavFragment extends Fragment {
 		@Override
 		public void onClick(View view) {
 			RelativeLayout thisView = (RelativeLayout) view;
-			CardView newView = (CardView) thisView.getParent();
-			newView.setCardBackgroundColor(getResources().getColor(R.color.accent));
+			LinearLayout newView = (LinearLayout) thisView.getParent();
+			newView.setBackgroundColor(getResources().getColor(R.color.accent));
+
 			int oldSelected = mSelected;
 			mSelected = mNavList.indexOf(thisItem);
 
@@ -316,18 +318,18 @@ public class NavFragment extends Fragment {
 		public void onClick(View view) {
 			int index = mNavList.indexOf(thisItem);
 
-			if(thisItem.getIsExpanded()) {
+			if (thisItem.getIsExpanded()) {
 				// expanded, remove all sub feeds so we can close
 				int count = 0;
-				while(!mNavList.get(index + 1).getIsTopLevel()) {
+				while (!mNavList.get(index + 1).getIsTopLevel()) {
 					mNavList.remove(index + 1);
 					mAdapter.notifyItemRemoved(index + 1);
 					count++;
 				}
 
 				// adjust selected item if shifted
-				if(mSelected > index) {
-					if(mSelected > (index + count)) {
+				if (mSelected > index) {
+					if (mSelected > (index + count)) {
 						// selected item not removed, adjust value
 						int oldSelected = mSelected;
 						mSelected = mSelected - count;
@@ -349,7 +351,7 @@ public class NavFragment extends Fragment {
 				mAdapter.notifyItemRangeInserted(index + 1, thisFeedList.size());
 
 				// adjust selected item if shifted
-				if(mSelected > index) {
+				if (mSelected > index) {
 					// selected item shifted, adjust value
 					int oldSelected = mSelected;
 					mSelected = mSelected + thisFeedList.size();

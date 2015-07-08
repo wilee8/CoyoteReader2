@@ -23,14 +23,14 @@
         android:baselineAligned="false"
         android:orientation="horizontal"
         android:fitsSystemWindows="true"
-        android:background="@color/card_background" >
+        android:background="@color/background_material_light" >
 
         <FrameLayout
             android:id="@+id/frame0"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/card_background" >
+            android:background="@color/background_material_light" >
         </FrameLayout>
 
         <FrameLayout
@@ -38,7 +38,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/card_background" >
+            android:background="@color/background_material_light" >
         </FrameLayout>
 
         <FrameLayout
@@ -46,7 +46,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/card_background" >
+            android:background="@color/background_material_light" >
         </FrameLayout>
 
     </LinearLayout>

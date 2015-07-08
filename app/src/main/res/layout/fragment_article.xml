@@ -3,19 +3,19 @@
             xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="@color/cardview_light_background"
+            android:background="@color/background_material_light"
     >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/cardview_light_background"
+        android:background="@color/background_material_light"
         android:orientation="vertical">
 
         <RelativeLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="@color/cardview_light_background">
+            android:background="@color/background_material_light">
 
             <ImageView
                 android:id="@+id/articleStar"
@@ -23,7 +23,7 @@
                 android:layout_height="45dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:background="@color/cardview_light_background"
+                android:background="@color/background_material_light"
                 android:contentDescription="@string/item_star_image_description"
                 android:paddingBottom="10dp"
                 android:paddingLeft="10dp"
@@ -35,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@+id/articleStar"
-                android:background="@color/cardview_light_background"
+                android:background="@color/background_material_light"
                 android:paddingBottom="8dp"
                 android:paddingEnd="16dp"
                 android:paddingStart="0dp"
@@ -47,7 +47,7 @@
             android:id="@+id/author_frame"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/cardview_light_background"
+            android:background="@color/background_material_light"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:textAppearance="?android:textAppearanceMedium"
@@ -57,7 +57,7 @@
             android:id="@+id/summary_frame"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="@color/cardview_light_background"
+            android:background="@color/background_material_light"
             tools:ignore="WebViewLayout"/>
     </LinearLayout>
 

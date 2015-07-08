@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.RequestQueue;
@@ -403,11 +403,11 @@ public class FeedFragment extends Fragment {
 //			holder.itemStar.setOnClickListener(new StarClickListener(position));
 
 			if ((mSelected != -1) && (position == mSelected)) {
-				viewHolder.articleCardView.setCardBackgroundColor(
+				viewHolder.articleWrapper.setBackgroundColor(
 					getResources().getColor(R.color.accent));
 			} else {
-				viewHolder.articleCardView.setCardBackgroundColor(
-					getResources().getColor(R.color.cardview_light_background));
+				viewHolder.articleWrapper.setBackgroundColor(
+					getResources().getColor(R.color.background_material_light));
 			}
 		}
 
@@ -427,13 +427,13 @@ public class FeedFragment extends Fragment {
 
 	private class ArticleViewHolder extends RecyclerView.ViewHolder {
 
-		public CardView  articleCardView;
-		public ImageView articleStar;
-		public TextView  articleInfo;
+		public RelativeLayout articleWrapper;
+		public ImageView      articleStar;
+		public TextView       articleInfo;
 
 		public ArticleViewHolder(View itemView) {
 			super(itemView);
-			articleCardView = (CardView) itemView.findViewById(R.id.articleCardView);
+			articleWrapper = (RelativeLayout) itemView.findViewById(R.id.articleWrapper);
 			articleStar = (ImageView) itemView.findViewById(R.id.articleStar);
 			articleInfo = (TextView) itemView.findViewById(R.id.articleInfo);
 		}
@@ -447,7 +447,7 @@ public class FeedFragment extends Fragment {
 					int totalItemcount = mLayoutManager.getItemCount();
 					int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
 
-					if(lastVisibleItem >= (totalItemcount - 1)) {
+					if (lastVisibleItem >= (totalItemcount - 1)) {
 						mFetchInProgress = true;
 						emitter.onNext(mContinuation);
 					}
@@ -467,7 +467,8 @@ public class FeedFragment extends Fragment {
 		@Override
 		public void onClick(View view) {
 			TextView thisView = (TextView) view;
-			CardView newView = (CardView) thisView.getParent().getParent();
+			RelativeLayout newView = (RelativeLayout) thisView.getParent();
+			newView.setBackgroundColor(getResources().getColor(R.color.accent));
 			int oldSelected = mSelected;
 			mSelected = mPosition;
 
@@ -475,9 +476,6 @@ public class FeedFragment extends Fragment {
 			if (oldSelected != -1) {
 				mAdapter.notifyItemChanged(oldSelected);
 			}
-
-			mAdapter.notifyItemChanged(mSelected);
-
 
 			mCallback.selectArticle(mPosition);
 		}
@@ -499,7 +497,7 @@ public class FeedFragment extends Fragment {
 		int totalItemcount = mLayoutManager.getItemCount();
 		int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
 
-		if(lastVisibleItem >= (totalItemcount - 4)) {
+		if (lastVisibleItem >= (totalItemcount - 4)) {
 			mFetchInProgress = true;
 			emitter.onNext(mContinuation);
 		}

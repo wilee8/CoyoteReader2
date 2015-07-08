@@ -117,7 +117,7 @@ public class ArticleFragment extends Fragment{
 
 		ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
-		mSummaryFrame.setBackgroundColor(getResources().getColor(R.color.cardview_light_background));
+		mSummaryFrame.setBackgroundColor(getResources().getColor(R.color.background_material_light));
 
 		if ((savedInstanceState != null) && savedInstanceState.containsKey("progress")) {
 			float progress = savedInstanceState.getFloat("progress");
