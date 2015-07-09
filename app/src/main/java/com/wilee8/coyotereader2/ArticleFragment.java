@@ -17,6 +17,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.wilee8.coyotereader2.containers.ArticleItem;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ArticleFragment extends Fragment{
+public class ArticleFragment extends Fragment {
 
 	private ArticleFragmentListener mCallback;
 	private Context                 mContext;
@@ -36,6 +37,10 @@ public class ArticleFragment extends Fragment{
 
 	private WebView   mSummaryFrame;
 	private ImageView mStarFrame;
+
+	private ScrollView mArticleScroll;
+	private int        mScrollX;
+	private int        mScrollY;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -52,6 +57,14 @@ public class ArticleFragment extends Fragment{
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		if (savedInstanceState != null) {
+			mScrollX = savedInstanceState.getInt("scrollX", -1);
+			mScrollY = savedInstanceState.getInt("scrollY", -1);
+		} else {
+			mScrollX = -1;
+			mScrollY = -1;
+		}
+
 		mContext = getActivity();
 	}
 
@@ -66,6 +79,7 @@ public class ArticleFragment extends Fragment{
 
 		TextView titleFrame = (TextView) rootView.findViewById(R.id.title_frame);
 		TextView authorFrame = (TextView) rootView.findViewById(R.id.author_frame);
+		mArticleScroll = (ScrollView) rootView.findViewById(R.id.articleScroll);
 		mSummaryFrame = (WebView) rootView.findViewById(R.id.summary_frame);
 		mStarFrame = (ImageView) rootView.findViewById(R.id.articleStar);
 
@@ -95,7 +109,7 @@ public class ArticleFragment extends Fragment{
 		titleFrame.setLinksClickable(true);
 		titleFrame.setMovementMethod(LinkMovementMethod.getInstance());
 		titleFrame.setText(Html.fromHtml("<b><a href=\"" + mItem.getCanonical() + "\">"
-											  + mItem.getTitle() + "</a></b>"));
+											 + mItem.getTitle() + "</a></b>"));
 
 		// Set author
 		String author = mItem.getAuthor();
@@ -118,12 +132,7 @@ public class ArticleFragment extends Fragment{
 		ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
 		mSummaryFrame.setBackgroundColor(getResources().getColor(R.color.background_material_light));
-
-		if ((savedInstanceState != null) && savedInstanceState.containsKey("progress")) {
-			float progress = savedInstanceState.getFloat("progress");
-
-			mSummaryFrame.setWebViewClient(new MyWebViewClient(progress, mSummaryFrame));
-		}
+		mSummaryFrame.setWebViewClient(new MyWebViewClient());
 
 		// get mouseover text for webcomics
 		if (mItem.getOrigin().matches("xkcd.com")) {
@@ -144,16 +153,18 @@ public class ArticleFragment extends Fragment{
 		return rootView;
 	}
 
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+
+		int scrollX = mArticleScroll.getScrollX();
+		int scrollY = mArticleScroll.getScrollY();
+
+		outState.putInt("scrollX", scrollX);
+		outState.putInt("scrollY", scrollY);
+	}
+
 	private class MyWebViewClient extends WebViewClient {
-		private float   mProgress;
-		private WebView mWebView;
-
-		public MyWebViewClient(float progress, WebView webview) {
-			super();
-
-			mProgress = progress;
-			mWebView = webview;
-		}
 
 		@Override
 		public void onPageFinished(WebView view, String url) {
@@ -162,10 +173,9 @@ public class ArticleFragment extends Fragment{
 			view.postDelayed(new Runnable() {
 				@Override
 				public void run() {
-					float positionTopView = mSummaryFrame.getTop();
-					float contentHeight = mSummaryFrame.getContentHeight();
-					int currentScrollPosition = Math.round((contentHeight * mProgress) + positionTopView);
-					mWebView.scrollTo(0, currentScrollPosition);
+					if ((mScrollX != -1) && (mScrollY != -1)) {
+						mArticleScroll.scrollTo(mScrollX, mScrollY);
+					}
 				}
 			}, 300);
 		}
