@@ -126,7 +126,7 @@ public class ArticleFragment extends Fragment{
 		}
 
 		// get mouseover text for webcomics
-		if (mItem.getOrigin().matches("http://xkcd.com/")) {
+		if (mItem.getOrigin().matches("xkcd.com")) {
 			Pattern findTitle = Pattern.compile("title=\"(.*?)\"");
 			Matcher matcher = findTitle.matcher(mItem.getSummary());
 			while (matcher.find()) {

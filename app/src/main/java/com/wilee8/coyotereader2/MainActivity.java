@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.transition.TransitionManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -1056,6 +1057,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
 		fragment.changeSelected(position);
 
+		mTitles[mContentFrame] = Html.fromHtml(item.getOrigin()).toString();
+		mActionBar.setTitle(mTitles[mContentFrame]);
 		//TODO mark item as read
 	}
 
