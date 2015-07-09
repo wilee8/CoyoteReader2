@@ -17,11 +17,6 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
-
 public class ArticlePagerFragment extends Fragment {
 
 	private ArticlePagerFragmentListener mCallback;
@@ -52,12 +47,9 @@ public class ArticlePagerFragment extends Fragment {
 
 		mItems = mCallback.getItems();
 		int position = getArguments().getInt("position", 0);
-		DataProcessedSubscriber subscriber = new DataProcessedSubscriber();
-
-		Observable.create(new ProcessDataObservable(position))
-			.subscribeOn(Schedulers.io())
-			.observeOn(AndroidSchedulers.mainThread())
-			.subscribe(subscriber);
+		mPagerAdapter = new ArticlePagerAdapter(getChildFragmentManager());
+		mPager.setAdapter(mPagerAdapter);
+		mPager.setCurrentItem(position);
 
 		return rootView;
 	}
@@ -148,41 +140,6 @@ public class ArticlePagerFragment extends Fragment {
 			super.onPageSelected(position);
 
 			mCallback.onArticleSelected(position);
-		}
-	}
-
-	private class ProcessDataObservable implements Observable.OnSubscribe<Integer> {
-
-		private int position;
-
-		public ProcessDataObservable(int position) {
-			this.position = position;
-		}
-
-		@Override
-		public void call(Subscriber<? super Integer> subscriber) {
-			mPagerAdapter = new ArticlePagerAdapter(getChildFragmentManager());
-			mPager.setAdapter(mPagerAdapter);
-			subscriber.onNext(position);
-			subscriber.onCompleted();
-		}
-	}
-
-	private class DataProcessedSubscriber extends Subscriber<Integer> {
-
-		@Override
-		public void onCompleted() {
-			unsubscribe();
-		}
-
-		@Override
-		public void onError(Throwable e) {
-
-		}
-
-		@Override
-		public void onNext(Integer integer) {
-			mPager.setCurrentItem(integer);
 		}
 	}
 }
