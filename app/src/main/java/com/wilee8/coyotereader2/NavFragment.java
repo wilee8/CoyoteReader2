@@ -366,4 +366,16 @@ public class NavFragment extends Fragment {
 			mAdapter.notifyItemChanged(index);
 		}
 	}
+
+	public void updateUnreadCount(String id) {
+		// the unread counts inside the nav list was updated in MainActivity
+		// just need to refresh updated views here
+		for (int i = 0; i < mNavList.size(); i++) {
+			TagItem tagItem = mNavList.get(i);
+			if (tagItem.getId().equalsIgnoreCase(id)) {
+				mAdapter.notifyItemChanged(i);
+				break;
+			}
+		}
+	}
 }

@@ -49,6 +49,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import retrofit.RequestInterceptor;
+import retrofit.RestAdapter;
+import retrofit.mime.TypedByteArray;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.app.AppObservable;
@@ -93,7 +96,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	// needed to determine when all the main volley requests have returned and can be processed
 	private static int NUMBER_MAIN_REQUESTS = 5;
 
-	private RequestQueue mQueue;
+	private InoreaderService mService;
+	private RequestQueue     mQueue;
 	private final String mainActivityQueueTag = "MainActivity";
 
 	@Override
@@ -268,6 +272,22 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mActionBar.setTitle(mTitles[mContentFrame]);
 
 		mQueue = Volley.newRequestQueue(this);
+
+		RequestInterceptor requestInterceptor = new RequestInterceptor() {
+			@Override
+			public void intercept(RequestFacade request) {
+				request.addHeader("Authorization", "GoogleLogin auth=" + mAuthToken);
+				request.addHeader("AppId", getString(R.string.app_id));
+				request.addHeader("AppKey", getString(R.string.app_key));
+			}
+		};
+
+		RestAdapter restAdapter = new RestAdapter.Builder()
+			.setEndpoint("https://www.inoreader.com")
+			.setRequestInterceptor(requestInterceptor)
+			.build();
+
+		mService = restAdapter.create(InoreaderService.class);
 
 		if (needToFetchData) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
@@ -1048,6 +1068,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		return mItems;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void onArticleSelected(int position) {
 		ArticleItem item = mItems.get(position);
@@ -1059,7 +1080,139 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		mTitles[mContentFrame] = Html.fromHtml(item.getOrigin()).toString();
 		mActionBar.setTitle(mTitles[mContentFrame]);
-		//TODO mark item as read
+
+		Map queryMap = new HashMap<>();
+		queryMap.put("a", "user/-/state/com.google/read");
+		queryMap.put("i", item.getId());
+
+		// check if already marked as read before launching service
+		boolean isUnread = true;
+		String readCategory = "user/" + mUserId + "/state/com.google/read";
+
+		for (int i = 0; i < item.getCategories().size(); i++) {
+			if (item.getCategories().get(i).matches(readCategory)) {
+				isUnread = false;
+				break;
+			}
+		}
+
+		if(isUnread) {
+			// mark item as read
+			AppObservable.bindActivity(
+				this,
+				mService.editTag(queryMap)
+					.lift(new GetUnreadCountsOperator())
+					.lift(new UpdateUnreadCounts())
+					.subscribeOn(Schedulers.io()))
+				.subscribe(new UpdateUnreadDisplays());
+
+			fragment.updateUnreadStatus(item.getId(), false);
+		}
+	}
+
+	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, retrofit.client.Response> {
+		@Override
+		public Subscriber<? super retrofit.client.Response> call(final Subscriber<? super UnreadCounts> subscriber) {
+			return new Subscriber<retrofit.client.Response>() {
+				@Override
+				public void onCompleted() {
+					subscriber.onCompleted();
+				}
+
+				@Override
+				public void onError(Throwable e) {
+					subscriber.onError(e);
+				}
+
+				@Override
+				public void onNext(retrofit.client.Response response) {
+					String reponseBody = new String(((TypedByteArray) response.getBody()).getBytes());
+
+					if (reponseBody.equalsIgnoreCase("OK")) {
+						subscriber.onNext(mService.unreadCounts());
+					} else {
+						subscriber.onError(null);
+					}
+				}
+			};
+		}
+	}
+
+	private class UpdateUnreadCounts implements Observable.Operator<String, UnreadCounts> {
+		@Override
+		public Subscriber<? super UnreadCounts> call(final Subscriber<? super String> subscriber) {
+			return new Subscriber<UnreadCounts>() {
+				@Override
+				public void onCompleted() {
+					subscriber.onCompleted();
+				}
+
+				@Override
+				public void onError(Throwable e) {
+					subscriber.onError(e);
+				}
+
+				@Override
+				public void onNext(UnreadCounts unreadCounts) {
+					// update unread displays for every id that changed
+					for (int i = 0; i < mNavList.size(); i++) {
+						// check if unread count changed on top level item
+						TagItem tagItem = mNavList.get(i);
+						String id = tagItem.getId();
+
+						int oldUnreadNumber = tagItem.getUnreadCount();
+						int newUnreadNumber = unreadCounts.getUnreadCount(id);
+						if (oldUnreadNumber != newUnreadNumber) {
+							tagItem.setUnreadCount(newUnreadNumber);
+							subscriber.onNext(id);
+						}
+
+						// update unread counts on child items
+						ArrayList<TagItem> subNavList = tagItem.getFeeds();
+						if (subNavList != null) {
+							for (int j = 0; j < subNavList.size(); j++) {
+								tagItem = subNavList.get(j);
+								id = tagItem.getId();
+
+								oldUnreadNumber = tagItem.getUnreadCount();
+								newUnreadNumber = unreadCounts.getUnreadCount(id);
+								if (oldUnreadNumber != newUnreadNumber) {
+									tagItem.setUnreadCount(newUnreadNumber);
+									subscriber.onNext(id);
+								}
+							}
+						}
+					}
+
+					mUnreadCounts = unreadCounts;
+
+					subscriber.onCompleted();
+				}
+			};
+		}
+	}
+
+	private class UpdateUnreadDisplays extends Subscriber<String> {
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_mark_unread,
+					  Snackbar.LENGTH_SHORT)
+				.show();
+		}
+
+		@Override
+		public void onNext(String id) {
+			// Update NavFragment
+			NavFragment fragment = (NavFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[0]);
+			fragment.updateUnreadCount(id);
+		}
 	}
 
 	private void addRefreshButton() {

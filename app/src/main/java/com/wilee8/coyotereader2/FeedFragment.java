@@ -502,4 +502,46 @@ public class FeedFragment extends Fragment {
 			emitter.onNext(mContinuation);
 		}
 	}
+
+	public void updateUnreadStatus(String id, boolean unread) {
+		for (int i = 0; i < mItems.size(); i++) {
+			ArticleItem item = mItems.get(i);
+			if (item.getId().equalsIgnoreCase(id)) {
+				ArrayList<String> categories = item.getCategories();
+
+				String readCategory = "user/" + mCallback.getUserId() + "/state/com.google/read";
+
+				if (unread) {
+					// mark as unread
+					for (int j = 0; j < categories.size(); j++) {
+						String category = categories.get(j);
+						if (category.equalsIgnoreCase(readCategory)) {
+							categories.remove(j);
+							mAdapter.notifyItemChanged(i);
+							break;
+						}
+					}
+				} else {
+					// mark as read
+					boolean alreadyRead = false;
+
+					for (int j = 0; j < categories.size(); j++) {
+						String category = categories.get(j);
+
+						if (category.equalsIgnoreCase(readCategory)) {
+							alreadyRead = true;
+							break;
+						}
+					}
+
+					if (!(alreadyRead)) {
+						categories.add(readCategory);
+						mAdapter.notifyItemChanged(i);
+					}
+
+					break;
+				}
+			}
+		}
+	}
 }
