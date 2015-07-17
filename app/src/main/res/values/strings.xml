@@ -17,6 +17,7 @@
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
     <string name="auth_token">authToken</string>
+    <string name="pref_dialog_title">Prefrences</string>
     <string name="pref_alpha">Sort feeds alphabetically</string>
     <string name="pref_alpha_summ">If unchecked, use manual sort order</string>
     <string name="pref_unread">Show unread items only</string>

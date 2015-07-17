@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<CheckBoxPreference
+	<SwitchPreference
 		android:key="pref_alpha"
 		android:title="@string/pref_alpha"
 		android:summary="@string/pref_alpha_summ"
 		android:defaultValue="true" />
-	<CheckBoxPreference
+	<SwitchPreference
 		android:key="pref_unread"
 		android:title="@string/pref_unread"
 		android:defaultValue="false" />
-	<CheckBoxPreference
+	<SwitchPreference
 		android:key="pref_confirm"
 		android:title="@string/pref_confirm"
 		android:defaultValue="true" />

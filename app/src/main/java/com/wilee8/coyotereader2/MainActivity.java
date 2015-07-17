@@ -812,6 +812,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		//noinspection SimplifiableIfStatement
 		switch (id) {
 			case R.id.action_settings:
+				FragmentManager fm = getSupportFragmentManager();
+				SettingsDialog fragment = new SettingsDialog();
+				fragment.show(fm, null);
+
 				return true;
 			case android.R.id.home:
 				onBackPressed();
