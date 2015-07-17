@@ -27,13 +27,10 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.TagItem;
 import com.wilee8.coyotereader2.gson.Category;
-import com.wilee8.coyotereader2.gson.GsonRequest;
 import com.wilee8.coyotereader2.gson.StreamPref;
 import com.wilee8.coyotereader2.gson.StreamPrefs;
 import com.wilee8.coyotereader2.gson.Subscription;
@@ -55,11 +52,12 @@ import java.util.Map;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
+import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.app.AppObservable;
-import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func5;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements NavFragment.NavFragmentListener,
@@ -102,9 +100,6 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	private String               mMarkAllReadFeed;
 	private long                 mUpdated;
 	private FloatingActionButton mFab;
-
-	// needed to determine when all the main volley requests have returned and can be processed
-	private static int NUMBER_MAIN_REQUESTS = 5;
 
 	private InoreaderService mService;
 	private RequestQueue     mQueue;
@@ -329,276 +324,118 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
 			AppObservable.bindActivity(
 				this,
-				Observable.create(new FetchDataObserver())
-					.skip(NUMBER_MAIN_REQUESTS - 1)
-					.lift(new ProcessDataOperator())
+				Observable.zip(mService.unreadCounts(),
+							   mService.tagList(),
+							   mService.subscriptionList(),
+							   mService.userInfo(),
+							   mService.streamPrefs(),
+							   new ProcessDataZip())
 					.subscribeOn(Schedulers.io()))
 				.subscribe(initFinishedSubscriber);
 		}
 	}
 
-	private class FetchDataObserver implements Observable.OnSubscribe<Void> {
-
+	private class ProcessDataZip implements Func5<UnreadCounts, TagList, SubscriptionList, UserInfo, StreamPrefs, Void> {
 		@Override
-		public void call(final Subscriber<? super Void> subscriber) {
-			String url;
-			Map<String, String> headers = new HashMap<>();
-			headers.put("Authorization", "GoogleLogin auth=" + mAuthToken);
-			headers.put("AppId", getString(R.string.app_id));
-			headers.put("AppKey", getString(R.string.app_key));
+		public Void call(UnreadCounts unreadCounts, TagList tagList, SubscriptionList subscriptionList, UserInfo userInfo, StreamPrefs streamPrefs) {
+			mUnreadCounts = unreadCounts;
+			mTagList = tagList;
+			mSubscriptionList = subscriptionList;
+			mUserId = userInfo.getUserId();
+			mStreamPrefs = streamPrefs;
+			mNavList = new ArrayList<>();
 
-			// get unread counts
-			if (mUnreadCounts == null) {
-				url = "https://www.inoreader.com/reader/api/0/unread-count?output=json";
-				@SuppressWarnings("unchecked")
-				GsonRequest<UnreadCounts> unreadCountsGsonRequest =
-					new GsonRequest<>(
-						url, UnreadCounts.class, headers,
-						new Response.Listener<UnreadCounts>() {
-							@Override
-							public void onResponse(UnreadCounts response) {
-								mUnreadCounts = response;
-								subscriber.onNext(null);
-							}
-						}, new Response.ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							subscriber.onError(error);
-						}
-					});
+			// set all items at the start
+			TagItem tagItemAllItems = new TagItem();
+			String allItemsId = "user/" + mUserId + "/state/com.google/reading-list";
+			tagItemAllItems.setName("All Items");
+			tagItemAllItems.setId(allItemsId);
 
-				unreadCountsGsonRequest.setTag(mainActivityQueueTag);
-				mQueue.add(unreadCountsGsonRequest);
-			} else {
-				subscriber.onNext(null);
+			try {
+				tagItemAllItems.setUnreadCount(mUnreadCounts.getUnreadCount(allItemsId));
+			} catch (InvalidParameterException e) {
+				tagItemAllItems.setUnreadCount(0);
 			}
+			tagItemAllItems.setIsFeed(true);
+			tagItemAllItems.setIsTopLevel(true);
 
-			// get list of tags
-			if (mTagList == null) {
-				url = "https://www.inoreader.com/reader/api/0/tag/list";
-				@SuppressWarnings("unchecked")
-				GsonRequest<TagList> tagListGsonRequest =
-					new GsonRequest<>(
-						url, TagList.class, headers,
-						new Response.Listener<TagList>() {
-							@Override
-							public void onResponse(TagList response) {
-								mTagList = response;
-								subscriber.onNext(null);
-							}
-						}, new Response.ErrorListener() {
+			tagItemAllItems.setResId(R.drawable.clear_favicon);
 
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							subscriber.onError(error);
-						}
-					});
+			mNavList.add(tagItemAllItems);
 
-				tagListGsonRequest.setTag(mainActivityQueueTag);
-				mQueue.add(tagListGsonRequest);
-			} else {
-				subscriber.onNext(null);
+			// set starred
+			TagItem tagItemStarred = new TagItem();
+			String starredId = "user/" + mUserId + "/state/com.google/starred";
+			tagItemStarred.setName("Favorites");
+			tagItemStarred.setId(starredId);
+
+			try {
+				tagItemStarred.setUnreadCount(mUnreadCounts.getUnreadCount("user/-/state/com.google/starred"));
+			} catch (InvalidParameterException e) {
+				tagItemStarred.setUnreadCount(0);
 			}
+			tagItemStarred.setIsFeed(true);
+			tagItemStarred.setIsTopLevel(true);
 
-			// get subscription list
-			if (mSubscriptionList == null) {
-				url = "https://www.inoreader.com/reader/api/0/subscription/list";
-				@SuppressWarnings("unchecked")
-				GsonRequest<SubscriptionList> subscriptionListGsonRequest =
-					new GsonRequest<>(
-						url, SubscriptionList.class, headers,
-						new Response.Listener<SubscriptionList>() {
-							@Override
-							public void onResponse(SubscriptionList response) {
-								mSubscriptionList = response;
-								subscriber.onNext(null);
-							}
-						}, new Response.ErrorListener() {
+			tagItemStarred.setResId(R.drawable.ic_star_grey600_48dp);
 
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							subscriber.onError(error);
-						}
-					});
+			mNavList.add(tagItemStarred);
 
-				subscriptionListGsonRequest.setTag(mainActivityQueueTag);
-				mQueue.add(subscriptionListGsonRequest);
-			} else {
-				subscriber.onNext(null);
-			}
+			// Add tags to tag list
+			ArrayList<Tag> tags = mTagList.getTags();
 
-			// get user info
-			if (mUserId == null) {
-				url = "https://www.inoreader.com/reader/api/0/user-info";
-				@SuppressWarnings("unchecked")
-				GsonRequest<UserInfo> userInfoGsonRequest =
-					new GsonRequest<>(
-						url, UserInfo.class, headers,
-						new Response.Listener<UserInfo>() {
-							@Override
-							public void onResponse(UserInfo response) {
-								mUserId = response.getUserId();
-								subscriber.onNext(null);
-							}
-						}, new Response.ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							subscriber.onError(error);
-						}
-					});
+			// skip first three tags
+			for (int i = 3; i < tags.size(); i++) {
+				Tag tag = tags.get(i);
+				TagItem tagItem = new TagItem();
 
-				userInfoGsonRequest.setTag(mainActivityQueueTag);
-				mQueue.add(userInfoGsonRequest);
-			} else {
-				subscriber.onNext(null);
-			}
+				String tagId = tag.getId();
+				tagItem.setId(tagId);
 
-			// get stream preferences
-			if (mStreamPrefs == null) {
-				url = "https://www.inoreader.com/reader/api/0/preference/stream/list";
-				@SuppressWarnings("unchecked")
-				GsonRequest<StreamPrefs> streamPrefsGsonRequest =
-					new GsonRequest<>(
-						url, StreamPrefs.class, headers,
-						new Response.Listener<StreamPrefs>() {
-							@Override
-							public void onResponse(StreamPrefs response) {
-								mStreamPrefs = response;
-								subscriber.onNext(null);
-							}
-						}, new Response.ErrorListener() {
-						@Override
-						public void onErrorResponse(VolleyError error) {
-							subscriber.onError(error);
-						}
-					});
+				int lastSlash = tagId.lastIndexOf("/");
+				tagItem.setName(tagId.substring(lastSlash + 1));
 
-				streamPrefsGsonRequest.setTag(mainActivityQueueTag);
-				mQueue.add(streamPrefsGsonRequest);
-			} else {
-				subscriber.onNext(null);
-			}
+				tagItem.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
+				tagItem.setIsFeed(false);
+				tagItem.setIsTopLevel(true);
 
-		}
-	}
+				tagItem.setResId(R.drawable.ic_folder_grey600_48dp);
 
-	private class ProcessDataOperator implements Observable.Operator<Void, Void> {
-		@Override
-		public Subscriber<? super Void> call(final Subscriber<? super Void> s) {
-			return new Subscriber<Void>(s) {
-				@Override
-				public void onCompleted() {
-					if (!s.isUnsubscribed()) {
-						s.onCompleted();
-					}
+				// Get feeds for this tag
+				if (!tagItem.getIsFeed()) {
+					ArrayList<TagItem> subFeedList = new ArrayList<>();
+					tagItem.setFeeds(subFeedList);
+					getTagFeeds(tagId, tagItem.getFeeds());
+				} else {
+					tagItem.setFeeds(null);
 				}
 
-				@Override
-				public void onError(Throwable throwable) {
-					if (!s.isUnsubscribed()) {
-						s.onError(throwable);
-					}
+				mNavList.add(tagItem);
+			}
+
+			// add untagged subscriptions
+			ArrayList<Subscription> subscriptions = mSubscriptionList.getSubscriptions();
+
+			for (int i = 0; i < subscriptions.size(); i++) {
+				Subscription subscription = subscriptions.get(i);
+
+				// only add a subscription to the nav bar if it has no tags
+				if (subscription.getCategories().size() == 0) {
+					TagItem tagItem = new TagItem();
+
+					String tagId = subscription.getId();
+					tagItem.setId(tagId);
+					tagItem.setName(subscription.getTitle());
+					tagItem.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
+					tagItem.setIsFeed(true);
+					tagItem.setIsTopLevel(true);
+					tagItem.setIconUrl(subscription.getIconUrl());
+
+					mNavList.add(tagItem);
 				}
+			}
 
-				@Override
-				public void onNext(Void aVoid) {
-					if (!s.isUnsubscribed()) {
-						mNavList = new ArrayList<>();
-
-						// set all items at the start
-						TagItem tagItemAllItems = new TagItem();
-						String allItemsId = "user/" + mUserId + "/state/com.google/reading-list";
-						tagItemAllItems.setName("All Items");
-						tagItemAllItems.setId(allItemsId);
-
-						try {
-							tagItemAllItems.setUnreadCount(mUnreadCounts.getUnreadCount(allItemsId));
-						} catch (InvalidParameterException e) {
-							tagItemAllItems.setUnreadCount(0);
-						}
-						tagItemAllItems.setIsFeed(true);
-						tagItemAllItems.setIsTopLevel(true);
-
-						tagItemAllItems.setResId(R.drawable.clear_favicon);
-
-						mNavList.add(tagItemAllItems);
-
-						// set starred
-						TagItem tagItemStarred = new TagItem();
-						String starredId = "user/" + mUserId + "/state/com.google/starred";
-						tagItemStarred.setName("Favorites");
-						tagItemStarred.setId(starredId);
-
-						try {
-							tagItemStarred.setUnreadCount(mUnreadCounts.getUnreadCount("user/-/state/com.google/starred"));
-						} catch (InvalidParameterException e) {
-							tagItemStarred.setUnreadCount(0);
-						}
-						tagItemStarred.setIsFeed(true);
-						tagItemStarred.setIsTopLevel(true);
-
-						tagItemStarred.setResId(R.drawable.ic_star_grey600_48dp);
-
-						mNavList.add(tagItemStarred);
-
-						// Add tags to tag list
-						ArrayList<Tag> tags = mTagList.getTags();
-
-						// skip first three tags
-						for (int i = 3; i < tags.size(); i++) {
-							Tag tag = tags.get(i);
-							TagItem tagItem = new TagItem();
-
-							String tagId = tag.getId();
-							tagItem.setId(tagId);
-
-							int lastSlash = tagId.lastIndexOf("/");
-							tagItem.setName(tagId.substring(lastSlash + 1));
-
-							tagItem.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
-							tagItem.setIsFeed(false);
-							tagItem.setIsTopLevel(true);
-
-							tagItem.setResId(R.drawable.ic_folder_grey600_48dp);
-
-							// Get feeds for this tag
-							if (!tagItem.getIsFeed()) {
-								ArrayList<TagItem> subFeedList = new ArrayList<>();
-								tagItem.setFeeds(subFeedList);
-								getTagFeeds(tagId, tagItem.getFeeds());
-							} else {
-								tagItem.setFeeds(null);
-							}
-
-							mNavList.add(tagItem);
-						}
-
-						// add untagged subscriptions
-						ArrayList<Subscription> subscriptions = mSubscriptionList.getSubscriptions();
-
-						for (int i = 0; i < subscriptions.size(); i++) {
-							Subscription subscription = subscriptions.get(i);
-
-							// only add a subscription to the nav bar if it has no tags
-							if (subscription.getCategories().size() == 0) {
-								TagItem tagItem = new TagItem();
-
-								String tagId = subscription.getId();
-								tagItem.setId(tagId);
-								tagItem.setName(subscription.getTitle());
-								tagItem.setUnreadCount(mUnreadCounts.getUnreadCount(tagId));
-								tagItem.setIsFeed(true);
-								tagItem.setIsTopLevel(true);
-								tagItem.setIconUrl(subscription.getIconUrl());
-
-								mNavList.add(tagItem);
-							}
-						}
-
-						s.onNext(null);
-					}
-				}
-			};
+			return null;
 		}
 	}
 
@@ -914,11 +751,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mStreamPrefs = null;
 
 		InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
-		Observable.create(new FetchDataObserver())
-			.skip(NUMBER_MAIN_REQUESTS - 1)
-			.lift(new ProcessDataOperator())
-			.subscribeOn(Schedulers.io())
-			.observeOn(AndroidSchedulers.mainThread())
+		AppObservable.bindActivity(
+			this,
+			Observable.zip(mService.unreadCounts(),
+						   mService.tagList(),
+						   mService.subscriptionList(),
+						   mService.userInfo(),
+						   mService.streamPrefs(),
+						   new ProcessDataZip())
+				.subscribeOn(Schedulers.io()))
 			.subscribe(initFinishedSubscriber);
 	}
 
@@ -1161,10 +1002,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		}
 	}
 
-	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, retrofit.client.Response> {
+	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, Response> {
 		@Override
-		public Subscriber<? super retrofit.client.Response> call(final Subscriber<? super UnreadCounts> subscriber) {
-			return new Subscriber<retrofit.client.Response>() {
+		public Subscriber<? super Response> call(final Subscriber<? super UnreadCounts> subscriber) {
+			return new Subscriber<Response>() {
 				@Override
 				public void onCompleted() {
 					subscriber.onCompleted();
@@ -1176,11 +1017,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				}
 
 				@Override
-				public void onNext(retrofit.client.Response response) {
+				public void onNext(Response response) {
 					String reponseBody = new String(((TypedByteArray) response.getBody()).getBytes());
 
 					if (reponseBody.equalsIgnoreCase("OK")) {
-						subscriber.onNext(mService.unreadCounts());
+						subscriber.onNext(mService.unreadCountsObject());
 					} else {
 						subscriber.onError(null);
 					}
