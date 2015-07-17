@@ -33,4 +33,9 @@
     <string name="feed_row_image_description">Feed icon</string>
     <string name="item_star_image_description">Favorites</string>
 
+    <!-- alert string -->
+    <string name="alert_mark_all_as_read">Mark all as read?</string>
+    <string name="alert_ok">OK</string>
+    <string name="alert_cancel">Cancel</string>
+
 </resources>

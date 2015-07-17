@@ -51,6 +51,7 @@ public class FeedFragment extends Fragment {
 
 	private String                  mFeedId;
 	private String                  mContinuation;
+	private long                    mUpdated;
 	private Subject<String, String> emitter;
 	private Subscription            mEmitterSubscription;
 	private Boolean                 mFetchInProgress;
@@ -73,12 +74,14 @@ public class FeedFragment extends Fragment {
 				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 				mSelected = savedInstanceState.getInt("mSelected", -1);
 				mContinuation = savedInstanceState.getString("mContinuation", null);
+				mUpdated = savedInstanceState.getLong("mUpdated", -1);
 				mFetchInProgress = savedInstanceState.getBoolean("mFetchInProgress", false);
 			} else {
 				mItems = new ArrayList<>();
 				mCallback.clearStreamContents();
 				mSelected = -1;
 				mContinuation = null;
+				mUpdated = -1;
 				mFetchInProgress = false;
 			}
 		} else {
@@ -86,6 +89,7 @@ public class FeedFragment extends Fragment {
 			mCallback.clearStreamContents();
 			mSelected = -1;
 			mContinuation = null;
+			mUpdated = -1;
 			mFetchInProgress = false;
 		}
 	}
@@ -162,6 +166,7 @@ public class FeedFragment extends Fragment {
 		outState.putParcelable("mItems", Parcels.wrap(mItems));
 		outState.putString("mContinuation", mContinuation);
 		outState.putInt("mSelected", mSelected);
+		outState.putLong("mUpdated", mUpdated);
 	}
 
 	private class FetchItems implements Observable.Operator<Integer, String> {
@@ -262,7 +267,7 @@ public class FeedFragment extends Fragment {
 
 		@Override
 		public void onNext(Integer integer) {
-			mCallback.setFeedContents(mItems);
+			mCallback.setFeedContents(mItems, mFeedId, mUpdated);
 
 			mProgress.setVisibility(View.GONE);
 
@@ -275,6 +280,7 @@ public class FeedFragment extends Fragment {
 	// function returns the index of the first new item
 	private int addArticles(StreamContents contents) {
 		mContinuation = contents.getContinuation();
+		mUpdated = contents.getUpdated();
 
 		if (mItems.size() != 0) {
 			// if footer is present, remove so we can append all
@@ -323,7 +329,7 @@ public class FeedFragment extends Fragment {
 
 		void clearStreamContents();
 
-		void setFeedContents(ArrayList<ArticleItem> items);
+		void setFeedContents(ArrayList<ArticleItem> items, String id, long updated);
 
 		String getUserId();
 
@@ -504,7 +510,8 @@ public class FeedFragment extends Fragment {
 	}
 
 	public void updateUnreadStatus(String id, boolean unread) {
-		for (int i = 0; i < mItems.size(); i++) {
+		// size of mItems includes footer view we need to ignore
+		for (int i = 0; i < mItems.size() - 1; i++) {
 			ArticleItem item = mItems.get(i);
 			if (item.getId().equalsIgnoreCase(id)) {
 				ArrayList<String> categories = item.getCategories();
@@ -541,6 +548,32 @@ public class FeedFragment extends Fragment {
 
 					break;
 				}
+			}
+		}
+	}
+
+	public void markAllAsRead() {
+		String readCategory = "user/" + mCallback.getUserId() + "/state/com.google/read";
+
+		// size of mItems includes footer view we need to ignore
+		for (int i = 0; i < mItems.size() - 1; i++) {
+			ArticleItem item = mItems.get(i);
+			ArrayList<String> categories = item.getCategories();
+
+			Boolean alreadyRead = false;
+
+			for (int j = 0; j < categories.size(); j++) {
+				String category = categories.get(j);
+
+				if (category.equalsIgnoreCase(readCategory)) {
+					alreadyRead = true;
+					break;
+				}
+			}
+
+			if (!(alreadyRead)) {
+				categories.add(readCategory);
+				mAdapter.notifyItemChanged(i);
 			}
 		}
 	}

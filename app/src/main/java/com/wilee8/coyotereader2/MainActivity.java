@@ -1,15 +1,19 @@
 package com.wilee8.coyotereader2;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
@@ -62,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 															   FeedFragment.FeedFragmentListener,
 															   ArticlePagerFragment.ArticlePagerFragmentListener,
 															   ArticleFragment.ArticleFragmentListener {
+	private Context mContext;
 
 	private SharedPreferences mAuthPreferences;
 	private String            mAuthToken;
@@ -93,6 +98,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 	private Boolean mShowRefresh;
 
+	private Boolean              mShowMarkAllRead;
+	private String               mMarkAllReadFeed;
+	private long                 mUpdated;
+	private FloatingActionButton mFab;
+
 	// needed to determine when all the main volley requests have returned and can be processed
 	private static int NUMBER_MAIN_REQUESTS = 5;
 
@@ -103,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		mContext = this;
 
 		// Get the saved login credentials
 		mAuthPreferences = getSharedPreferences(getString(R.string.auth_prefs), MODE_PRIVATE);
@@ -196,6 +208,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 			}
 			// else punt so we don't write over data from FeedFragment
+
+			// if we don't have a feed, can't mark anything read
+			if (savedInstanceState.containsKey("mMarkAllReadFeed")) {
+				mShowMarkAllRead = savedInstanceState.getBoolean("mShowMarkAllRead", false);
+				mMarkAllReadFeed = savedInstanceState.getString("mMarkAllReadFeed", "");
+				mUpdated = savedInstanceState.getLong("mUpdated", -1);
+			} else {
+				mShowMarkAllRead = false;
+			}
 		} else {
 			needToFetchData = true;
 			mContentFrame = 0;
@@ -207,6 +228,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			mNavList = null;
 			mTitles = new String[FRAME_IDS.length];
 			mTitles[0] = getResources().getString(R.string.app_name);
+			mShowMarkAllRead = false;
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
@@ -270,6 +292,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		}
 
 		mActionBar.setTitle(mTitles[mContentFrame]);
+
+		mFab = (FloatingActionButton) findViewById(R.id.feed_mark_all_read_button);
+		if (mShowMarkAllRead) {
+			mFab.setVisibility(View.VISIBLE);
+		} else {
+			mFab.setVisibility(View.GONE);
+		}
+
+		mFab.setOnClickListener(new MarkAllReadClickListener());
 
 		mQueue = Volley.newRequestQueue(this);
 
@@ -732,6 +763,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 			mContentFrame--;
 
+			if (mContentFrame == 0) {
+				mShowMarkAllRead = false;
+				mFab.setVisibility(View.GONE);
+			}
+
 			mActionBar.setTitle(mTitles[mContentFrame]);
 		}
 
@@ -829,6 +865,12 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		if (mTitles != null) {
 			outState.putStringArray("mTitles", mTitles);
+		}
+
+		outState.putBoolean("mShowMarkAllRead", mShowMarkAllRead);
+		if (mShowMarkAllRead) {
+			outState.putString("mMarkAllReadFeed", mMarkAllReadFeed);
+			outState.putLong("mUpdated", mUpdated);
 		}
 	}
 
@@ -973,8 +1015,13 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	}
 
 	@Override
-	public void setFeedContents(ArrayList<ArticleItem> items) {
+	public void setFeedContents(ArrayList<ArticleItem> items, String id, long updated) {
 		mItems = items;
+
+		mMarkAllReadFeed = id;
+		mUpdated = updated;
+		mShowMarkAllRead = true;
+		mFab.setVisibility(View.VISIBLE);
 
 		// Update article pager - only exists if pager is content frame
 		if (mContentFrame == 2) {
@@ -1096,7 +1143,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			}
 		}
 
-		if(isUnread) {
+		if (isUnread) {
 			// mark item as read
 			AppObservable.bindActivity(
 				this,
@@ -1242,5 +1289,54 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			}
 		}
 
+	}
+
+	private class MarkAllReadClickListener implements View.OnClickListener {
+		@Override
+		public void onClick(View view) {
+			if (mConfirm) {
+				AlertDialog.Builder builder =
+					new AlertDialog.Builder(mContext, R.style.MyAlertDialogStyle);
+
+				builder.setMessage(R.string.alert_mark_all_as_read);
+
+				builder.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						markAllAsReadConfirmed();
+					}
+				});
+
+				builder.setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						// nothing, just go back
+					}
+				});
+
+				AlertDialog dialog = builder.create();
+				dialog.show();
+			} else {
+				//Toast.makeText(this, "Marking all as read", Toast.LENGTH_SHORT).show();
+				markAllAsReadConfirmed();
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void markAllAsReadConfirmed() {
+		Map queryMap = new HashMap<>();
+		queryMap.put("ts", Long.toString(mUpdated));
+		queryMap.put("s", mMarkAllReadFeed);
+
+		AppObservable.bindActivity(
+			this,
+			mService.markAllAsRead(queryMap)
+				.lift(new GetUnreadCountsOperator())
+				.lift(new UpdateUnreadCounts())
+				.subscribeOn(Schedulers.io()))
+			.subscribe(new UpdateUnreadDisplays());
+
+		FeedFragment fragment =
+			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
+		fragment.markAllAsRead();
 	}
 }

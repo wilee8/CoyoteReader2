@@ -15,4 +15,12 @@
         <item name="spinBars">true</item>
     </style>
 
+    <style name="MyAlertDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/accent</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/secondary_text_default_material_light</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/background_material_light</item>
+    </style>
 </resources>
