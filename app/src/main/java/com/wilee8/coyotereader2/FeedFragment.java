@@ -17,44 +17,36 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.wilee8.coyotereader2.containers.ArticleItem;
-import com.wilee8.coyotereader2.gson.GsonRequest;
 import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamContents;
 
 import org.parceler.Parcels;
 
-import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import retrofit.RequestInterceptor;
+import retrofit.RestAdapter;
 import rx.Observable;
 import rx.Subscriber;
-import rx.Subscription;
-import rx.subjects.PublishSubject;
-import rx.subjects.SerializedSubject;
-import rx.subjects.Subject;
+import rx.android.app.AppObservable;
+import rx.schedulers.Schedulers;
 
 public class FeedFragment extends Fragment {
 	private FeedFragmentListener mCallback;
 
 	private Activity mContext;
-
-	private RequestQueue mQueue;
+	private Fragment mThisFragment;
 
 	private String mAuthToken;
 
-	private String                  mFeedId;
-	private String                  mContinuation;
-	private long                    mUpdated;
-	private Subject<String, String> emitter;
-	private Subscription            mEmitterSubscription;
-	private Boolean                 mFetchInProgress;
+	private String           mFeedId;
+	private String           mContinuation;
+	private long             mUpdated;
+	private InoreaderService mService;
+	private Boolean          mFetchInProgress;
 
 	private ArrayList<ArticleItem> mItems;
 	private FeedAdapter            mAdapter;
@@ -68,6 +60,7 @@ public class FeedFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		mContext = getActivity();
+		mThisFragment = this;
 
 		if (savedInstanceState != null) {
 			if (savedInstanceState.containsKey("mItems")) {
@@ -111,23 +104,6 @@ public class FeedFragment extends Fragment {
 
 		mAuthToken = mCallback.getAuthToken();
 
-		mQueue = mCallback.getQueue();
-
-		PublishSubject<String> emitterSubject = PublishSubject.create();
-		emitter = new SerializedSubject<>(emitterSubject);
-		UpdateItems updateItems = new UpdateItems();
-
-//		mEmitterSubscription = AppObservable.bindFragment(this,
-//														  emitter
-//															  .lift(new FetchItems())
-//															  .subscribeOn(Schedulers.io())
-//															  .observeOn(AndroidSchedulers.mainThread()))
-//			.subscribe(updateItems);
-
-		mEmitterSubscription = emitter
-			.lift(new FetchItems())
-			.subscribe(updateItems);
-
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
 		mProgress = (ProgressBar) view.findViewById(R.id.progressbar_loading);
 		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
@@ -140,23 +116,28 @@ public class FeedFragment extends Fragment {
 		recyclerView.setAdapter(mAdapter);
 		recyclerView.addOnScrollListener(new RecyclerScrollListener());
 
+		RequestInterceptor requestInterceptor = new RequestInterceptor() {
+			@Override
+			public void intercept(RequestFacade request) {
+				request.addHeader("Authorization", "GoogleLogin auth=" + mAuthToken);
+				request.addHeader("AppId", getString(R.string.app_id));
+				request.addHeader("AppKey", getString(R.string.app_key));
+			}
+		};
+
+		RestAdapter restAdapter = new RestAdapter.Builder()
+			.setEndpoint("https://www.inoreader.com")
+			.setRequestInterceptor(requestInterceptor)
+			.build();
+
+		mService = restAdapter.create(InoreaderService.class);
 		if (mItems.size() == 0) {
 			mProgress.setVisibility(View.VISIBLE);
 
-			mFetchInProgress = true;
-			emitter.onNext(mContinuation);
+			getMoreArticles();
 		}
 
 		return view;
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-
-		if (mEmitterSubscription != null) {
-			mEmitterSubscription.unsubscribe();
-		}
 	}
 
 	@Override
@@ -169,11 +150,32 @@ public class FeedFragment extends Fragment {
 		outState.putLong("mUpdated", mUpdated);
 	}
 
-	private class FetchItems implements Observable.Operator<Integer, String> {
+	@SuppressWarnings("unchecked")
+	private void getMoreArticles() {
+		mFetchInProgress = true;
 
+		Map queryMap = new HashMap<>();
+		if (mCallback.getUnreadOnly()) {
+			queryMap.put("xt", "user/-/state/com.google/read");
+		}
+		if (mContinuation != null) {
+			queryMap.put("c", mContinuation);
+		}
+
+		UpdateItems updateItems = new UpdateItems();
+
+		AppObservable.bindFragment(
+			this,
+			mService.streamContents(mFeedId, queryMap)
+				.lift(new AddArticles())
+				.subscribeOn(Schedulers.io()))
+			.subscribe(updateItems);
+	}
+
+	private class AddArticles implements Observable.Operator<Integer, StreamContents> {
 		@Override
-		public Subscriber<? super String> call(final Subscriber<? super Integer> subscriber) {
-			return new Subscriber<String>() {
+		public Subscriber<? super StreamContents> call(final Subscriber<? super Integer> subscriber) {
+			return new Subscriber<StreamContents>() {
 				@Override
 				public void onCompleted() {
 					subscriber.onCompleted();
@@ -185,65 +187,47 @@ public class FeedFragment extends Fragment {
 				}
 
 				@Override
-				public void onNext(String s) {
-					String showUnreadOnly;
-					String contParam;
+				public void onNext(StreamContents streamContents) {
+					mContinuation = streamContents.getContinuation();
+					mUpdated = streamContents.getUpdated();
 
-					Map<String, String> headers = new HashMap<>();
-					headers.put("Authorization", "GoogleLogin auth=" + mAuthToken);
-					headers.put("AppId", getString(R.string.app_id));
-					headers.put("AppKey", getString(R.string.app_key));
-
-					if (mCallback.getUnreadOnly()) {
-						showUnreadOnly = "?xt=user/-/state/com.google/read";
-					} else {
-						showUnreadOnly = "";
-					}
-
-					if (s == null) {
-						contParam = "";
-					} else {
-						if (showUnreadOnly.length() == 0) {
-							contParam = "?";
-						} else {
-							contParam = "&";
+					if (mItems.size() != 0) {
+						// if footer is present, remove so we can append all
+						ArticleItem lastItem = mItems.get(mItems.size() - 1);
+						if (lastItem.getIsFooter()) {
+							mItems.remove(mItems.size() - 1);
 						}
-
-						contParam = contParam.concat("c=" + s);
 					}
 
-					String fullUrl;
-					try {
-						fullUrl = "https://www.inoreader.com/reader/api/0/stream/contents" +
-							URLEncoder.encode(mFeedId, "utf-8") + showUnreadOnly + contParam;
-					} catch (IOException e) {
-						subscriber.onError(e);
-						return;
+					int firstNewIndex = mItems.size();
+
+					ArrayList<Item> items = streamContents.getItems();
+					for (int i = 0; i < items.size(); i++) {
+						ArticleItem article = new ArticleItem();
+						Item item = items.get(i);
+
+						article.setId(item.getId());
+						article.setTitle(item.getTitle());
+						article.setCategories(item.getCategories());
+						article.setSummary(item.getSummary().getContent());
+						article.setAuthor(item.getAuthor());
+						article.setCanonical(item.getCanonical().get(0).getHref());
+						article.setOrigin(item.getOrigin().getTitle());
+						article.setIsFooter(false);
+
+						mItems.add(article);
 					}
 
-					GsonRequest<StreamContents> streamRequest =
-						new GsonRequest<>(
-							fullUrl, StreamContents.class, headers,
-							new Response.Listener<StreamContents>() {
-								@Override
-								public void onResponse(StreamContents response) {
-									// function will take all articles in response and add them to mItems
-									int firstNewIndex = addArticles(response);
+					// add footer if necessary
+					if (mContinuation != null) {
+						ArticleItem footer = new ArticleItem();
+						footer.setIsFooter(true);
+						// no other fields matter
+						mItems.add(footer);
+					}
 
-									subscriber.onNext(firstNewIndex);
-
-									if (mContinuation == null) {
-										subscriber.onCompleted();
-									}
-								}
-							}, new Response.ErrorListener() {
-							@Override
-							public void onErrorResponse(VolleyError error) {
-								subscriber.onError(error);
-							}
-						});
-
-					mQueue.add(streamRequest);
+					subscriber.onNext(firstNewIndex);
+					subscriber.onCompleted();
 				}
 			};
 		}
@@ -277,55 +261,10 @@ public class FeedFragment extends Fragment {
 		}
 	}
 
-	// function returns the index of the first new item
-	private int addArticles(StreamContents contents) {
-		mContinuation = contents.getContinuation();
-		mUpdated = contents.getUpdated();
-
-		if (mItems.size() != 0) {
-			// if footer is present, remove so we can append all
-			ArticleItem lastItem = mItems.get(mItems.size() - 1);
-			if (lastItem.getIsFooter()) {
-				mItems.remove(mItems.size() - 1);
-			}
-		}
-
-		int firstNewIndex = mItems.size();
-
-		ArrayList<Item> items = contents.getItems();
-		for (int i = 0; i < items.size(); i++) {
-			ArticleItem article = new ArticleItem();
-			Item item = items.get(i);
-
-			article.setId(item.getId());
-			article.setTitle(item.getTitle());
-			article.setCategories(item.getCategories());
-			article.setSummary(item.getSummary().getContent());
-			article.setAuthor(item.getAuthor());
-			article.setCanonical(item.getCanonical().get(0).getHref());
-			article.setOrigin(item.getOrigin().getTitle());
-			article.setIsFooter(false);
-
-			mItems.add(article);
-		}
-
-		// add footer if necessary
-		if (mContinuation != null) {
-			ArticleItem footer = new ArticleItem();
-			footer.setIsFooter(true);
-			// no other fields matter
-			mItems.add(footer);
-		}
-
-		return firstNewIndex;
-	}
-
 	public interface FeedFragmentListener {
 		String getAuthToken();
 
 		Boolean getUnreadOnly();
-
-		RequestQueue getQueue();
 
 		void clearStreamContents();
 
@@ -454,8 +393,7 @@ public class FeedFragment extends Fragment {
 					int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
 
 					if (lastVisibleItem >= (totalItemcount - 1)) {
-						mFetchInProgress = true;
-						emitter.onNext(mContinuation);
+						getMoreArticles();
 					}
 				}
 			}
@@ -504,8 +442,7 @@ public class FeedFragment extends Fragment {
 		int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
 
 		if (lastVisibleItem >= (totalItemcount - 4)) {
-			mFetchInProgress = true;
-			emitter.onNext(mContinuation);
+			getMoreArticles();
 		}
 	}
 

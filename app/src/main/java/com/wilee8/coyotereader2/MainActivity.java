@@ -848,11 +848,6 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	}
 
 	@Override
-	public RequestQueue getQueue() {
-		return mQueue;
-	}
-
-	@Override
 	public void clearStreamContents() {
 		if (mItems != null) {
 			mItems.clear();
