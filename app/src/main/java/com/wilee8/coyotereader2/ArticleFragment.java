@@ -3,6 +3,8 @@ package com.wilee8.coyotereader2;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -33,9 +35,6 @@ public class ArticleFragment extends Fragment {
 	private ArticleFragmentListener mCallback;
 	private Context                 mContext;
 
-	private ArticleItem mItem;
-
-	private WebView   mSummaryFrame;
 	private ImageView mStarFrame;
 
 	private ScrollView mArticleScroll;
@@ -75,16 +74,16 @@ public class ArticleFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_article, container, false);
 
-		mItem = Parcels.unwrap(getArguments().getParcelable("articleItem"));
+		ArticleItem item = Parcels.unwrap(getArguments().getParcelable("articleItem"));
 
 		TextView titleFrame = (TextView) rootView.findViewById(R.id.title_frame);
 		TextView authorFrame = (TextView) rootView.findViewById(R.id.author_frame);
 		mArticleScroll = (ScrollView) rootView.findViewById(R.id.articleScroll);
-		mSummaryFrame = (WebView) rootView.findViewById(R.id.summary_frame);
+		WebView summaryFrame = (WebView) rootView.findViewById(R.id.summary_frame);
 		mStarFrame = (ImageView) rootView.findViewById(R.id.articleStar);
 
 		// set star
-		ArrayList<String> categories = mItem.getCategories();
+		ArrayList<String> categories = item.getCategories();
 		Boolean starred = false;
 
 		for (int i = 0; i < categories.size(); i++) {
@@ -108,17 +107,17 @@ public class ArticleFragment extends Fragment {
 		// Set title
 		titleFrame.setLinksClickable(true);
 		titleFrame.setMovementMethod(LinkMovementMethod.getInstance());
-		titleFrame.setText(Html.fromHtml("<b><a href=\"" + mItem.getCanonical() + "\">"
-											 + mItem.getTitle() + "</a></b>"));
+		titleFrame.setText(Html.fromHtml("<b><a href=\"" + item.getCanonical() + "\">"
+											 + item.getTitle() + "</a></b>"));
 
 		// Set author
-		String author = mItem.getAuthor();
+		String author = item.getAuthor();
 		if ((author != null) && (author.length() != 0)) {
 			authorFrame.setText("by " + author);
 			authorFrame.setVisibility(View.VISIBLE);
 		}
 
-		WebSettings ws = mSummaryFrame.getSettings();
+		WebSettings ws = summaryFrame.getSettings();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			ws.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
 		} else {
@@ -131,24 +130,24 @@ public class ArticleFragment extends Fragment {
 
 		ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
-		mSummaryFrame.setBackgroundColor(getResources().getColor(R.color.background_material_light));
-		mSummaryFrame.setWebViewClient(new MyWebViewClient());
+		summaryFrame.setBackgroundColor(getResources().getColor(R.color.background_material_light));
+		summaryFrame.setWebViewClient(new MyWebViewClient());
 
 		// get mouseover text for webcomics
-		if (mItem.getOrigin().matches("xkcd.com")) {
+		if (item.getOrigin().matches("xkcd.com")) {
 			Pattern findTitle = Pattern.compile("title=\"(.*?)\"");
-			Matcher matcher = findTitle.matcher(mItem.getSummary());
+			Matcher matcher = findTitle.matcher(item.getSummary());
 			while (matcher.find()) {
 				String s = matcher.group(1);
-				mSummaryFrame.setOnLongClickListener(new WebComicOnLongClickListener(s));
+				summaryFrame.setOnLongClickListener(new WebComicOnLongClickListener(s));
 			}
 		}
 
 		// Set summary
 		String imageCss = "<style>img{display: inline;max-width: 95%;display: block;margin-left: auto;margin-right: auto;}</style>" +
 			"<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
-		mSummaryFrame.loadUrl("about:blank");
-		mSummaryFrame.loadData(imageCss + mItem.getSummary(), "text/html; charset=UTF-8", null);
+		summaryFrame.loadUrl("about:blank");
+		summaryFrame.loadData(imageCss + item.getSummary(), "text/html; charset=UTF-8", null);
 
 		return rootView;
 	}
@@ -178,6 +177,13 @@ public class ArticleFragment extends Fragment {
 					}
 				}
 			}, 300);
+		}
+
+		@Override
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+			startActivity(i);
+			return true;
 		}
 	}
 
