@@ -15,6 +15,9 @@ import retrofit.http.QueryMap;
 import rx.Observable;
 
 public interface InoreaderService {
+	@POST("/accounts/ClientLogin")
+	Observable<Response> clientLogin(@QueryMap Map<String, String> options);
+
 	@GET("/reader/api/0/unread-count")
 	Observable<UnreadCounts> unreadCounts();
 

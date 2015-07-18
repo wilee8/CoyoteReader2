@@ -20,15 +20,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
+import java.util.HashMap;
+import java.util.Map;
 
-import rx.Observable;
+import retrofit.RequestInterceptor;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import retrofit.mime.TypedByteArray;
 import rx.Subscriber;
 import rx.android.app.AppObservable;
 import rx.schedulers.Schedulers;
@@ -48,6 +47,7 @@ public class LoginActivity extends AppCompatActivity {
 	private View                 mLoginFormView;
 	private Context              mContext;
 
+	private InoreaderService  mService;
 	private SharedPreferences mPreferences;
 	private String            mUsername;
 
@@ -92,6 +92,21 @@ public class LoginActivity extends AppCompatActivity {
 
 		mLoginFormView = findViewById(R.id.login_form);
 		mProgressView = findViewById(R.id.login_progress);
+
+		RequestInterceptor requestInterceptor = new RequestInterceptor() {
+			@Override
+			public void intercept(RequestFacade request) {
+				request.addHeader("AppId", getString(R.string.app_id));
+				request.addHeader("AppKey", getString(R.string.app_key));
+			}
+		};
+
+		RestAdapter restAdapter = new RestAdapter.Builder()
+			.setEndpoint("https://www.inoreader.com")
+			.setRequestInterceptor(requestInterceptor)
+			.build();
+
+		mService = restAdapter.create(InoreaderService.class);
 	}
 
 	/**
@@ -99,6 +114,7 @@ public class LoginActivity extends AppCompatActivity {
 	 * If there are form errors (invalid email, missing fields, etc.), the
 	 * errors are presented and no actual login attempt is made.
 	 */
+	@SuppressWarnings("unchecked")
 	public void attemptLogin() {
 
 		// Reset errors.
@@ -138,56 +154,21 @@ public class LoginActivity extends AppCompatActivity {
 
 			mUsername = email;
 
-			String url = "https://www.inoreader.com/accounts/ClientLogin?Email=" + email
-				+ "&Passwd=" + password + "&output=json&AppId=" + R.string.app_id +
-				"&AppKey=" + R.string.app_key;
+			Map queryMap = new HashMap<>();
+			queryMap.put("Email", email);
+			queryMap.put("Passwd", password);
 
 			AuthReplyHandler authReplyHandler = new AuthReplyHandler();
 			AppObservable.bindActivity(
 				this,
-				Observable.create(new DoAuthCallObserver(url))
-					.subscribeOn(Schedulers.io()))
-				.subscribe(authReplyHandler);
+				mService.clientLogin(queryMap)
+				.subscribeOn(Schedulers.io()))
+			.subscribe(authReplyHandler);
 //			Observable.create(new DoAuthCallObserver(url)).subscribe(authReplyHandler);
 		}
 	}
 
-	private class DoAuthCallObserver implements Observable.OnSubscribe<String> {
-
-		private String url;
-
-		public DoAuthCallObserver(String url) {
-			this.url = url;
-		}
-
-		@Override
-		public void call(final Subscriber<? super String> subscriber) {
-			RequestQueue queue = Volley.newRequestQueue(mContext);
-			StringRequest stringRequest = new StringRequest(
-				Request.Method.POST, url, new Response.Listener<String>() {
-
-				@Override
-				public void onResponse(String response) {
-					// Get the authentication token
-					String holder[] = response.split("Auth=");
-					String token = holder[1];
-
-					subscriber.onNext(token);
-					subscriber.onCompleted();
-				}
-			}, new Response.ErrorListener() {
-
-				@Override
-				public void onErrorResponse(VolleyError error) {
-					subscriber.onError(error);
-				}
-			});
-
-			queue.add(stringRequest);
-		}
-	}
-
-	private class AuthReplyHandler extends Subscriber<String> {
+	private class AuthReplyHandler extends Subscriber<Response> {
 
 		@Override
 		public void onCompleted() {
@@ -196,26 +177,32 @@ public class LoginActivity extends AppCompatActivity {
 
 		@Override
 		public void onError(Throwable throwable) {
-			VolleyError error = (VolleyError) throwable;
+			RetrofitError error = (RetrofitError) throwable;
+			String message = error.getMessage();
 
 			showProgress(false);
 
-			if (error instanceof AuthFailureError) {
+			if (message.equalsIgnoreCase("401 Authorization Required")) {
 				// Failed login, post an error
 				mPasswordView.setError(getString(R.string.error_incorrect_password));
 			} else {
-				mPasswordView.setError(getString(R.string.error_network));
+			mPasswordView.setError(getString(R.string.error_network));
 			}
 
 			mPasswordView.requestFocus();
 		}
 
 		@Override
-		public void onNext(String s) {
+		public void onNext(Response response) {
+			String responseBody = new String(((TypedByteArray) response.getBody()).getBytes());
+
+			// Get the authentication token
+			String holder[] = responseBody.split("Auth=");
+			String token = holder[1].replaceAll("\n", "");
 			SharedPreferences.Editor editor = mPreferences.edit();
 
 			editor.putString("username", mUsername);
-			editor.putString("authToken", s);
+			editor.putString("authToken", token);
 			editor.apply();
 
 			// Launch main activity
