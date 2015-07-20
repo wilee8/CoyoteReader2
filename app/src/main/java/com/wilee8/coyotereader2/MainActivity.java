@@ -883,7 +883,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
 					  R.string.error_null_items,
-					  Snackbar.LENGTH_SHORT)
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1090,7 +1090,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
 					  R.string.error_mark_unread,
-					  Snackbar.LENGTH_SHORT)
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1155,7 +1155,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				AlertDialog dialog = builder.create();
 				dialog.show();
 			} else {
-				//Toast.makeText(this, "Marking all as read", Toast.LENGTH_SHORT).show();
+				Snackbar
+					.make(findViewById(R.id.sceneRoot),
+						  R.string.notify_marking_all_read,
+						  Snackbar.LENGTH_SHORT)
+					.show();
 				markAllAsReadConfirmed();
 			}
 		}

@@ -39,4 +39,7 @@
     <string name="alert_ok">OK</string>
     <string name="alert_cancel">Cancel</string>
 
+    <!-- notifications -->
+    <string name="notify_marking_all_read">Marking all as read</string>
+
 </resources>

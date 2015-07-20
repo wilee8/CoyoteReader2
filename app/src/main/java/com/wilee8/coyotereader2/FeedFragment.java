@@ -38,7 +38,6 @@ public class FeedFragment extends Fragment {
 	private FeedFragmentListener mCallback;
 
 	private Activity mContext;
-	private Fragment mThisFragment;
 
 	private String mAuthToken;
 
@@ -60,7 +59,6 @@ public class FeedFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		mContext = getActivity();
-		mThisFragment = this;
 
 		if (savedInstanceState != null) {
 			if (savedInstanceState.containsKey("mItems")) {
@@ -245,7 +243,7 @@ public class FeedFragment extends Fragment {
 			Snackbar
 				.make(mContext.findViewById(R.id.sceneRoot),
 					  R.string.error_fetch_data,
-					  Snackbar.LENGTH_SHORT)
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
