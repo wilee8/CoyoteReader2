@@ -2,13 +2,10 @@ package com.wilee8.coyotereader2.containers;
 
 import org.parceler.Parcel;
 
-import java.util.ArrayList;
-
 @Parcel
 public class ArticleItem {
 	private String            id;
 	private String            title;
-	private ArrayList<String> categories;
 	private String            summary;
 	private String            author;
 	private String            canonical;
@@ -35,14 +32,6 @@ public class ArticleItem {
 
 	public void setCanonical(String canonical) {
 		this.canonical = canonical;
-	}
-
-	public ArrayList<String> getCategories() {
-		return categories;
-	}
-
-	public void setCategories(ArrayList<String> categories) {
-		this.categories = categories;
 	}
 
 	public String getId() {

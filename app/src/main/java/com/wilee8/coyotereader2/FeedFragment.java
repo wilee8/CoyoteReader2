@@ -206,7 +206,6 @@ public class FeedFragment extends Fragment {
 
 						article.setId(item.getId());
 						article.setTitle(item.getTitle());
-						article.setCategories(item.getCategories());
 						article.setSummary(item.getSummary().getContent());
 						article.setAuthor(item.getAuthor());
 						article.setCanonical(item.getCanonical().get(0).getHref());
