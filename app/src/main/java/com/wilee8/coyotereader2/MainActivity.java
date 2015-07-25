@@ -968,22 +968,12 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mTitles[mContentFrame] = Html.fromHtml(item.getOrigin()).toString();
 		mActionBar.setTitle(mTitles[mContentFrame]);
 
-		Map queryMap = new HashMap<>();
-		queryMap.put("a", "user/-/state/com.google/read");
-		queryMap.put("i", item.getId());
+		// check if already unread before marking unread
+		if (item.getUnread()) {
+			Map queryMap = new HashMap<>();
+			queryMap.put("a", "user/-/state/com.google/read");
+			queryMap.put("i", item.getId());
 
-		// check if already marked as read before launching service
-		boolean isUnread = true;
-		String readCategory = "user/" + mUserId + "/state/com.google/read";
-
-		for (int i = 0; i < item.getCategories().size(); i++) {
-			if (item.getCategories().get(i).matches(readCategory)) {
-				isUnread = false;
-				break;
-			}
-		}
-
-		if (isUnread) {
 			// mark item as read
 			AppObservable.bindActivity(
 				this,
@@ -1182,5 +1172,67 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		FeedFragment fragment =
 			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
 		fragment.markAllAsRead();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void onStarClicked(int position, Boolean starred) {
+		// update FeedFragment star status
+		FeedFragment feedFragment =
+			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
+		feedFragment.updateStarredStatus(position, starred);
+
+		// update ArticleFragment star status
+		ArticlePagerFragment pagerFragment =
+			(ArticlePagerFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[2]);
+		if(pagerFragment != null) {
+			pagerFragment.updateStarredStatus(position, starred);
+		}
+
+		ArticleItem item = mItems.get(position);
+
+		Map queryMap = new HashMap<>();
+
+		// item has already been updated, so set string to match status
+		if (item.getStarred()) {
+			queryMap.put("a", "user/-/state/com.google/starred");
+		} else {
+			queryMap.put("r", "user/-/state/com.google/starred");
+		}
+		queryMap.put("i", item.getId());
+
+		AppObservable.bindActivity(
+			this,
+			mService.editTag(queryMap)
+				.subscribeOn(Schedulers.io()))
+			.subscribe(new StarredSubscriber());
+	}
+
+	private class StarredSubscriber extends Subscriber<Response> {
+
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_update_starred,
+					  Snackbar.LENGTH_LONG)
+				.show();
+		}
+
+		@Override
+		public void onNext(Response response) {
+			String reponseBody = new String(((TypedByteArray) response.getBody()).getBytes());
+
+			if (!reponseBody.equalsIgnoreCase("OK")) {
+				onError(null);
+			}
+
+			onCompleted();
+		}
 	}
 }

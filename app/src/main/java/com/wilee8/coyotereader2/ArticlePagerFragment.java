@@ -86,6 +86,7 @@ public class ArticlePagerFragment extends Fragment {
 			ArticleItem item = mItems.get(position);
 			Bundle args = new Bundle();
 			args.putParcelable("articleItem", Parcels.wrap(item));
+			args.putInt("position", position);
 
 			ArticleFragment fragment = new ArticleFragment();
 			fragment.setArguments(args);
@@ -128,7 +129,7 @@ public class ArticlePagerFragment extends Fragment {
 			return mFragmentList[position] != null;
 		}
 
-		public Fragment returnExistingElement(int position) {
+		public ArticleFragment returnExistingElement(int position) {
 			return mFragmentList[position];
 		}
 	}
@@ -140,6 +141,13 @@ public class ArticlePagerFragment extends Fragment {
 			super.onPageSelected(position);
 
 			mCallback.onArticleSelected(position);
+		}
+	}
+
+	public void updateStarredStatus(int position, Boolean starred) {
+		if (mPagerAdapter.articleExists(position)) {
+			ArticleFragment fragment = mPagerAdapter.returnExistingElement(position);
+			fragment.updateStarredStatus(starred);
 		}
 	}
 }

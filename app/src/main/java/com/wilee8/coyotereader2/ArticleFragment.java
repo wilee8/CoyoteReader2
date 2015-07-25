@@ -26,7 +26,6 @@ import com.wilee8.coyotereader2.containers.ArticleItem;
 
 import org.parceler.Parcels;
 
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,11 +34,13 @@ public class ArticleFragment extends Fragment {
 	private ArticleFragmentListener mCallback;
 	private Context                 mContext;
 
-	private ImageView mStarFrame;
+	private ArticleItem mItem;
 
+	private ImageView  mStarFrame;
 	private ScrollView mArticleScroll;
-	private int        mScrollX;
-	private int        mScrollY;
+
+	private int mScrollX;
+	private int mScrollY;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -68,13 +69,16 @@ public class ArticleFragment extends Fragment {
 	}
 
 	@Nullable
-	@SuppressWarnings("deprecation")
 	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_article, container, false);
 
-		ArticleItem item = Parcels.unwrap(getArguments().getParcelable("articleItem"));
+		if (savedInstanceState != null) {
+			mItem = Parcels.unwrap(savedInstanceState.getParcelable("articleItem"));
+		} else {
+			mItem = Parcels.unwrap(getArguments().getParcelable("articleItem"));
+		}
 
 		TextView titleFrame = (TextView) rootView.findViewById(R.id.title_frame);
 		TextView authorFrame = (TextView) rootView.findViewById(R.id.author_frame);
@@ -82,36 +86,20 @@ public class ArticleFragment extends Fragment {
 		WebView summaryFrame = (WebView) rootView.findViewById(R.id.summary_frame);
 		mStarFrame = (ImageView) rootView.findViewById(R.id.articleStar);
 
-		// set star
-		ArrayList<String> categories = item.getCategories();
-		Boolean starred = false;
+		setStarDrawable(mItem.getStarred());
 
-		for (int i = 0; i < categories.size(); i++) {
-			String category = categories.get(i);
-
-			if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/starred")) {
-				starred = true;
-			}
-		}
-
-		if (starred) {
-			mStarFrame.setImageDrawable(mContext.getResources().getDrawable(
-				R.drawable.ic_star_grey600_48dp));
-		} else {
-			mStarFrame.setImageDrawable(mContext.getResources().getDrawable(
-				R.drawable.ic_star_outline_grey600_48dp));
-		}
-
-		//TODO set onClickListener for mStarFrame
+		int position = getArguments().getInt("position");
+		StarClickListener starClickListener = new StarClickListener(position);
+		mStarFrame.setOnClickListener(starClickListener);
 
 		// Set title
 		titleFrame.setLinksClickable(true);
 		titleFrame.setMovementMethod(LinkMovementMethod.getInstance());
-		titleFrame.setText(Html.fromHtml("<b><a href=\"" + item.getCanonical() + "\">"
-											 + item.getTitle() + "</a></b>"));
+		titleFrame.setText(Html.fromHtml("<b><a href=\"" + mItem.getCanonical() + "\">"
+											 + mItem.getTitle() + "</a></b>"));
 
 		// Set author
-		String author = item.getAuthor();
+		String author = mItem.getAuthor();
 		if ((author != null) && (author.length() != 0)) {
 			authorFrame.setText("by " + author);
 			authorFrame.setVisibility(View.VISIBLE);
@@ -134,9 +122,9 @@ public class ArticleFragment extends Fragment {
 		summaryFrame.setWebViewClient(new MyWebViewClient());
 
 		// get mouseover text for webcomics
-		if (item.getOrigin().matches("xkcd.com")) {
+		if (mItem.getOrigin().matches("xkcd.com")) {
 			Pattern findTitle = Pattern.compile("title=\"(.*?)\"");
-			Matcher matcher = findTitle.matcher(item.getSummary());
+			Matcher matcher = findTitle.matcher(mItem.getSummary());
 			while (matcher.find()) {
 				String s = matcher.group(1);
 				summaryFrame.setOnLongClickListener(new WebComicOnLongClickListener(s));
@@ -147,7 +135,7 @@ public class ArticleFragment extends Fragment {
 		String imageCss = "<style>img{display: inline;max-width: 95%;display: block;margin-left: auto;margin-right: auto;}</style>" +
 			"<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
 		summaryFrame.loadUrl("about:blank");
-		summaryFrame.loadData(imageCss + item.getSummary(), "text/html; charset=UTF-8", null);
+		summaryFrame.loadData(imageCss + mItem.getSummary(), "text/html; charset=UTF-8", null);
 
 		return rootView;
 	}
@@ -161,6 +149,8 @@ public class ArticleFragment extends Fragment {
 
 		outState.putInt("scrollX", scrollX);
 		outState.putInt("scrollY", scrollY);
+
+		outState.putParcelable("articleItem", Parcels.wrap(mItem));
 	}
 
 	private class MyWebViewClient extends WebViewClient {
@@ -209,6 +199,39 @@ public class ArticleFragment extends Fragment {
 	}
 
 	public interface ArticleFragmentListener {
-		String getUserId();
+		void onStarClicked(int position, Boolean starred);
+	}
+
+	private class StarClickListener implements View.OnClickListener {
+
+		private int position;
+
+		public StarClickListener(int position) {
+			this.position = position;
+		}
+
+		@Override
+		public void onClick(View view) {
+			mItem.setStarred(!(mItem.getStarred()));
+
+			setStarDrawable(mItem.getStarred());
+			mCallback.onStarClicked(this.position, mItem.getStarred());
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	private void setStarDrawable(Boolean starred) {
+		if (starred) {
+			mStarFrame.setImageDrawable(mContext.getResources().getDrawable(
+				R.drawable.ic_star_grey600_48dp));
+		} else {
+			mStarFrame.setImageDrawable(mContext.getResources().getDrawable(
+				R.drawable.ic_star_outline_grey600_48dp));
+		}
+	}
+
+	public void updateStarredStatus(Boolean starred) {
+		mItem.setStarred(starred);
+		setStarDrawable(mItem.getStarred());
 	}
 }

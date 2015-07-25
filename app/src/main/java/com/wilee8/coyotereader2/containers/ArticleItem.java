@@ -13,6 +13,8 @@ public class ArticleItem {
 	private String            author;
 	private String            canonical;
 	private String            origin;
+	private Boolean           starred;
+	private Boolean           unread;
 	private Boolean           isFooter;
 
 	public ArticleItem() {
@@ -81,5 +83,21 @@ public class ArticleItem {
 
 	public void setIsFooter(Boolean isFooter) {
 		this.isFooter = isFooter;
+	}
+
+	public Boolean getStarred() {
+		return starred;
+	}
+
+	public void setStarred(Boolean starred) {
+		this.starred = starred;
+	}
+
+	public Boolean getUnread() {
+		return unread;
+	}
+
+	public void setUnread(Boolean unread) {
+		this.unread = unread;
 	}
 }

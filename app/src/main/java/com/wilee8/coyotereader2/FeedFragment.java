@@ -213,6 +213,22 @@ public class FeedFragment extends Fragment {
 						article.setOrigin(item.getOrigin().getTitle());
 						article.setIsFooter(false);
 
+						ArrayList<String> categories = item.getCategories();
+						article.setUnread(true);
+						article.setStarred(false);
+
+						for (int j = 0; j < categories.size(); j++) {
+							String category = categories.get(j);
+							if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/read")) {
+								article.setUnread(false);
+							}
+
+							if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/starred")) {
+								article.setStarred(true);
+								break;
+							}
+						}
+
 						mItems.add(article);
 					}
 
@@ -271,6 +287,8 @@ public class FeedFragment extends Fragment {
 		String getUserId();
 
 		void selectArticle(int position);
+
+		void onStarClicked(int position, Boolean starred);
 	}
 
 	private class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -311,22 +329,8 @@ public class FeedFragment extends Fragment {
 			}
 
 			ArticleViewHolder viewHolder = (ArticleViewHolder) holder;
-			Boolean unread = true;
-			Boolean starred = false;
 
-			ArrayList<String> categories = item.getCategories();
-
-			for (int i = 0; i < categories.size(); i++) {
-				String category = categories.get(i);
-				if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/read")) {
-					unread = false;
-				}
-				if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/starred")) {
-					starred = true;
-				}
-			}
-
-			if (unread) {
+			if (item.getUnread()) {
 				viewHolder.articleInfo.setText(
 					Html.fromHtml("<b>" + item.getTitle() + "</b> - " + item.getOrigin()));
 			} else {
@@ -334,7 +338,7 @@ public class FeedFragment extends Fragment {
 					Html.fromHtml(item.getTitle() + " - " + item.getOrigin()));
 			}
 
-			if (starred) {
+			if (item.getStarred()) {
 				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
 					R.drawable.ic_star_grey600_48dp));
 			} else {
@@ -343,7 +347,7 @@ public class FeedFragment extends Fragment {
 			}
 
 			viewHolder.articleInfo.setOnClickListener(new FeedSelectClickListener(position));
-//			holder.itemStar.setOnClickListener(new StarClickListener(position));
+			viewHolder.articleStar.setOnClickListener(new StarClickListener(position));
 
 			if ((mSelected != -1) && (position == mSelected)) {
 				viewHolder.articleWrapper.setBackgroundColor(
@@ -449,67 +453,53 @@ public class FeedFragment extends Fragment {
 		for (int i = 0; i < mItems.size() - 1; i++) {
 			ArticleItem item = mItems.get(i);
 			if (item.getId().equalsIgnoreCase(id)) {
-				ArrayList<String> categories = item.getCategories();
 
-				String readCategory = "user/" + mCallback.getUserId() + "/state/com.google/read";
-
-				if (unread) {
-					// mark as unread
-					for (int j = 0; j < categories.size(); j++) {
-						String category = categories.get(j);
-						if (category.equalsIgnoreCase(readCategory)) {
-							categories.remove(j);
-							mAdapter.notifyItemChanged(i);
-							break;
-						}
-					}
-				} else {
-					// mark as read
-					boolean alreadyRead = false;
-
-					for (int j = 0; j < categories.size(); j++) {
-						String category = categories.get(j);
-
-						if (category.equalsIgnoreCase(readCategory)) {
-							alreadyRead = true;
-							break;
-						}
-					}
-
-					if (!(alreadyRead)) {
-						categories.add(readCategory);
-						mAdapter.notifyItemChanged(i);
-					}
-
-					break;
-				}
+				item.setUnread(unread);
+				mAdapter.notifyItemChanged(i);
+				break;
 			}
 		}
 	}
 
 	public void markAllAsRead() {
-		String readCategory = "user/" + mCallback.getUserId() + "/state/com.google/read";
-
 		// size of mItems includes footer view we need to ignore
 		for (int i = 0; i < mItems.size() - 1; i++) {
 			ArticleItem item = mItems.get(i);
-			ArrayList<String> categories = item.getCategories();
 
-			Boolean alreadyRead = false;
-
-			for (int j = 0; j < categories.size(); j++) {
-				String category = categories.get(j);
-
-				if (category.equalsIgnoreCase(readCategory)) {
-					alreadyRead = true;
-					break;
-				}
-			}
-
-			if (!(alreadyRead)) {
-				categories.add(readCategory);
+			if (item.getUnread()) {
+				item.setUnread(false);
 				mAdapter.notifyItemChanged(i);
 			}
 		}
+	}
+
+	private class StarClickListener implements View.OnClickListener {
+
+		private int position;
+
+		public StarClickListener(int position) {
+			this.position = position;
+		}
+
+		@SuppressWarnings("deprecation")
+		@Override
+		public void onClick(View view) {
+			ArticleItem item = mItems.get(position);
+			item.setStarred(!(item.getStarred()));
+
+			mAdapter.notifyItemChanged(position);
+
+			mCallback.onStarClicked(this.position, item.getStarred());
+		}
+	}
+
+	public void updateStarredStatus(int position, Boolean starred) {
+		ArticleItem item = mItems.get(position);
+
+		if (item.getStarred() != starred) {
+			item.setStarred(starred);
+		}
+
+		mAdapter.notifyItemChanged(position);
 	}
 }

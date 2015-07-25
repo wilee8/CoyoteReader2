@@ -13,6 +13,7 @@
     <string name="error_fetch_data">Error retrieving data from server</string>
     <string name="error_null_items">Error loading article list, reload feed</string>
     <string name="error_mark_unread">Error updating unread articles</string>
+    <string name="error_update_starred">Error updating starred status on server</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
