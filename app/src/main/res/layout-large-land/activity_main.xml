@@ -22,46 +22,50 @@
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
-        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:background="@color/background_material_light"
-                     android:baselineAligned="false"
-                     android:fitsSystemWindows="true">
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:background="@color/background_material_light"
+                      android:baselineAligned="false"
+                      android:fitsSystemWindows="true"
+                      android:orientation="horizontal">
 
             <FrameLayout
                 android:id="@+id/frame0"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="@color/background_material_light">
             </FrameLayout>
 
             <FrameLayout
                 android:id="@+id/frame1"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="@color/background_material_light">
             </FrameLayout>
 
             <FrameLayout
                 android:id="@+id/frame2"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="@color/background_material_light">
             </FrameLayout>
 
-        </FrameLayout>
+        </LinearLayout>
 
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/feed_mark_all_read_button"
+        app:fabSize="normal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="@dimen/fab_margin_bottom"
         android:layout_marginEnd="@dimen/fab_margin_right"
         android:src="@drawable/ic_done_white_48dp"
-        app:borderWidth="0dp"
-        app:fabSize="normal"/>
+        app:borderWidth="0dp"/>
 </android.support.design.widget.CoordinatorLayout>

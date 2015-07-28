@@ -1,5 +1,7 @@
 package com.wilee8.coyotereader2;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -264,16 +266,12 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				mFrames[i].setVisibility(View.GONE);
 			}
 		} else {
-			LinearLayout.LayoutParams lp;
-
 			// everything left of the content frame is gone
 			for (int i = 0; i < mContentFrame; i++) {
 				mFrames[i].setVisibility(View.GONE);
 			}
 
-			// content frame is visible with weight of 1
-			lp = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
-			mFrames[mContentFrame].setLayoutParams(lp);
+			// content frame is visible
 			mFrames[mContentFrame].setVisibility(View.VISIBLE);
 
 			// everything right of the content frame is gone
@@ -565,11 +563,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		if (mContentFrame == 0) {
 			super.onBackPressed();
 		} else {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-				TransitionManager.beginDelayedTransition(mSceneRoot);
-			}
-
 			if (mDualPane) {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+					TransitionManager.beginDelayedTransition(mSceneRoot);
+				}
+
 				LinearLayout.LayoutParams lp;
 
 				// hide content frame
@@ -585,12 +583,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 					mFrames[mContentFrame - 2].setVisibility(View.VISIBLE);
 				}
 			} else {
-				// hide content frame
-				mFrames[mContentFrame].setVisibility(View.GONE);
-
-				// unhide frame to the left of content frame
-				mFrames[mContentFrame - 1].setVisibility(View.VISIBLE);
-
+				crossfade(mFrames[mContentFrame - 1], mFrames[mContentFrame]);
 			}
 
 			// remove old fragment so it isn't taking up memory
@@ -784,10 +777,6 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		FeedFragment fragment = new FeedFragment();
 		fragment.setArguments(args);
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-			TransitionManager.beginDelayedTransition(mSceneRoot);
-		}
-
 		FragmentManager fragmentManager = getSupportFragmentManager();
 		Fragment oldFragment = fragmentManager.findFragmentById(FRAME_IDS[1]);
 		if (oldFragment == null) {
@@ -803,6 +792,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		if (mDualPane) {
 			if (mContentFrame == 0) {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+					TransitionManager.beginDelayedTransition(mSceneRoot);
+				}
+
 				// change weight of content frame
 				LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0,
 																			 LayoutParams.MATCH_PARENT,
@@ -818,11 +811,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			}
 			// else no need to shift frames or increment mContentFrame
 		} else {
-			// hide content frame
-			mFrames[mContentFrame].setVisibility(View.GONE);
-
-			// unhide frame to the right of content frame
-			mFrames[mContentFrame + 1].setVisibility(View.VISIBLE);
+			crossfade(mFrames[mContentFrame + 1], mFrames[mContentFrame]);
 
 			mContentFrame++;
 		}
@@ -899,22 +888,22 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				fragment.setArguments(args);
 
 				FragmentManager fragmentManager = getSupportFragmentManager();
-				fragmentManager.beginTransaction().replace(FRAME_IDS[2], fragment).commit();
+				fragmentManager.beginTransaction().replace(FRAME_IDS[mContentFrame + 1], fragment).commit();
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 					TransitionManager.beginDelayedTransition(mSceneRoot);
 				}
 
 				// hide sidebar
-				mFrames[0].setVisibility(View.GONE);
+				mFrames[mContentFrame - 1].setVisibility(View.GONE);
 
 				// change weight of content frame
 				LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
-				mFrames[1].setLayoutParams(lp);
+				mFrames[mContentFrame].setLayoutParams(lp);
 
 				// unhide frame to the right of content frame
 				lp = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 2.0f);
-				mFrames[2].setLayoutParams(lp);
-				mFrames[2].setVisibility(View.VISIBLE);
+				mFrames[mContentFrame + 1].setLayoutParams(lp);
+				mFrames[mContentFrame + 1].setVisibility(View.VISIBLE);
 
 				mContentFrame++;
 			} else {
@@ -925,20 +914,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				fragment.changeSelected(position);
 			}
 		} else {
+			crossfade(mFrames[mContentFrame + 1], mFrames[mContentFrame]);
+
 			Fragment fragment = new ArticlePagerFragment();
 			fragment.setArguments(args);
 
 			FragmentManager fragmentManager = getSupportFragmentManager();
-			fragmentManager.beginTransaction().replace(FRAME_IDS[2], fragment).commit();
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-				TransitionManager.beginDelayedTransition(mSceneRoot);
-			}
-
-			// hide content frame
-			mFrames[1].setVisibility(View.GONE);
-
-			// unhide frame to the right of content frame
-			mFrames[2].setVisibility(View.VISIBLE);
+			fragmentManager.beginTransaction()
+				.replace(FRAME_IDS[mContentFrame + 1], fragment)
+				.commit();
 
 			mContentFrame++;
 		}
@@ -962,7 +946,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		// update FeedFragment position
 		FeedFragment fragment =
-			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
+			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[mContentFrame - 1]);
 		fragment.changeSelected(position);
 
 		mTitles[mContentFrame] = Html.fromHtml(item.getOrigin()).toString();
@@ -1185,7 +1169,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		// update ArticleFragment star status
 		ArticlePagerFragment pagerFragment =
 			(ArticlePagerFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[2]);
-		if(pagerFragment != null) {
+		if (pagerFragment != null) {
 			pagerFragment.updateStarredStatus(position, starred);
 		}
 
@@ -1234,5 +1218,33 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 			onCompleted();
 		}
+	}
+
+	private void crossfade(View fadeIn, final View fadeOut) {
+		int shortAnimationDuration = getResources().getInteger(
+			android.R.integer.config_shortAnimTime);
+
+		// set fade in view so that it is visible but fully transparent
+		fadeIn.setAlpha(0f);
+		fadeIn.setVisibility(View.VISIBLE);
+
+		// animate the fade in view to 100% opacity
+		fadeIn.animate()
+			.alpha(1f)
+			.setDuration(shortAnimationDuration)
+			.setListener(null);
+
+		// animate the fade out view to 0% opacity, then set visibility to gone
+		fadeOut.animate()
+			.alpha(0f)
+			.setDuration(shortAnimationDuration)
+			.setListener(new AnimatorListenerAdapter() {
+				@Override
+				public void onAnimationEnd(Animator animation) {
+					super.onAnimationEnd(animation);
+					fadeOut.setVisibility(View.GONE);
+					fadeOut.setAlpha(1f);
+				}
+			});
 	}
 }
