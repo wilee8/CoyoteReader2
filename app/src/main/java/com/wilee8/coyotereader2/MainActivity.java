@@ -14,6 +14,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -48,7 +49,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mAuthPreferences = getSharedPreferences(getString(R.string.auth_prefs), MODE_PRIVATE);
 		mAuthToken = mAuthPreferences.getString(getString(R.string.auth_token), "");
 
-		if ((mAuthToken == null) || (mAuthToken.equals(""))) {
+		if (mAuthToken.equals("")) {
 			// logout and skip the rest of this function
 			logout();
 			return;
@@ -954,7 +954,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		// check if already unread before marking unread
 		if (item.getUnread()) {
-			Map queryMap = new HashMap<>();
+			Map queryMap = new ArrayMap<>();
 			queryMap.put("a", "user/-/state/com.google/read");
 			queryMap.put("i", item.getId());
 
@@ -1141,7 +1141,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 	@SuppressWarnings("unchecked")
 	private void markAllAsReadConfirmed() {
-		Map queryMap = new HashMap<>();
+		Map queryMap = new ArrayMap<>();
 		queryMap.put("ts", Long.toString(mUpdated));
 		queryMap.put("s", mMarkAllReadFeed);
 
@@ -1175,7 +1175,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		ArticleItem item = mItems.get(position);
 
-		Map queryMap = new HashMap<>();
+		Map queryMap = new ArrayMap<>();
 
 		// item has already been updated, so set string to match status
 		if (item.getStarred()) {

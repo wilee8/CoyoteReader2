@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -24,7 +25,6 @@ import com.wilee8.coyotereader2.gson.StreamContents;
 import org.parceler.Parcels;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import retrofit.RequestInterceptor;
@@ -152,7 +152,7 @@ public class FeedFragment extends Fragment {
 	private void getMoreArticles() {
 		mFetchInProgress = true;
 
-		Map queryMap = new HashMap<>();
+		Map queryMap = new ArrayMap<>();
 		if (mCallback.getUnreadOnly()) {
 			queryMap.put("xt", "user/-/state/com.google/read");
 		}

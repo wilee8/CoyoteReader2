@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -20,7 +21,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import retrofit.RequestInterceptor;
@@ -154,7 +154,7 @@ public class LoginActivity extends AppCompatActivity {
 
 			mUsername = email;
 
-			Map queryMap = new HashMap<>();
+			Map queryMap = new ArrayMap<>();
 			queryMap.put("Email", email);
 			queryMap.put("Passwd", password);
 
