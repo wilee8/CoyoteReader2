@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App authentication -->
-    <string name="app_id">1000001426</string>
-    <string name="app_key">RUFiR_DffNpiONMASGzOw07ppJ6yLx6l</string>
-
     <!-- Main strings -->
     <string name="app_name">Coyote Reader</string>
     <string name="title_activity_main">MainActivity</string>

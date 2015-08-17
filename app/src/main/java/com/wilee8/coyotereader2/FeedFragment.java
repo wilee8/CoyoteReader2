@@ -118,8 +118,8 @@ public class FeedFragment extends Fragment {
 			@Override
 			public void intercept(RequestFacade request) {
 				request.addHeader("Authorization", "GoogleLogin auth=" + mAuthToken);
-				request.addHeader("AppId", getString(R.string.app_id));
-				request.addHeader("AppKey", getString(R.string.app_key));
+				request.addHeader("AppId", BuildConfig.INOREADER_APP_ID);
+				request.addHeader("AppKey", BuildConfig.INOREADER_APP_KEY);
 			}
 		};
 
