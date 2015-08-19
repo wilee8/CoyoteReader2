@@ -49,6 +49,7 @@ public class FeedFragment extends Fragment {
 
 	private ArrayList<ArticleItem> mItems;
 	private FeedAdapter            mAdapter;
+	private RecyclerView           mRecyclerView;
 	private LinearLayoutManager    mLayoutManager;
 	private ProgressBar            mProgress;
 
@@ -104,15 +105,15 @@ public class FeedFragment extends Fragment {
 
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
 		mProgress = (ProgressBar) view.findViewById(R.id.progressbar_loading);
-		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
+		mRecyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
 
 		mLayoutManager = new LinearLayoutManager(mContext);
-		recyclerView.setLayoutManager(mLayoutManager);
-		recyclerView.setItemAnimator(new DefaultItemAnimator());
+		mRecyclerView.setLayoutManager(mLayoutManager);
+		mRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
 		mAdapter = new FeedAdapter();
-		recyclerView.setAdapter(mAdapter);
-		recyclerView.addOnScrollListener(new RecyclerScrollListener());
+		mRecyclerView.setAdapter(mAdapter);
+		mRecyclerView.addOnScrollListener(new RecyclerScrollListener());
 
 		RequestInterceptor requestInterceptor = new RequestInterceptor() {
 			@Override
@@ -187,6 +188,11 @@ public class FeedFragment extends Fragment {
 				@Override
 				public void onNext(StreamContents streamContents) {
 					mContinuation = streamContents.getContinuation();
+
+					if (mContinuation == null) {
+						mRecyclerView.clearOnScrollListeners();
+					}
+
 					mUpdated = streamContents.getUpdated();
 
 					if (mItems.size() != 0) {
