@@ -13,4 +13,9 @@
 		android:key="pref_confirm"
 		android:title="@string/pref_confirm"
 		android:defaultValue="true" />
+	<SwitchPreference
+		android:key="pref_advance"
+		android:title="@string/pref_advance"
+		android:summary="@string/pref_advance_summ"
+		android:defaultValue="false" />
 </PreferenceScreen>

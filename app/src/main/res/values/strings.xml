@@ -14,11 +14,13 @@
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
     <string name="auth_token">authToken</string>
-    <string name="pref_dialog_title">Prefrences</string>
+    <string name="pref_dialog_title">Preferences</string>
     <string name="pref_alpha">Sort feeds alphabetically</string>
     <string name="pref_alpha_summ">If unchecked, use manual sort order</string>
     <string name="pref_unread">Show unread items only</string>
     <string name="pref_confirm">Confirm mark all read</string>
+    <string name="pref_advance">Advance on mark all read</string>
+    <string name="pref_advance_summ">Will open next unread feed</string>
 
     <!-- Menu items -->
     <string name="action_settings">Settings</string>
