@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	private Boolean           mSortAlpha;
 	private Boolean           mShowUnreadOnly;
 	private Boolean           mConfirm;
+	private Boolean           mAdvance;
 	private DefPrefListener   mPrefListener;
 
 	private UnreadCounts       mUnreadCounts;
@@ -92,7 +93,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
 
-	private static int FRAME_IDS[] = {R.id.frame0, R.id.frame1, R.id.frame2};
+	private static int           FRAME_IDS[]         = {R.id.frame0, R.id.frame1, R.id.frame2};
+	// constant for what frame to go back to when automatically advancing, points to frame1
+	@SuppressWarnings("FieldCanBeLocal")
+	private static int           FEED_FRAGMENT_FRAME = 1;
 	private FrameLayout[] mFrames;
 	private String        mTitles[];
 
@@ -130,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mSortAlpha = mSettings.getBoolean("pref_alpha", true);
 		mShowUnreadOnly = mSettings.getBoolean("pref_unread", false);
 		mConfirm = mSettings.getBoolean("pref_confirm", true);
+		mAdvance = mSettings.getBoolean("pref_advance", false);
 
 		// listen for changed settings
 		mPrefListener = new DefPrefListener();
@@ -768,6 +773,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 	@Override
 	public void selectNav(String id, String title) {
+		// in case of advance after marking all as read, roll back to FeedFragment in content frame
+		while (mContentFrame > FEED_FRAGMENT_FRAME) {
+			onBackPressed();
+		}
+
 		// NavFragment only ever shows up in frame0
 		// Open selected tag in frame1
 
@@ -811,9 +821,11 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			}
 			// else no need to shift frames or increment mContentFrame
 		} else {
-			crossfade(mFrames[mContentFrame + 1], mFrames[mContentFrame]);
+			if (mContentFrame == 0) {
+				crossfade(mFrames[mContentFrame + 1], mFrames[mContentFrame]);
 
-			mContentFrame++;
+				mContentFrame++;
+			}
 		}
 
 		mTitles[mContentFrame] = title;
@@ -1054,8 +1066,27 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	}
 
 	private class UpdateUnreadDisplays extends Subscriber<String> {
+
+		private boolean advance;
+
+		public UpdateUnreadDisplays() {
+			advance = false;
+		}
+
+		public UpdateUnreadDisplays(boolean advance) {
+			this.advance = advance;
+		}
+
 		@Override
 		public void onCompleted() {
+
+			// Now that we're done updating unread count, advance to next unread feed if necessary
+			if (advance) {
+				FragmentManager fm = getSupportFragmentManager();
+				NavFragment fragment = (NavFragment) fm.findFragmentById(FRAME_IDS[0]);
+				fragment.advanceToNextUnreadFeed();
+			}
+
 			unsubscribe();
 		}
 
@@ -1099,7 +1130,9 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			} else if (key.matches("pref_unread")) {
 				mShowUnreadOnly = sharedPreferences.getBoolean("pref_unread", false);
 			} else if (key.matches("pref_confirm")) {
-				mConfirm = sharedPreferences.getBoolean("pref_confirm", false);
+				mConfirm = sharedPreferences.getBoolean("pref_confirm", true);
+			} else if (key.matches("pref_advance")) {
+				mAdvance = sharedPreferences.getBoolean("pref_advance", false);
 			}
 		}
 
@@ -1151,7 +1184,7 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 				.lift(new GetUnreadCountsOperator())
 				.lift(new UpdateUnreadCounts())
 				.subscribeOn(Schedulers.io()))
-			.subscribe(new UpdateUnreadDisplays());
+			.subscribe(new UpdateUnreadDisplays(mAdvance));
 
 		FeedFragment fragment =
 			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);

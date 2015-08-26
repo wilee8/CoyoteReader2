@@ -35,6 +35,7 @@ public class NavFragment extends Fragment {
 	private ImageLoader mImageLoader;
 
 	private NavAdapter mAdapter;
+	private LinearLayoutManager mLayoutManager;
 
 	private ArrayList<TagItem> mNavList;
 
@@ -88,7 +89,8 @@ public class NavFragment extends Fragment {
 		});
 
 		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.nav_recycler_view);
-		recyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+		mLayoutManager = new LinearLayoutManager(mContext);
+		recyclerView.setLayoutManager(mLayoutManager);
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setItemAnimator(new DefaultItemAnimator());
 
@@ -375,6 +377,49 @@ public class NavFragment extends Fragment {
 			if (tagItem.getId().equalsIgnoreCase(id)) {
 				mAdapter.notifyItemChanged(i);
 				break;
+			}
+		}
+	}
+
+	public void advanceToNextUnreadFeed() {
+		// if All Items unread count is zero, there is nowhere to advance
+		// All Items is at index zero
+		TagItem tagItem = mNavList.get(0);
+		if (tagItem.getUnreadCount() != 0) {
+			if (mSelected == 0) {
+				// All Items, reload all items
+				mCallback.selectNav(tagItem.getId(), tagItem.getName());
+			} else {
+				// search for non-"All Items" feed with unread items
+				// offset starts loop at last selected feed
+				int offset = (mSelected == -1) ? 0 : mSelected;
+				int lastNavIndex = mNavList.size() - 1;
+
+				for (int i = 0; i < mNavList.size(); i++) {
+					int thisIndex = (offset + i) % lastNavIndex;
+
+					// don't go to All Items if we weren't already there
+					if (thisIndex != 0) {
+						// if this feed has unread items, select it
+						TagItem thisItem = mNavList.get(thisIndex);
+
+						// don't select this item if it's an expanded top level item
+						// if it has unread items, at least one child will have unread items
+						if (!((thisItem.getIsTopLevel()) && (thisItem.getIsExpanded()))) {
+							if (thisItem.getUnreadCount() != 0) {
+								int oldSelected = mSelected;
+								mSelected = thisIndex;
+
+								mAdapter.notifyItemChanged(oldSelected);
+								mAdapter.notifyItemChanged(mSelected);
+
+								mLayoutManager.scrollToPosition(thisIndex);
+								mCallback.selectNav(thisItem.getId(), thisItem.getName());
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 	}
