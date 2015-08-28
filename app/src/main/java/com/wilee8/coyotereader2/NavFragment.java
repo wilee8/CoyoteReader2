@@ -34,7 +34,7 @@ public class NavFragment extends Fragment {
 	private Activity    mContext;
 	private ImageLoader mImageLoader;
 
-	private NavAdapter mAdapter;
+	private NavAdapter          mAdapter;
 	private LinearLayoutManager mLayoutManager;
 
 	private ArrayList<TagItem> mNavList;
@@ -221,10 +221,11 @@ public class NavFragment extends Fragment {
 				navViewHolder.tagName.setTypeface(null, Typeface.NORMAL);
 			}
 
+			navViewHolder.tagFrame.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
 			if (position == mSelected) {
-				navViewHolder.tagRow.setBackgroundColor(getResources().getColor(R.color.accent));
+				navViewHolder.tagFrame.setSelected(true);
 			} else {
-				navViewHolder.tagRow.setBackgroundColor(getResources().getColor(R.color.background_material_light));
+				navViewHolder.tagFrame.setSelected(false);
 			}
 
 			navViewHolder.tagFrame.setOnClickListener(new NavSelectClickListener(tagItem));
@@ -293,16 +294,9 @@ public class NavFragment extends Fragment {
 
 		@Override
 		public void onClick(View view) {
-			RelativeLayout thisView = (RelativeLayout) view;
-			LinearLayout newView = (LinearLayout) thisView.getParent();
-			newView.setBackgroundColor(getResources().getColor(R.color.accent));
-
 			int oldSelected = mSelected;
 			mSelected = mNavList.indexOf(thisItem);
-
-			if (oldSelected != -1) {
-				mAdapter.notifyItemChanged(oldSelected);
-			}
+			changeSelected(mSelected, oldSelected);
 
 			mCallback.selectNav(thisItem.getId(), thisItem.getName());
 		}
@@ -333,17 +327,10 @@ public class NavFragment extends Fragment {
 				if (mSelected > index) {
 					if (mSelected > (index + count)) {
 						// selected item not removed, adjust value
-						int oldSelected = mSelected;
 						mSelected = mSelected - count;
-
-						mAdapter.notifyItemChanged(oldSelected);
-						mAdapter.notifyItemChanged(mSelected);
 					} else {
 						// selected item was removed, nothing selected any more
-						int oldSelected = mSelected;
 						mSelected = -1;
-
-						mAdapter.notifyItemChanged(oldSelected);
 					}
 				}
 			} else {
@@ -355,17 +342,32 @@ public class NavFragment extends Fragment {
 				// adjust selected item if shifted
 				if (mSelected > index) {
 					// selected item shifted, adjust value
-					int oldSelected = mSelected;
 					mSelected = mSelected + thisFeedList.size();
-
-					mAdapter.notifyItemChanged(oldSelected);
-					mAdapter.notifyItemChanged(mSelected);
 				}
 			}
 
 			// toggle expand button
 			thisItem.setIsExpanded(!thisItem.getIsExpanded());
 			mAdapter.notifyItemChanged(index);
+		}
+	}
+
+	private void changeSelected(int newSelected, int oldSelected) {
+		if (newSelected == oldSelected) return;
+
+		if (newSelected != -1) {
+			View view = mLayoutManager.findViewByPosition(newSelected);
+			if (view != null) {
+				RelativeLayout tagFrame = (RelativeLayout) view.findViewById(R.id.tagFrame);
+				tagFrame.setSelected(true);
+			}
+		}
+		if (oldSelected != -1) {
+			View view = mLayoutManager.findViewByPosition(oldSelected);
+			if (view != null) {
+				RelativeLayout tagFrame = (RelativeLayout) view.findViewById(R.id.tagFrame);
+				tagFrame.setSelected(false);
+			}
 		}
 	}
 
@@ -410,8 +412,7 @@ public class NavFragment extends Fragment {
 								int oldSelected = mSelected;
 								mSelected = thisIndex;
 
-								mAdapter.notifyItemChanged(oldSelected);
-								mAdapter.notifyItemChanged(mSelected);
+								changeSelected(mSelected, oldSelected);
 
 								mLayoutManager.scrollToPosition(thisIndex);
 								mCallback.selectNav(thisItem.getId(), thisItem.getName());
