@@ -1,6 +1,7 @@
 package com.wilee8.coyotereader2;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -11,7 +12,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -352,14 +355,14 @@ public class FeedFragment extends Fragment {
 			}
 
 			viewHolder.articleInfo.setOnClickListener(new FeedSelectClickListener(position));
+			viewHolder.articleInfo.setOnTouchListener(new FeedSelectTouchListener(position));
 			viewHolder.articleStar.setOnClickListener(new StarClickListener(position));
 
+			viewHolder.articleWrapper.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
 			if ((mSelected != -1) && (position == mSelected)) {
-				viewHolder.articleWrapper.setBackgroundColor(
-					getResources().getColor(R.color.accent));
+				viewHolder.articleWrapper.setSelected(true);
 			} else {
-				viewHolder.articleWrapper.setBackgroundColor(
-					getResources().getColor(R.color.background_material_light));
+				viewHolder.articleWrapper.setSelected(false);
 			}
 		}
 
@@ -417,18 +420,60 @@ public class FeedFragment extends Fragment {
 
 		@Override
 		public void onClick(View view) {
-			TextView thisView = (TextView) view;
-			RelativeLayout newView = (RelativeLayout) thisView.getParent();
-			newView.setBackgroundColor(getResources().getColor(R.color.accent));
+			mCallback.selectArticle(mPosition);
+		}
+	}
+
+	private class FeedSelectTouchListener implements View.OnTouchListener {
+
+		int mPosition;
+
+		public FeedSelectTouchListener(int position) {
+			mPosition = position;
+		}
+
+		@Override
+		public boolean onTouch(View view, MotionEvent motionEvent) {
 			int oldSelected = mSelected;
 			mSelected = mPosition;
+			changeSelected(mSelected,
+						   oldSelected,
+						   (int) motionEvent.getX(),
+						   (int) motionEvent.getY());
+			return false;
+		}
+	}
 
-			// adapter should reset views with new backgrounds
-			if (oldSelected != -1) {
-				mAdapter.notifyItemChanged(oldSelected);
+	private void changeSelected(int newSelected, int oldSelected, int x, int y) {
+		if (newSelected == oldSelected) return;
+
+		if (newSelected != -1) {
+			View view = mLayoutManager.findViewByPosition(newSelected);
+			if (view != null) {
+				RelativeLayout articleWrapper = (RelativeLayout) view.findViewById(R.id.articleWrapper);
+				articleWrapper.setSelected(true);
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+					if (x == -1) {
+						x = articleWrapper.getWidth() / 2;
+					}
+					if (y == -1) {
+						y = articleWrapper.getHeight() / 2;
+					}
+					ViewAnimationUtils.createCircularReveal(articleWrapper,
+															x,
+															y,
+															0,
+															articleWrapper.getWidth()).start();
+				}
 			}
-
-			mCallback.selectArticle(mPosition);
+		}
+		if (oldSelected != -1) {
+			View view = mLayoutManager.findViewByPosition(oldSelected);
+			if (view != null) {
+				RelativeLayout articleWrapper = (RelativeLayout) view.findViewById(R.id.articleWrapper);
+				articleWrapper.setSelected(false);
+			}
 		}
 	}
 
@@ -436,10 +481,10 @@ public class FeedFragment extends Fragment {
 		int oldSelected = mSelected;
 		mSelected = position;
 
-		mAdapter.notifyItemChanged(mSelected);
-		if (oldSelected != -1) {
-			mAdapter.notifyItemChanged(oldSelected);
-		}
+		changeSelected(mSelected,
+					   oldSelected,
+					   -1,
+					   -1);
 
 		mLayoutManager.scrollToPosition(position);
 
