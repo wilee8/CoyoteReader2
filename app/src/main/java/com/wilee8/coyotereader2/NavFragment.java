@@ -4,6 +4,7 @@ package com.wilee8.coyotereader2;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -11,7 +12,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.LruCache;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -24,8 +29,6 @@ import com.android.volley.toolbox.NetworkImageView;
 import com.wilee8.coyotereader2.containers.TagItem;
 
 import java.util.ArrayList;
-
-import static android.view.View.OnClickListener;
 
 public class NavFragment extends Fragment {
 
@@ -229,6 +232,7 @@ public class NavFragment extends Fragment {
 			}
 
 			navViewHolder.tagFrame.setOnClickListener(new NavSelectClickListener(tagItem));
+			navViewHolder.tagFrame.setOnTouchListener(new NavSelectTouchListener(tagItem));
 			if (!tagItem.getIsFeed()) {
 				navViewHolder.tagExpand.setOnClickListener(new NavExpandClickListener(tagItem));
 			}
@@ -294,11 +298,30 @@ public class NavFragment extends Fragment {
 
 		@Override
 		public void onClick(View view) {
-			int oldSelected = mSelected;
-			mSelected = mNavList.indexOf(thisItem);
-			changeSelected(mSelected, oldSelected);
-
 			mCallback.selectNav(thisItem.getId(), thisItem.getName());
+		}
+	}
+
+	private class NavSelectTouchListener implements OnTouchListener {
+
+		private TagItem thisItem;
+
+		public NavSelectTouchListener(TagItem item) {
+			thisItem = item;
+		}
+
+
+		@Override
+		public boolean onTouch(View view, MotionEvent motionEvent) {
+			if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+				int oldSelected = mSelected;
+				mSelected = mNavList.indexOf(thisItem);
+				changeSelected(mSelected,
+							   oldSelected,
+							   (int) motionEvent.getX(),
+							   (int) motionEvent.getY());
+			}
+			return false;
 		}
 	}
 
@@ -352,7 +375,7 @@ public class NavFragment extends Fragment {
 		}
 	}
 
-	private void changeSelected(int newSelected, int oldSelected) {
+	private void changeSelected(int newSelected, int oldSelected, int x, int y) {
 		if (newSelected == oldSelected) return;
 
 		if (newSelected != -1) {
@@ -360,6 +383,20 @@ public class NavFragment extends Fragment {
 			if (view != null) {
 				RelativeLayout tagFrame = (RelativeLayout) view.findViewById(R.id.tagFrame);
 				tagFrame.setSelected(true);
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+					if (x == -1) {
+						x = tagFrame.getWidth() / 2;
+					}
+					if (y == -1) {
+						y = tagFrame.getHeight() / 2;
+					}
+					ViewAnimationUtils.createCircularReveal(tagFrame,
+															x,
+															y,
+															0,
+															tagFrame.getWidth()).start();
+				}
 			}
 		}
 		if (oldSelected != -1) {
@@ -412,7 +449,7 @@ public class NavFragment extends Fragment {
 								int oldSelected = mSelected;
 								mSelected = thisIndex;
 
-								changeSelected(mSelected, oldSelected);
+								changeSelected(mSelected, oldSelected, -1, -1);
 
 								mLayoutManager.scrollToPosition(thisIndex);
 								mCallback.selectNav(thisItem.getId(), thisItem.getName());
