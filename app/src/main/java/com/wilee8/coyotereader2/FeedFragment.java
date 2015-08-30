@@ -358,6 +358,8 @@ public class FeedFragment extends Fragment {
 			viewHolder.articleInfo.setOnTouchListener(new FeedSelectTouchListener(position));
 			viewHolder.articleStar.setOnClickListener(new StarClickListener(position));
 
+			viewHolder.articleInfo.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
+			viewHolder.articleStar.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
 			viewHolder.articleWrapper.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
 			if ((mSelected != -1) && (position == mSelected)) {
 				viewHolder.articleWrapper.setSelected(true);
@@ -434,12 +436,14 @@ public class FeedFragment extends Fragment {
 
 		@Override
 		public boolean onTouch(View view, MotionEvent motionEvent) {
-			int oldSelected = mSelected;
-			mSelected = mPosition;
-			changeSelected(mSelected,
-						   oldSelected,
-						   (int) motionEvent.getX(),
-						   (int) motionEvent.getY());
+			if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+				int oldSelected = mSelected;
+				mSelected = mPosition;
+				changeSelected(mSelected,
+							   oldSelected,
+							   (int) motionEvent.getX(),
+							   (int) motionEvent.getY());
+			}
 			return false;
 		}
 	}
@@ -460,6 +464,12 @@ public class FeedFragment extends Fragment {
 					if (y == -1) {
 						y = articleWrapper.getHeight() / 2;
 					}
+
+					// since we're calculating x from articleInfo but animating articleWrapper,
+					// move x over by width of articleStar
+					ImageView articleStar = (ImageView) view.findViewById(R.id.articleStar);
+					x += articleStar.getWidth();
+
 					ViewAnimationUtils.createCircularReveal(articleWrapper,
 															x,
 															y,
