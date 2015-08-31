@@ -5,19 +5,26 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
 public class SettingsDialog extends DialogFragment {
+
+	private int mWidth;
+
 	public SettingsDialog() {
 		// Empty constructor required for DialogFragment
 	}
 
-	public static SettingsDialog newInstance(String title) {
-		return new SettingsDialog();
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		mWidth = getArguments().getInt("width", -1);
+		super.onCreate(savedInstanceState);
 	}
 
 	@Nullable
@@ -26,7 +33,7 @@ public class SettingsDialog extends DialogFragment {
 		getDialog().setTitle(R.string.pref_dialog_title);
 		LayoutInflater i = getActivity().getLayoutInflater();
 
-		LinearLayout ll = (LinearLayout) i.inflate(R.layout.dialog_settings, null);
+		LinearLayout ll = (LinearLayout) i.inflate(R.layout.dialog_settings, container, false);
 
 		SettingsFragment settingsFragment = new SettingsFragment();
 		FragmentManager fm = getChildFragmentManager();
@@ -42,5 +49,15 @@ public class SettingsDialog extends DialogFragment {
 			}
 		});
 		return ll;
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		if (mWidth != -1) {
+			Window window = getDialog().getWindow();
+			window.setLayout(mWidth, window.getAttributes().height);
+			window.setGravity(Gravity.CENTER);
+		}
 	}
 }

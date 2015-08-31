@@ -649,6 +649,14 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			case R.id.action_settings:
 				FragmentManager fm = getSupportFragmentManager();
 				SettingsDialog fragment = new SettingsDialog();
+
+				Bundle args = new Bundle();
+				if (!mDualPane) {
+					View view = findViewById(FRAME_IDS[mContentFrame]);
+					args.putInt("width", view.getWidth());
+				}
+
+				fragment.setArguments(args);
 				fragment.show(fm, null);
 
 				return true;
