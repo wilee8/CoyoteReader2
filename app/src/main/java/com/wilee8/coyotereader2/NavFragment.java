@@ -2,6 +2,7 @@ package com.wilee8.coyotereader2;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Build;
@@ -58,13 +59,13 @@ public class NavFragment extends Fragment {
 	}
 
 	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
+	public void onAttach(Context context) {
+		super.onAttach(context);
 
 		try {
-			mCallback = (NavFragmentListener) activity;
+			mCallback = (NavFragmentListener) context;
 		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString() + " must implement NavFragmentListener");
+			throw new ClassCastException(context.toString() + " must implement NavFragmentListener");
 		}
 	}
 

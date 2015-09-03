@@ -1,6 +1,6 @@
 package com.wilee8.coyotereader2;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -25,13 +25,13 @@ public class ArticlePagerFragment extends Fragment {
 	private ArrayList<ArticleItem>       mItems;
 
 	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
+	public void onAttach(Context context) {
+		super.onAttach(context);
 
 		try {
-			mCallback = (ArticlePagerFragmentListener) activity;
+			mCallback = (ArticlePagerFragmentListener) context;
 		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString() + " must implement ArticlePagerFragmentListener");
+			throw new ClassCastException(context.toString() + " must implement ArticlePagerFragmentListener");
 		}
 	}
 

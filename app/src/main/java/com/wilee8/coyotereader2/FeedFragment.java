@@ -1,6 +1,7 @@
 package com.wilee8.coyotereader2;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -92,13 +93,13 @@ public class FeedFragment extends Fragment {
 	}
 
 	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
+	public void onAttach(Context context) {
+		super.onAttach(context);
 
 		try {
-			mCallback = (FeedFragmentListener) activity;
+			mCallback = (FeedFragmentListener) context;
 		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString() + " must implement FeedFragmentListener");
+			throw new ClassCastException(context.toString() + " must implement FeedFragmentListener");
 		}
 	}
 

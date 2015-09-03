@@ -1,7 +1,6 @@
 package com.wilee8.coyotereader2;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -43,13 +42,13 @@ public class ArticleFragment extends Fragment {
 	private int mScrollY;
 
 	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
+	public void onAttach(Context context) {
+		super.onAttach(context);
 
 		try {
-			mCallback = (ArticleFragmentListener) activity;
+			mCallback = (ArticleFragmentListener) context;
 		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString() + " must implement ArticleFragmentListener");
+			throw new ClassCastException(context.toString() + " must implement ArticleFragmentListener");
 		}
 	}
 
