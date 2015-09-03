@@ -29,7 +29,8 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import rx.Subscriber;
-import rx.android.app.AppObservable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 
@@ -48,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
 	private Context              mContext;
 
 	private InoreaderService  mService;
+	private Subscription      mSubscription;
 	private SharedPreferences mPreferences;
 	private String            mUsername;
 
@@ -109,6 +111,14 @@ public class LoginActivity extends AppCompatActivity {
 		mService = restAdapter.create(InoreaderService.class);
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
+			mSubscription.unsubscribe();
+		}
+	}
+
 	/**
 	 * Attempts to sign in or register the account specified by the login form.
 	 * If there are form errors (invalid email, missing fields, etc.), the
@@ -159,12 +169,13 @@ public class LoginActivity extends AppCompatActivity {
 			queryMap.put("Passwd", password);
 
 			AuthReplyHandler authReplyHandler = new AuthReplyHandler();
-			AppObservable.bindActivity(
-				this,
-				mService.clientLogin(queryMap)
-				.subscribeOn(Schedulers.io()))
-			.subscribe(authReplyHandler);
-//			Observable.create(new DoAuthCallObserver(url)).subscribe(authReplyHandler);
+			if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
+				mSubscription.unsubscribe();
+			}
+			mSubscription = mService.clientLogin(queryMap)
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(authReplyHandler);
 		}
 	}
 
@@ -172,7 +183,7 @@ public class LoginActivity extends AppCompatActivity {
 
 		@Override
 		public void onCompleted() {
-
+			unsubscribe();
 		}
 
 		@Override
@@ -186,10 +197,12 @@ public class LoginActivity extends AppCompatActivity {
 				// Failed login, post an error
 				mPasswordView.setError(getString(R.string.error_incorrect_password));
 			} else {
-			mPasswordView.setError(getString(R.string.error_network));
+				mPasswordView.setError(getString(R.string.error_network));
 			}
 
 			mPasswordView.requestFocus();
+
+			unsubscribe();
 		}
 
 		@Override

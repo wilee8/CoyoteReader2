@@ -49,6 +49,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.app.AppObservable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func5;
 import rx.schedulers.Schedulers;
 
@@ -93,10 +94,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
 
-	private static int           FRAME_IDS[]         = {R.id.frame0, R.id.frame1, R.id.frame2};
+	private static int FRAME_IDS[]         = {R.id.frame0, R.id.frame1, R.id.frame2};
 	// constant for what frame to go back to when automatically advancing, points to frame1
 	@SuppressWarnings("FieldCanBeLocal")
-	private static int           FEED_FRAGMENT_FRAME = 1;
+	private static int FEED_FRAGMENT_FRAME = 1;
 	private FrameLayout[] mFrames;
 	private String        mTitles[];
 
@@ -108,6 +109,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 	private FloatingActionButton mFab;
 
 	private InoreaderService mService;
+	private rx.Subscription  mInitSubscription;
+	private LinkedList       mMarkArticleReadSubscriptions;
+	private LinkedList       mMarkAllReadSubscriptions;
+	private LinkedList       mStarSubscriptions;
 	private RequestQueue     mQueue;
 	private final String mainActivityQueueTag = "MainActivity";
 
@@ -318,6 +323,10 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		mService = restAdapter.create(InoreaderService.class);
 
+		mMarkAllReadSubscriptions = new LinkedList();
+		mMarkArticleReadSubscriptions = new LinkedList();
+		mStarSubscriptions = new LinkedList();
+
 		if (needToFetchData) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -325,15 +334,14 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			fragmentManager.beginTransaction().replace(R.id.frame0, fragment1).commit();
 
 			InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
-			AppObservable.bindActivity(
-				this,
-				Observable.zip(mService.unreadCounts(),
-							   mService.tagList(),
-							   mService.subscriptionList(),
-							   mService.userInfo(),
-							   mService.streamPrefs(),
-							   new ProcessDataZip())
-					.subscribeOn(Schedulers.io()))
+			mInitSubscription = Observable.zip(mService.unreadCounts(),
+											   mService.tagList(),
+											   mService.subscriptionList(),
+											   mService.userInfo(),
+											   mService.streamPrefs(),
+											   new ProcessDataZip())
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(initFinishedSubscriber);
 		}
 	}
@@ -628,6 +636,34 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		if (mQueue != null) {
 			mQueue.cancelAll(mainActivityQueueTag);
 		}
+
+		if ((mInitSubscription != null) && (!mInitSubscription.isUnsubscribed())) {
+			mInitSubscription.unsubscribe();
+		}
+
+		while (mMarkAllReadSubscriptions.size() > 0) {
+			rx.Subscription subscription = (rx.Subscription) mMarkAllReadSubscriptions.removeFirst();
+
+			if ((subscription != null) && (!subscription.isUnsubscribed())) {
+				subscription.unsubscribe();
+			}
+		}
+
+		while (mMarkArticleReadSubscriptions.size() > 0) {
+			rx.Subscription subscription = (rx.Subscription) mMarkArticleReadSubscriptions.removeFirst();
+
+			if ((subscription != null) && (!subscription.isUnsubscribed())) {
+				subscription.unsubscribe();
+			}
+		}
+
+		while (mStarSubscriptions.size() > 0) {
+			rx.Subscription subscription = (rx.Subscription) mStarSubscriptions.removeFirst();
+
+			if ((subscription != null) && (!subscription.isUnsubscribed())) {
+				subscription.unsubscribe();
+			}
+		}
 	}
 
 	@Override
@@ -756,16 +792,19 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		mUserId = null;
 		mStreamPrefs = null;
 
+		if ((mInitSubscription != null) && (!mInitSubscription.isUnsubscribed())) {
+			mInitSubscription.unsubscribe();
+		}
+
 		InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
-		AppObservable.bindActivity(
-			this,
-			Observable.zip(mService.unreadCounts(),
-						   mService.tagList(),
-						   mService.subscriptionList(),
-						   mService.userInfo(),
-						   mService.streamPrefs(),
-						   new ProcessDataZip())
-				.subscribeOn(Schedulers.io()))
+		mInitSubscription = Observable.zip(mService.unreadCounts(),
+										   mService.tagList(),
+										   mService.subscriptionList(),
+										   mService.userInfo(),
+										   mService.streamPrefs(),
+										   new ProcessDataZip())
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
 			.subscribe(initFinishedSubscriber);
 	}
 
@@ -979,13 +1018,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			queryMap.put("i", item.getId());
 
 			// mark item as read
-			AppObservable.bindActivity(
-				this,
-				mService.editTag(queryMap)
-					.lift(new GetUnreadCountsOperator())
-					.lift(new UpdateUnreadCounts())
-					.subscribeOn(Schedulers.io()))
-				.subscribe(new UpdateUnreadDisplays());
+			UpdateUnreadDisplays updateUnreadDisplays = new UpdateUnreadDisplays();
+			rx.Subscription subscription = mService.editTag(queryMap)
+				.lift(new GetUnreadCountsOperator())
+				.lift(new UpdateUnreadCounts())
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(updateUnreadDisplays);
+
+			mMarkArticleReadSubscriptions.addLast(subscription);
 
 			fragment.updateUnreadStatus(item.getId(), false);
 		}
@@ -1186,13 +1227,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		queryMap.put("ts", Long.toString(mUpdated));
 		queryMap.put("s", mMarkAllReadFeed);
 
-		AppObservable.bindActivity(
-			this,
-			mService.markAllAsRead(queryMap)
-				.lift(new GetUnreadCountsOperator())
-				.lift(new UpdateUnreadCounts())
-				.subscribeOn(Schedulers.io()))
-			.subscribe(new UpdateUnreadDisplays(mAdvance));
+		UpdateUnreadDisplays updateUnreadDisplays = new UpdateUnreadDisplays(mAdvance);
+		rx.Subscription subscription = mService.markAllAsRead(queryMap)
+			.lift(new GetUnreadCountsOperator())
+			.lift(new UpdateUnreadCounts())
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.subscribe(updateUnreadDisplays);
+
+		mMarkAllReadSubscriptions.addLast(subscription);
 
 		FeedFragment fragment =
 			(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[1]);
@@ -1226,11 +1269,13 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 		}
 		queryMap.put("i", item.getId());
 
-		AppObservable.bindActivity(
-			this,
-			mService.editTag(queryMap)
-				.subscribeOn(Schedulers.io()))
-			.subscribe(new StarredSubscriber());
+		StarredSubscriber starredSubscriber = new StarredSubscriber();
+		rx.Subscription subscription = mService.editTag(queryMap)
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.subscribe(starredSubscriber);
+
+		mStarSubscriptions.addLast(subscription);
 	}
 
 	private class StarredSubscriber extends Subscriber<Response> {

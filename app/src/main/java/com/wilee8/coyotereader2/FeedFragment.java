@@ -34,7 +34,8 @@ import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.app.AppObservable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class FeedFragment extends Fragment {
@@ -48,6 +49,7 @@ public class FeedFragment extends Fragment {
 	private String           mContinuation;
 	private long             mUpdated;
 	private InoreaderService mService;
+	private Subscription     mSubscription;
 	private Boolean          mFetchInProgress;
 
 	private ArrayList<ArticleItem> mItems;
@@ -143,6 +145,14 @@ public class FeedFragment extends Fragment {
 	}
 
 	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
+			mSubscription.unsubscribe();
+		}
+	}
+
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
@@ -166,11 +176,13 @@ public class FeedFragment extends Fragment {
 
 		UpdateItems updateItems = new UpdateItems();
 
-		AppObservable.bindFragment(
-			this,
-			mService.streamContents(mFeedId, queryMap)
-				.lift(new AddArticles())
-				.subscribeOn(Schedulers.io()))
+		if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
+			mSubscription.unsubscribe();
+		}
+		mSubscription = mService.streamContents(mFeedId, queryMap)
+			.lift(new AddArticles())
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
 			.subscribe(updateItems);
 	}
 
@@ -269,6 +281,8 @@ public class FeedFragment extends Fragment {
 					  R.string.error_fetch_data,
 					  Snackbar.LENGTH_LONG)
 				.show();
+
+			unsubscribe();
 		}
 
 		@Override
