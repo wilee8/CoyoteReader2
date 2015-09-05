@@ -31,8 +31,7 @@ import org.parceler.Parcels;
 import java.util.ArrayList;
 import java.util.Map;
 
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
+import retrofit.Retrofit;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -43,8 +42,6 @@ public class FeedFragment extends Fragment {
 	private FeedFragmentListener mCallback;
 
 	private Activity mContext;
-
-	private String mAuthToken;
 
 	private String           mFeedId;
 	private String           mContinuation;
@@ -107,8 +104,6 @@ public class FeedFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		mFeedId = getArguments().getString("id");
 
-		mAuthToken = mCallback.getAuthToken();
-
 		View view = inflater.inflate(R.layout.fragment_feed, container, false);
 		mProgress = (ProgressBar) view.findViewById(R.id.progressbar_loading);
 		mRecyclerView = (RecyclerView) view.findViewById(R.id.feed_recycler_view);
@@ -121,19 +116,13 @@ public class FeedFragment extends Fragment {
 		mRecyclerView.setAdapter(mAdapter);
 		mRecyclerView.addOnScrollListener(new RecyclerScrollListener());
 
-		RequestInterceptor requestInterceptor = new RequestInterceptor() {
-			@Override
-			public void intercept(RequestFacade request) {
-				request.addHeader("Authorization", "GoogleLogin auth=" + mAuthToken);
-				request.addHeader("AppId", BuildConfig.INOREADER_APP_ID);
-				request.addHeader("AppKey", BuildConfig.INOREADER_APP_KEY);
-			}
-		};
-
-		RestAdapter restAdapter = new RestAdapter.Builder()
-			.setEndpoint("https://www.inoreader.com")
-			.setRequestInterceptor(requestInterceptor)
+		Retrofit restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
 			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mCallback.getAuthToken()));
 
 		mService = restAdapter.create(InoreaderService.class);
 		if (mItems.size() == 0) {

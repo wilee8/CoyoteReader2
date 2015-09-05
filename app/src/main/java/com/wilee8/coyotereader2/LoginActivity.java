@@ -21,13 +21,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.Map;
 
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
-import retrofit.mime.TypedByteArray;
+import retrofit.Response;
+import retrofit.Retrofit;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -95,18 +93,13 @@ public class LoginActivity extends AppCompatActivity {
 		mLoginFormView = findViewById(R.id.login_form);
 		mProgressView = findViewById(R.id.login_progress);
 
-		RequestInterceptor requestInterceptor = new RequestInterceptor() {
-			@Override
-			public void intercept(RequestFacade request) {
-				request.addHeader("AppId", BuildConfig.INOREADER_APP_ID);
-				request.addHeader("AppKey", BuildConfig.INOREADER_APP_KEY);
-			}
-		};
-
-		RestAdapter restAdapter = new RestAdapter.Builder()
-			.setEndpoint("https://www.inoreader.com")
-			.setRequestInterceptor(requestInterceptor)
+		Retrofit restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
 			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(null));
 
 		mService = restAdapter.create(InoreaderService.class);
 	}
@@ -188,8 +181,7 @@ public class LoginActivity extends AppCompatActivity {
 
 		@Override
 		public void onError(Throwable throwable) {
-			RetrofitError error = (RetrofitError) throwable;
-			String message = error.getMessage();
+			String message = throwable.getMessage();
 
 			showProgress(false);
 
@@ -207,7 +199,14 @@ public class LoginActivity extends AppCompatActivity {
 
 		@Override
 		public void onNext(Response response) {
-			String responseBody = new String(((TypedByteArray) response.getBody()).getBytes());
+			com.squareup.okhttp.Response rawResponse = response.raw();
+			String responseBody;
+			try {
+				responseBody = rawResponse.body().string();
+			} catch (IOException e) {
+				onError(e);
+				return;
+			}
 
 			// Get the authentication token
 			String holder[] = responseBody.split("Auth=");

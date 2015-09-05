@@ -45,6 +45,7 @@ import com.wilee8.coyotereader2.gson.UserInfo;
 
 import org.parceler.Parcels;
 
+import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,10 +54,8 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
 
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
-import retrofit.client.Response;
-import retrofit.mime.TypedByteArray;
+import retrofit.Response;
+import retrofit.Retrofit;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -307,19 +306,13 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 		mQueue = Volley.newRequestQueue(this);
 
-		RequestInterceptor requestInterceptor = new RequestInterceptor() {
-			@Override
-			public void intercept(RequestFacade request) {
-				request.addHeader("Authorization", "GoogleLogin auth=" + mAuthToken);
-				request.addHeader("AppId", BuildConfig.INOREADER_APP_ID);
-				request.addHeader("AppKey", BuildConfig.INOREADER_APP_KEY);
-			}
-		};
-
-		RestAdapter restAdapter = new RestAdapter.Builder()
-			.setEndpoint("https://www.inoreader.com")
-			.setRequestInterceptor(requestInterceptor)
+		Retrofit restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
 			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
 
 		mService = restAdapter.create(InoreaderService.class);
 
@@ -641,27 +634,33 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			mInitSubscription.unsubscribe();
 		}
 
-		while (mMarkAllReadSubscriptions.size() > 0) {
-			rx.Subscription subscription = (rx.Subscription) mMarkAllReadSubscriptions.removeFirst();
+		if (mMarkAllReadSubscriptions != null) {
+			while (mMarkAllReadSubscriptions.size() > 0) {
+				rx.Subscription subscription = (rx.Subscription) mMarkAllReadSubscriptions.removeFirst();
 
-			if ((subscription != null) && (!subscription.isUnsubscribed())) {
-				subscription.unsubscribe();
+				if ((subscription != null) && (!subscription.isUnsubscribed())) {
+					subscription.unsubscribe();
+				}
 			}
 		}
 
-		while (mMarkArticleReadSubscriptions.size() > 0) {
-			rx.Subscription subscription = (rx.Subscription) mMarkArticleReadSubscriptions.removeFirst();
+		if (mMarkArticleReadSubscriptions != null) {
+			while (mMarkArticleReadSubscriptions.size() > 0) {
+				rx.Subscription subscription = (rx.Subscription) mMarkArticleReadSubscriptions.removeFirst();
 
-			if ((subscription != null) && (!subscription.isUnsubscribed())) {
-				subscription.unsubscribe();
+				if ((subscription != null) && (!subscription.isUnsubscribed())) {
+					subscription.unsubscribe();
+				}
 			}
 		}
 
-		while (mStarSubscriptions.size() > 0) {
-			rx.Subscription subscription = (rx.Subscription) mStarSubscriptions.removeFirst();
+		if (mStarSubscriptions != null ) {
+			while (mStarSubscriptions.size() > 0) {
+				rx.Subscription subscription = (rx.Subscription) mStarSubscriptions.removeFirst();
 
-			if ((subscription != null) && (!subscription.isUnsubscribed())) {
-				subscription.unsubscribe();
+				if ((subscription != null) && (!subscription.isUnsubscribed())) {
+					subscription.unsubscribe();
+				}
 			}
 		}
 	}
@@ -1048,9 +1047,15 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 
 				@Override
 				public void onNext(Response response) {
-					String reponseBody = new String(((TypedByteArray) response.getBody()).getBytes());
+					String responseBody;
+					try {
+						responseBody = response.raw().body().string();
+					} catch (IOException e) {
+						onError(e);
+						return;
+					}
 
-					if (reponseBody.equalsIgnoreCase("OK")) {
+					if (responseBody.equalsIgnoreCase("OK")) {
 						subscriber.onNext(mService.unreadCountsObject());
 					} else {
 						subscriber.onError(null);
@@ -1292,13 +1297,21 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 					  R.string.error_update_starred,
 					  Snackbar.LENGTH_LONG)
 				.show();
+
+			unsubscribe();
 		}
 
 		@Override
 		public void onNext(Response response) {
-			String reponseBody = new String(((TypedByteArray) response.getBody()).getBytes());
+			String responseBody;
+			try {
+				responseBody = response.raw().body().string();
+			} catch (IOException e) {
+				onError(e);
+				return;
+			}
 
-			if (!reponseBody.equalsIgnoreCase("OK")) {
+			if (!responseBody.equalsIgnoreCase("OK")) {
 				onError(null);
 			}
 
