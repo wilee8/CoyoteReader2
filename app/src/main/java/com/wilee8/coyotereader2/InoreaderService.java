@@ -9,7 +9,7 @@ import com.wilee8.coyotereader2.gson.UserInfo;
 
 import java.util.Map;
 
-import retrofit.client.Response;
+import retrofit.Response;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.Path;

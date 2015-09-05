@@ -44,7 +44,8 @@ dependencies {
     compile 'io.reactivex:rxandroid:1.0.1'
     compile 'com.trello:rxlifecycle:0.3.0'
     compile 'com.trello:rxlifecycle-components:0.3.0'
-    compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta1'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
     compile('com.android.support:support-v4-preferencefragment:1.+@aar') {
         exclude module: 'support-v4'
     }
