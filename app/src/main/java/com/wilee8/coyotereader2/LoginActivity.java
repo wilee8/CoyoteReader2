@@ -101,7 +101,7 @@ public class LoginActivity extends RxAppCompatActivity {
 			.add(new HeaderInterceptor(null));
 
 		mService = restAdapter.create(InoreaderService.class);
-	}
+}
 
 	/**
 	 * Attempts to sign in or register the account specified by the login form.
@@ -161,57 +161,58 @@ public class LoginActivity extends RxAppCompatActivity {
 		}
 	}
 
-	private class AuthReplyHandler extends Subscriber<Response> {
+private class AuthReplyHandler extends Subscriber<Response> {
 
-		@Override
-		public void onCompleted() {
-			unsubscribe();
-		}
-
-		@Override
-		public void onError(Throwable throwable) {
-			String message = throwable.getMessage();
-
-			showProgress(false);
-
-			if (message.equalsIgnoreCase("401 Authorization Required")) {
-				// Failed login, post an error
-				mPasswordView.setError(getString(R.string.error_incorrect_password));
-			} else {
-				mPasswordView.setError(getString(R.string.error_network));
-			}
-
-			mPasswordView.requestFocus();
-
-			unsubscribe();
-		}
-
-		@Override
-		public void onNext(Response response) {
-			com.squareup.okhttp.Response rawResponse = response.raw();
-			String responseBody;
-			try {
-				responseBody = rawResponse.body().string();
-			} catch (IOException e) {
-				onError(e);
-				return;
-			}
-
-			// Get the authentication token
-			String holder[] = responseBody.split("Auth=");
-			String token = holder[1].replaceAll("\n", "");
-			SharedPreferences.Editor editor = mPreferences.edit();
-
-			editor.putString("username", mUsername);
-			editor.putString("authToken", token);
-			editor.apply();
-
-			// Launch main activity
-			Intent mainIntent = new Intent(mContext, MainActivity.class);
-			startActivity(mainIntent);
-			finish();
-		}
+	@Override
+	public void onCompleted() {
+		unsubscribe();
 	}
+
+	@Override
+	public void onError(Throwable throwable) {
+		String message = throwable.getMessage();
+
+		showProgress(false);
+
+		if (message.equalsIgnoreCase("401 Authorization Required")) {
+			// Failed login, post an error
+			mPasswordView.setError(getString(R.string.error_incorrect_password));
+		} else {
+			mPasswordView.setError(getString(R.string.error_network));
+		}
+
+		mPasswordView.requestFocus();
+
+		unsubscribe();
+	}
+
+	@Override
+	public void onNext(Response response) {
+		com.squareup.okhttp.Response rawResponse = response.raw();
+		String responseBody;
+		try {
+			responseBody = rawResponse.body().string();
+		} catch (IOException e) {
+			onError(e);
+			return;
+		}
+
+		// Get the authentication token
+		String holder[] = responseBody.split("Auth=");
+		String token = holder[1].replaceAll("\n", "");
+		SharedPreferences.Editor editor = mPreferences.edit();
+
+		editor.putString("username", mUsername);
+		editor.putString("authToken", token);
+		editor.apply();
+
+		// Launch main activity
+		Intent mainIntent = new Intent(mContext, MainActivity.class);
+		startActivity(mainIntent);
+		finish();
+	}
+
+}
 
 	/**
 	 * Shows the progress UI and hides the login form.
