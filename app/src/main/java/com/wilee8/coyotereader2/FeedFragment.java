@@ -6,7 +6,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,6 +21,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.trello.rxlifecycle.components.support.RxFragment;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamContents;
@@ -35,11 +35,10 @@ import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import rx.Observable;
 import rx.Subscriber;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class FeedFragment extends Fragment {
+public class FeedFragment extends RxFragment {
 	private FeedFragmentListener mCallback;
 
 	private Activity mContext;
@@ -50,7 +49,6 @@ public class FeedFragment extends Fragment {
 	private String           mContinuation;
 	private long             mUpdated;
 	private InoreaderService mService;
-	private Subscription     mSubscription;
 	private Boolean          mFetchInProgress;
 
 	private ArrayList<ArticleItem> mItems;
@@ -146,14 +144,6 @@ public class FeedFragment extends Fragment {
 	}
 
 	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
-			mSubscription.unsubscribe();
-		}
-	}
-
-	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
@@ -177,13 +167,11 @@ public class FeedFragment extends Fragment {
 
 		UpdateItems updateItems = new UpdateItems();
 
-		if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
-			mSubscription.unsubscribe();
-		}
-		mSubscription = mService.streamContents(mFeedId, queryMap)
+		mService.streamContents(mFeedId, queryMap)
 			.lift(new AddArticles())
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
+			.compose(this.<Integer>bindToLifecycle())
 			.subscribe(updateItems);
 	}
 

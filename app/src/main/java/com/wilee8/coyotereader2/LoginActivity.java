@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.util.ArrayMap;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -21,6 +20,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
+
 import java.util.Map;
 
 import retrofit.RequestInterceptor;
@@ -29,7 +30,6 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import rx.Subscriber;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -37,7 +37,7 @@ import rx.schedulers.Schedulers;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends RxAppCompatActivity {
 
 	private static final String AUTH_PREFS = "AuthPrefsFile";
 
@@ -49,7 +49,6 @@ public class LoginActivity extends AppCompatActivity {
 	private Context              mContext;
 
 	private InoreaderService  mService;
-	private Subscription      mSubscription;
 	private SharedPreferences mPreferences;
 	private String            mUsername;
 
@@ -111,14 +110,6 @@ public class LoginActivity extends AppCompatActivity {
 		mService = restAdapter.create(InoreaderService.class);
 	}
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
-			mSubscription.unsubscribe();
-		}
-	}
-
 	/**
 	 * Attempts to sign in or register the account specified by the login form.
 	 * If there are form errors (invalid email, missing fields, etc.), the
@@ -169,12 +160,10 @@ public class LoginActivity extends AppCompatActivity {
 			queryMap.put("Passwd", password);
 
 			AuthReplyHandler authReplyHandler = new AuthReplyHandler();
-			if ((mSubscription != null) && (!mSubscription.isUnsubscribed())) {
-				mSubscription.unsubscribe();
-			}
-			mSubscription = mService.clientLogin(queryMap)
+			mService.clientLogin(queryMap)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
+				.compose(this.<Response>bindToLifecycle())
 				.subscribe(authReplyHandler);
 		}
 	}
