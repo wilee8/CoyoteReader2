@@ -641,27 +641,33 @@ public class MainActivity extends AppCompatActivity implements NavFragment.NavFr
 			mInitSubscription.unsubscribe();
 		}
 
-		while (mMarkAllReadSubscriptions.size() > 0) {
-			rx.Subscription subscription = (rx.Subscription) mMarkAllReadSubscriptions.removeFirst();
+		if (mMarkAllReadSubscriptions != null) {
+			while (mMarkAllReadSubscriptions.size() > 0) {
+				rx.Subscription subscription = (rx.Subscription) mMarkAllReadSubscriptions.removeFirst();
 
-			if ((subscription != null) && (!subscription.isUnsubscribed())) {
-				subscription.unsubscribe();
+				if ((subscription != null) && (!subscription.isUnsubscribed())) {
+					subscription.unsubscribe();
+				}
 			}
 		}
 
-		while (mMarkArticleReadSubscriptions.size() > 0) {
-			rx.Subscription subscription = (rx.Subscription) mMarkArticleReadSubscriptions.removeFirst();
+		if (mMarkArticleReadSubscriptions != null) {
+			while (mMarkArticleReadSubscriptions.size() > 0) {
+				rx.Subscription subscription = (rx.Subscription) mMarkArticleReadSubscriptions.removeFirst();
 
-			if ((subscription != null) && (!subscription.isUnsubscribed())) {
-				subscription.unsubscribe();
+				if ((subscription != null) && (!subscription.isUnsubscribed())) {
+					subscription.unsubscribe();
+				}
 			}
 		}
 
-		while (mStarSubscriptions.size() > 0) {
-			rx.Subscription subscription = (rx.Subscription) mStarSubscriptions.removeFirst();
+		if (mStarSubscriptions != null) {
+			while (mStarSubscriptions.size() > 0) {
+				rx.Subscription subscription = (rx.Subscription) mStarSubscriptions.removeFirst();
 
-			if ((subscription != null) && (!subscription.isUnsubscribed())) {
-				subscription.unsubscribe();
+				if ((subscription != null) && (!subscription.isUnsubscribed())) {
+					subscription.unsubscribe();
+				}
 			}
 		}
 	}
