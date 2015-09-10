@@ -30,6 +30,7 @@ import android.widget.LinearLayout.LayoutParams;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.squareup.okhttp.ResponseBody;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.TagItem;
@@ -53,8 +54,10 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 
-import retrofit.Response;
+import retrofit.Call;
+import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
+import retrofit.RxJavaCallAdapterFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -62,9 +65,9 @@ import rx.functions.Func5;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends RxAppCompatActivity implements NavFragment.NavFragmentListener,
-															   FeedFragment.FeedFragmentListener,
-															   ArticlePagerFragment.ArticlePagerFragmentListener,
-															   ArticleFragment.ArticleFragmentListener {
+																 FeedFragment.FeedFragmentListener,
+																 ArticlePagerFragment.ArticlePagerFragmentListener,
+																 ArticleFragment.ArticleFragmentListener {
 	private Context mContext;
 
 	private SharedPreferences mAuthPreferences;
@@ -106,8 +109,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private long                 mUpdated;
 	private FloatingActionButton mFab;
 
-	private InoreaderService mService;
-	private RequestQueue     mQueue;
+	private InoreaderRxGsonService mRxGsonService;
+	private InoreaderRxService     mRxService;
+	private InoreaderGsonService   mGsonService;
+	private RequestQueue           mQueue;
 	private final String mainActivityQueueTag = "MainActivity";
 
 	@Override
@@ -303,13 +308,37 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		Retrofit restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
+			.addConverterFactory(GsonConverterFactory.create())
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
 			.build();
 
 		restAdapter.client()
 			.networkInterceptors()
 			.add(new HeaderInterceptor(mAuthToken));
 
-		mService = restAdapter.create(InoreaderService.class);
+		mRxGsonService = restAdapter.create(InoreaderRxGsonService.class);
+
+		restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
+
+		mRxService = restAdapter.create(InoreaderRxService.class);
+
+		restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.addConverterFactory(GsonConverterFactory.create())
+			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
+
+		mGsonService = restAdapter.create(InoreaderGsonService.class);
 
 		if (needToFetchData) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
@@ -318,12 +347,12 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			fragmentManager.beginTransaction().replace(R.id.frame0, fragment1).commit();
 
 			InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
-			Observable.zip(mService.unreadCounts(),
-											   mService.tagList(),
-											   mService.subscriptionList(),
-											   mService.userInfo(),
-											   mService.streamPrefs(),
-											   new ProcessDataZip())
+			Observable.zip(mRxGsonService.unreadCounts(),
+						   mRxGsonService.tagList(),
+						   mRxGsonService.subscriptionList(),
+						   mRxGsonService.userInfo(),
+						   mRxGsonService.streamPrefs(),
+						   new ProcessDataZip())
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.compose(this.<Void>bindToLifecycle())
@@ -750,12 +779,12 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mStreamPrefs = null;
 
 		InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
-		Observable.zip(mService.unreadCounts(),
-										   mService.tagList(),
-										   mService.subscriptionList(),
-										   mService.userInfo(),
-										   mService.streamPrefs(),
-										   new ProcessDataZip())
+		Observable.zip(mRxGsonService.unreadCounts(),
+					   mRxGsonService.tagList(),
+					   mRxGsonService.subscriptionList(),
+					   mRxGsonService.userInfo(),
+					   mRxGsonService.streamPrefs(),
+					   new ProcessDataZip())
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
 			.compose(this.<Void>bindToLifecycle())
@@ -973,7 +1002,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 			// mark item as read
 			UpdateUnreadDisplays updateUnreadDisplays = new UpdateUnreadDisplays();
-			mService.editTag(queryMap)
+			mRxService.editTag(queryMap)
 				.lift(new GetUnreadCountsOperator())
 				.lift(new UpdateUnreadCounts())
 				.subscribeOn(Schedulers.io())
@@ -985,10 +1014,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 	}
 
-	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, Response> {
+	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, ResponseBody> {
 		@Override
-		public Subscriber<? super Response> call(final Subscriber<? super UnreadCounts> subscriber) {
-			return new Subscriber<Response>() {
+		public Subscriber<? super ResponseBody> call(final Subscriber<? super UnreadCounts> subscriber) {
+			return new Subscriber<ResponseBody>() {
 				@Override
 				public void onCompleted() {
 					subscriber.onCompleted();
@@ -1000,17 +1029,22 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				}
 
 				@Override
-				public void onNext(Response response) {
-					String responseBody;
+				public void onNext(ResponseBody responseBody) {
+					String response;
 					try {
-						responseBody = response.raw().body().string();
+						response = responseBody.string();
 					} catch (IOException e) {
 						onError(e);
 						return;
 					}
 
-					if (responseBody.equalsIgnoreCase("OK")) {
-						subscriber.onNext(mService.unreadCountsObject());
+					if (response.equalsIgnoreCase("OK")) {
+						Call<UnreadCounts> call = mGsonService.unreadCountsObject();
+						try {
+							subscriber.onNext(call.execute().body());
+						} catch (IOException e) {
+							subscriber.onError(e);
+						}
 					} else {
 						subscriber.onError(null);
 					}
@@ -1187,7 +1221,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		queryMap.put("s", mMarkAllReadFeed);
 
 		UpdateUnreadDisplays updateUnreadDisplays = new UpdateUnreadDisplays(mAdvance);
-		mService.markAllAsRead(queryMap)
+		mRxService.markAllAsRead(queryMap)
 			.lift(new GetUnreadCountsOperator())
 			.lift(new UpdateUnreadCounts())
 			.subscribeOn(Schedulers.io())
@@ -1228,14 +1262,14 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		queryMap.put("i", item.getId());
 
 		StarredSubscriber starredSubscriber = new StarredSubscriber();
-		mService.editTag(queryMap)
+		mRxService.editTag(queryMap)
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
-			.compose(this.<Response>bindToLifecycle())
+			.compose(this.<ResponseBody>bindToLifecycle())
 			.subscribe(starredSubscriber);
 	}
 
-	private class StarredSubscriber extends Subscriber<Response> {
+	private class StarredSubscriber extends Subscriber<ResponseBody> {
 
 		@Override
 		public void onCompleted() {
@@ -1254,16 +1288,16 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		@Override
-		public void onNext(Response response) {
-			String responseBody;
+		public void onNext(ResponseBody responseBody) {
+			String response;
 			try {
-				responseBody = response.raw().body().string();
+				response = responseBody.string();
 			} catch (IOException e) {
 				onError(e);
 				return;
 			}
 
-			if (!responseBody.equalsIgnoreCase("OK")) {
+			if (!response.equalsIgnoreCase("OK")) {
 				onError(null);
 			}
 

@@ -20,13 +20,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.squareup.okhttp.ResponseBody;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 
 import java.io.IOException;
 import java.util.Map;
 
-import retrofit.Response;
 import retrofit.Retrofit;
+import retrofit.RxJavaCallAdapterFactory;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -46,9 +47,9 @@ public class LoginActivity extends RxAppCompatActivity {
 	private View                 mLoginFormView;
 	private Context              mContext;
 
-	private InoreaderService  mService;
-	private SharedPreferences mPreferences;
-	private String            mUsername;
+	private InoreaderRxService mService;
+	private SharedPreferences  mPreferences;
+	private String             mUsername;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -94,14 +95,15 @@ public class LoginActivity extends RxAppCompatActivity {
 
 		Retrofit restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
 			.build();
 
 		restAdapter.client()
 			.networkInterceptors()
 			.add(new HeaderInterceptor(null));
 
-		mService = restAdapter.create(InoreaderService.class);
-}
+		mService = restAdapter.create(InoreaderRxService.class);
+	}
 
 	/**
 	 * Attempts to sign in or register the account specified by the login form.
@@ -156,63 +158,62 @@ public class LoginActivity extends RxAppCompatActivity {
 			mService.clientLogin(queryMap)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
-				.compose(this.<Response>bindToLifecycle())
+				.compose(this.<ResponseBody>bindToLifecycle())
 				.subscribe(authReplyHandler);
 		}
 	}
 
-private class AuthReplyHandler extends Subscriber<Response> {
+	private class AuthReplyHandler extends Subscriber<ResponseBody> {
 
-	@Override
-	public void onCompleted() {
-		unsubscribe();
-	}
-
-	@Override
-	public void onError(Throwable throwable) {
-		String message = throwable.getMessage();
-
-		showProgress(false);
-
-		if (message.equalsIgnoreCase("401 Authorization Required")) {
-			// Failed login, post an error
-			mPasswordView.setError(getString(R.string.error_incorrect_password));
-		} else {
-			mPasswordView.setError(getString(R.string.error_network));
+		@Override
+		public void onCompleted() {
+			unsubscribe();
 		}
 
-		mPasswordView.requestFocus();
+		@Override
+		public void onError(Throwable throwable) {
+			String message = throwable.getMessage();
 
-		unsubscribe();
-	}
+			showProgress(false);
 
-	@Override
-	public void onNext(Response response) {
-		com.squareup.okhttp.Response rawResponse = response.raw();
-		String responseBody;
-		try {
-			responseBody = rawResponse.body().string();
-		} catch (IOException e) {
-			onError(e);
-			return;
+			if (message.equalsIgnoreCase("401 Authorization Required")) {
+				// Failed login, post an error
+				mPasswordView.setError(getString(R.string.error_incorrect_password));
+			} else {
+				mPasswordView.setError(getString(R.string.error_network));
+			}
+
+			mPasswordView.requestFocus();
+
+			unsubscribe();
 		}
 
-		// Get the authentication token
-		String holder[] = responseBody.split("Auth=");
-		String token = holder[1].replaceAll("\n", "");
-		SharedPreferences.Editor editor = mPreferences.edit();
+		@Override
+		public void onNext(ResponseBody responseBody) {
+			String response;
+			try {
+				response = responseBody.string();
+			} catch (IOException e) {
+				onError(e);
+				return;
+			}
 
-		editor.putString("username", mUsername);
-		editor.putString("authToken", token);
-		editor.apply();
+			// Get the authentication token
+			String holder[] = response.split("Auth=");
+			String token = holder[1].replaceAll("\n", "");
+			SharedPreferences.Editor editor = mPreferences.edit();
 
-		// Launch main activity
-		Intent mainIntent = new Intent(mContext, MainActivity.class);
-		startActivity(mainIntent);
-		finish();
+			editor.putString("username", mUsername);
+			editor.putString("authToken", token);
+			editor.apply();
+
+			// Launch main activity
+			Intent mainIntent = new Intent(mContext, MainActivity.class);
+			startActivity(mainIntent);
+			finish();
+		}
+
 	}
-
-}
 
 	/**
 	 * Shows the progress UI and hides the login form.

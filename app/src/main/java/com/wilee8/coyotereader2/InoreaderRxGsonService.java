@@ -9,17 +9,13 @@ import com.wilee8.coyotereader2.gson.UserInfo;
 
 import java.util.Map;
 
-import retrofit.Response;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.Path;
 import retrofit.http.QueryMap;
 import rx.Observable;
 
-public interface InoreaderService {
-	@POST("/accounts/ClientLogin")
-	Observable<Response> clientLogin(@QueryMap Map<String, String> options);
-
+public interface InoreaderRxGsonService {
 	@GET("/reader/api/0/unread-count")
 	Observable<UnreadCounts> unreadCounts();
 
@@ -37,13 +33,4 @@ public interface InoreaderService {
 
 	@POST("/reader/api/0/stream/contents/{feedId}")
 	Observable<StreamContents> streamContents(@Path("feedId") String feedId, @QueryMap Map<String, String> options);
-
-	@POST("/reader/api/0/edit-tag")
-	Observable<Response> editTag(@QueryMap Map<String, String> options);
-
-	@POST("/reader/api/0/mark-all-as-read")
-	Observable<Response> markAllAsRead(@QueryMap Map<String, String> options);
-
-	@GET("/reader/api/0/unread-count")
-	UnreadCounts unreadCountsObject();
 }

@@ -31,7 +31,9 @@ import org.parceler.Parcels;
 import java.util.ArrayList;
 import java.util.Map;
 
+import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
+import retrofit.RxJavaCallAdapterFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -42,11 +44,11 @@ public class FeedFragment extends RxFragment {
 
 	private Activity mContext;
 
-	private String           mFeedId;
-	private String           mContinuation;
-	private long             mUpdated;
-	private InoreaderService mService;
-	private Boolean          mFetchInProgress;
+	private String                 mFeedId;
+	private String                 mContinuation;
+	private long                   mUpdated;
+	private InoreaderRxGsonService mService;
+	private Boolean                mFetchInProgress;
 
 	private ArrayList<ArticleItem> mItems;
 	private FeedAdapter            mAdapter;
@@ -116,13 +118,15 @@ public class FeedFragment extends RxFragment {
 
 		Retrofit restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
+			.addConverterFactory(GsonConverterFactory.create())
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
 			.build();
 
 		restAdapter.client()
 			.networkInterceptors()
 			.add(new HeaderInterceptor(mCallback.getAuthToken()));
 
-		mService = restAdapter.create(InoreaderService.class);
+		mService = restAdapter.create(InoreaderRxGsonService.class);
 		if (mItems.size() == 0) {
 			mProgress.setVisibility(View.VISIBLE);
 
