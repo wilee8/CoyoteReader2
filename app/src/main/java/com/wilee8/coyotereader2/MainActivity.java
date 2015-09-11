@@ -28,8 +28,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.squareup.okhttp.ResponseBody;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.wilee8.coyotereader2.containers.ArticleItem;
@@ -112,8 +110,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private InoreaderRxGsonService mRxGsonService;
 	private InoreaderRxService     mRxService;
 	private InoreaderGsonService   mGsonService;
-	private RequestQueue           mQueue;
-	private final String mainActivityQueueTag = "MainActivity";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -304,8 +300,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		mFab.setOnClickListener(new MarkAllReadClickListener());
 
-		mQueue = Volley.newRequestQueue(this);
-
 		Retrofit restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
 			.addConverterFactory(GsonConverterFactory.create())
@@ -471,7 +465,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable throwable) {
-			mQueue.cancelAll(mainActivityQueueTag);
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
 					  R.string.error_fetch_data,
@@ -646,10 +639,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		} catch (Exception e) {
 			// can't really do anything, we're exiting
 		}
-
-		if (mQueue != null) {
-			mQueue.cancelAll(mainActivityQueueTag);
-		}
 	}
 
 	@Override
@@ -794,11 +783,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	@Override
 	public ArrayList<TagItem> getNavList() {
 		return mNavList;
-	}
-
-	@Override
-	public RequestQueue getRequestQueue() {
-		return mQueue;
 	}
 
 	@Override

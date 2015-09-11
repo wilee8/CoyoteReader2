@@ -3,7 +3,6 @@ package com.wilee8.coyotereader2;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,9 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.NetworkImageView;
+import com.squareup.picasso.Picasso;
 import com.wilee8.coyotereader2.containers.TagItem;
 
 import java.util.ArrayList;
@@ -35,8 +31,7 @@ public class NavFragment extends Fragment {
 
 	private NavFragmentListener mCallback;
 
-	private Activity    mContext;
-	private ImageLoader mImageLoader;
+	private Activity mContext;
 
 	private NavAdapter          mAdapter;
 	private LinearLayoutManager mLayoutManager;
@@ -77,21 +72,6 @@ public class NavFragment extends Fragment {
 
 		mNavList = mCallback.getNavList();
 
-		mImageLoader = new ImageLoader(mCallback.getRequestQueue(), new ImageLoader.ImageCache() {
-
-			private final LruCache<String, Bitmap> cache = new LruCache<>(20);
-
-			@Override
-			public Bitmap getBitmap(String url) {
-				return cache.get(url);
-			}
-
-			@Override
-			public void putBitmap(String url, Bitmap bitmap) {
-				cache.put(url, bitmap);
-			}
-		});
-
 		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.nav_recycler_view);
 		mLayoutManager = new LinearLayoutManager(mContext);
 		recyclerView.setLayoutManager(mLayoutManager);
@@ -115,8 +95,6 @@ public class NavFragment extends Fragment {
 
 	public interface NavFragmentListener {
 		ArrayList<TagItem> getNavList();
-
-		RequestQueue getRequestQueue();
 
 		void selectNav(String id, String title);
 	}
@@ -147,17 +125,9 @@ public class NavFragment extends Fragment {
 
 		@Override
 		public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-			if (viewType == VIEW_TYPE_SUB_FEED) {
-				return new SubfeedViewHolder(LayoutInflater.from(mContext).
-					inflate(R.layout.row_nav_card_subfeed, parent, false));
-			} else if (viewType == VIEW_TYPE_LOCAL_RESOURCE) {
-				// use networkimageview to display favicon url
-				return new LocalViewHolder(LayoutInflater.from(mContext).
-					inflate(R.layout.row_nav_card, parent, false));
-			} else {
-				return new NetworkViewHolder(LayoutInflater.from(mContext).
-					inflate(R.layout.row_nav_card_network, parent, false));
-			}
+			// use networkimageview to display favicon url
+			return new NavViewHolder(LayoutInflater.from(mContext).
+				inflate(R.layout.row_nav_card, parent, false));
 		}
 
 		@SuppressWarnings("deprecation")
@@ -184,26 +154,28 @@ public class NavFragment extends Fragment {
 
 			switch (getItemViewType(position)) {
 				case VIEW_TYPE_SUB_FEED:
-					String iconUrl = tagItem.getIconUrl();
-					SubfeedViewHolder subfeedViewHolder = (SubfeedViewHolder) viewHolder;
-					subfeedViewHolder.tagIcon.setImageUrl(iconUrl, mImageLoader);
-
-					break;
-
 				case VIEW_TYPE_REMOTE_URL:
-					iconUrl = tagItem.getIconUrl();
-					NetworkViewHolder networkViewHolder = (NetworkViewHolder) viewHolder;
-					networkViewHolder.tagIcon.setImageUrl(iconUrl, mImageLoader);
+					String iconUrl = tagItem.getIconUrl();
+					if ((iconUrl.length() == 0) || (iconUrl.matches("ICON_PATH/feed.png"))) {
+						navViewHolder.tagIcon.
+							setImageDrawable(mContext.getResources().
+								getDrawable(R.drawable.clear_favicon));
+					} else {
+						Picasso.with(mContext)
+							.load(iconUrl)
+							.placeholder(R.drawable.clear_favicon)
+							.error(R.drawable.clear_favicon)
+							.into(navViewHolder.tagIcon);
+					}
 
 					break;
 
 				case VIEW_TYPE_LOCAL_RESOURCE:
-					LocalViewHolder localViewHolder = (LocalViewHolder) viewHolder;
 					if (tagItem.getResId() == 0) {
-						localViewHolder.tagIcon.setImageDrawable(
+						navViewHolder.tagIcon.setImageDrawable(
 							mContext.getResources().getDrawable(R.drawable.clear_favicon));
 					} else {
-						localViewHolder.tagIcon.setImageDrawable(
+						navViewHolder.tagIcon.setImageDrawable(
 							mContext.getResources().getDrawable(tagItem.getResId()));
 					}
 
@@ -247,6 +219,7 @@ public class NavFragment extends Fragment {
 
 	private class NavViewHolder extends RecyclerView.ViewHolder {
 		public ImageView      tagExpand;
+		public ImageView      tagIcon;
 		public TextView       tagName;
 		public TextView       tagUnreadCount;
 		public RelativeLayout tagFrame;
@@ -255,37 +228,11 @@ public class NavFragment extends Fragment {
 		public NavViewHolder(View itemView) {
 			super(itemView);
 			tagExpand = (ImageView) itemView.findViewById(R.id.tagExpand);
+			tagIcon = (ImageView) itemView.findViewById(R.id.tagIcon);
 			tagName = (TextView) itemView.findViewById(R.id.tagName);
 			tagUnreadCount = (TextView) itemView.findViewById(R.id.tagUnreadCount);
 			tagFrame = (RelativeLayout) itemView.findViewById(R.id.tagFrame);
 			tagRow = (LinearLayout) itemView.findViewById(R.id.tagRow);
-		}
-	}
-
-	private class LocalViewHolder extends NavViewHolder {
-		public ImageView tagIcon;
-
-		public LocalViewHolder(View itemView) {
-			super(itemView);
-			tagIcon = (ImageView) itemView.findViewById(R.id.tagIcon);
-		}
-	}
-
-	private class NetworkViewHolder extends NavViewHolder {
-		public NetworkImageView tagIcon;
-
-		public NetworkViewHolder(View itemView) {
-			super(itemView);
-			tagIcon = (NetworkImageView) itemView.findViewById(R.id.tagIcon);
-		}
-	}
-
-	private class SubfeedViewHolder extends NavViewHolder {
-		public NetworkImageView tagIcon;
-
-		public SubfeedViewHolder(View itemView) {
-			super(itemView);
-			tagIcon = (NetworkImageView) itemView.findViewById(R.id.tagIcon);
 		}
 	}
 
