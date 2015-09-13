@@ -1,16 +1,17 @@
 package com.wilee8.coyotereader2;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsSession;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +42,8 @@ public class ArticleFragment extends Fragment {
 	private int mScrollX;
 	private int mScrollY;
 
+	private CustomTabsSession mCustomTabsSession;
+
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
@@ -65,10 +68,12 @@ public class ArticleFragment extends Fragment {
 		}
 
 		mContext = getActivity();
+		mCustomTabsSession = mCallback.getCustomTabsSession();
 	}
 
 	@Nullable
 	@SuppressLint("SetJavaScriptEnabled")
+	@SuppressWarnings("deprecation")
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_article, container, false);
@@ -92,10 +97,11 @@ public class ArticleFragment extends Fragment {
 		mStarFrame.setOnClickListener(starClickListener);
 
 		// Set title
-		titleFrame.setLinksClickable(true);
-		titleFrame.setMovementMethod(LinkMovementMethod.getInstance());
+		titleFrame.setClickable(false);
 		titleFrame.setText(Html.fromHtml("<b><a href=\"" + mItem.getCanonical() + "\">"
 											 + mItem.getTitle() + "</a></b>"));
+		titleFrame.setOnClickListener(new TitleOnClickListener(mItem.getCanonical()));
+		titleFrame.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
 
 		// Set author
 		String author = mItem.getAuthor();
@@ -136,6 +142,8 @@ public class ArticleFragment extends Fragment {
 		summaryFrame.loadUrl("about:blank");
 		summaryFrame.loadData(imageCss + mItem.getSummary(), "text/html; charset=UTF-8", null);
 
+		mCustomTabsSession.mayLaunchUrl(Uri.parse(mItem.getCanonical()), null, null);
+
 		return rootView;
 	}
 
@@ -151,6 +159,31 @@ public class ArticleFragment extends Fragment {
 
 		outState.putParcelable("articleItem", Parcels.wrap(mItem));
 	}
+
+	private class TitleOnClickListener implements View.OnClickListener {
+
+		private String url;
+
+		public TitleOnClickListener (String url) {
+			this.url = url;
+		}
+
+		@Override
+		public void onClick(View view) {
+			launchURLInCustomTabs(url);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	private void launchURLInCustomTabs(String url) {
+		Uri uri = Uri.parse(url);
+		CustomTabsIntent customTabsIntent =
+			new CustomTabsIntent.Builder(mCustomTabsSession)
+				.setToolbarColor(mContext.getResources().getColor(R.color.primary))
+				.build();
+		customTabsIntent.launchUrl((Activity) mContext, uri);
+	}
+
 
 	private class MyWebViewClient extends WebViewClient {
 
@@ -170,8 +203,7 @@ public class ArticleFragment extends Fragment {
 
 		@Override
 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-			startActivity(i);
+			launchURLInCustomTabs(url);
 			return true;
 		}
 	}
@@ -199,6 +231,8 @@ public class ArticleFragment extends Fragment {
 
 	public interface ArticleFragmentListener {
 		void onStarClicked(int position, Boolean starred);
+
+		CustomTabsSession getCustomTabsSession();
 	}
 
 	private class StarClickListener implements View.OnClickListener {

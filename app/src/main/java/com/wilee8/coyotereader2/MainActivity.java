@@ -2,6 +2,7 @@ package com.wilee8.coyotereader2;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +11,9 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.customtabs.CustomTabsClient;
+import android.support.customtabs.CustomTabsServiceConnection;
+import android.support.customtabs.CustomTabsSession;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -110,6 +114,12 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private InoreaderRxGsonService mRxGsonService;
 	private InoreaderRxService     mRxService;
 	private InoreaderGsonService   mGsonService;
+
+	@SuppressWarnings("FieldCanBeLocal")
+	private static String PACKAGE_NAME = "com.android.chrome";
+	private CustomTabsServiceConnection mCustomTabsServiceConnection;
+	private CustomTabsClient            mCustomTabsClient;
+	private CustomTabsSession           mCustomTabsSession;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -333,6 +343,24 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			.add(new HeaderInterceptor(mAuthToken));
 
 		mGsonService = restAdapter.create(InoreaderGsonService.class);
+
+		mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
+			@Override
+			public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient customTabsClient) {
+				mCustomTabsClient = customTabsClient;
+
+				mCustomTabsClient.warmup(0L);
+				mCustomTabsSession = mCustomTabsClient.newSession(null);
+			}
+
+			@Override
+			public void onServiceDisconnected(ComponentName componentName) {
+			}
+		};
+
+		if (!CustomTabsClient.bindCustomTabsService(this, PACKAGE_NAME, mCustomTabsServiceConnection)) {
+			mCustomTabsServiceConnection = null;
+		}
 
 		if (needToFetchData) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
@@ -639,6 +667,13 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		} catch (Exception e) {
 			// can't really do anything, we're exiting
 		}
+
+		if (mCustomTabsServiceConnection != null) {
+			unbindService(mCustomTabsServiceConnection);
+		}
+		mCustomTabsServiceConnection = null;
+		mCustomTabsClient = null;
+		mCustomTabsSession = null;
 	}
 
 	@Override
@@ -1251,6 +1286,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			.observeOn(AndroidSchedulers.mainThread())
 			.compose(this.<ResponseBody>bindToLifecycle())
 			.subscribe(starredSubscriber);
+	}
+
+	@Override
+	public CustomTabsSession getCustomTabsSession() {
+		return mCustomTabsSession;
 	}
 
 	private class StarredSubscriber extends Subscriber<ResponseBody> {
