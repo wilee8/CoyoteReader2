@@ -142,8 +142,6 @@ public class ArticleFragment extends Fragment {
 		summaryFrame.loadUrl("about:blank");
 		summaryFrame.loadData(imageCss + mItem.getSummary(), "text/html; charset=UTF-8", null);
 
-		mCustomTabsSession.mayLaunchUrl(Uri.parse(mItem.getCanonical()), null, null);
-
 		return rootView;
 	}
 
