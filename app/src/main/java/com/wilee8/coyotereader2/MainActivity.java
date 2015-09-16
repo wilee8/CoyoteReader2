@@ -81,6 +81,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private Boolean           mShowUnreadOnly;
 	private Boolean           mConfirm;
 	private Boolean           mAdvance;
+	private String            mBrowser;
 	private DefPrefListener   mPrefListener;
 
 	private UnreadCounts       mUnreadCounts;
@@ -146,6 +147,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mShowUnreadOnly = mSettings.getBoolean("pref_unread", false);
 		mConfirm = mSettings.getBoolean("pref_confirm", true);
 		mAdvance = mSettings.getBoolean("pref_advance", false);
+		mBrowser = mSettings.getString("pref_browser",
+									   getResources().getString(R.string.pref_browser_default_value));
 
 		// listen for changed settings
 		mPrefListener = new DefPrefListener();
@@ -1199,6 +1202,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				mConfirm = sharedPreferences.getBoolean("pref_confirm", true);
 			} else if (key.matches("pref_advance")) {
 				mAdvance = sharedPreferences.getBoolean("pref_advance", false);
+			} else if (key.matches("pref_browser")) {
+				mBrowser = sharedPreferences.getString("pref_browser",
+													   getResources().getString(R.string.pref_browser_default_value));
 			}
 		}
 
@@ -1296,6 +1302,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	@Override
 	public CustomTabsSession getCustomTabsSession() {
 		return mCustomTabsSession;
+	}
+
+	@Override
+	public String getBrowser() {
+		return mBrowser;
 	}
 
 	private class StarredSubscriber extends Subscriber<ResponseBody> {

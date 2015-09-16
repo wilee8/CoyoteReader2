@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="browser_preference_entries">
+        <item>Chrome Tabs</item>
+        <item>External Browser</item>
+    </string-array>
+    <string-array name="browser_preference_values">
+        <item>chrome_tabs</item>
+        <item>external_browser</item>
+    </string-array>
+</resources>

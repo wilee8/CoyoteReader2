@@ -2,7 +2,11 @@ package com.wilee8.coyotereader2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -162,24 +166,49 @@ public class ArticleFragment extends Fragment {
 
 		private String url;
 
-		public TitleOnClickListener (String url) {
+		public TitleOnClickListener(String url) {
 			this.url = url;
 		}
 
 		@Override
 		public void onClick(View view) {
-			launchURLInCustomTabs(url);
+			launchURL(url);
 		}
 	}
 
 	@SuppressWarnings("deprecation")
-	private void launchURLInCustomTabs(String url) {
+	private void launchURL(String url) {
 		Uri uri = Uri.parse(url);
-		CustomTabsIntent customTabsIntent =
-			new CustomTabsIntent.Builder(mCustomTabsSession)
-				.setToolbarColor(mContext.getResources().getColor(R.color.primary))
-				.build();
-		customTabsIntent.launchUrl((Activity) mContext, uri);
+		if (mCallback.getBrowser().matches(
+			mContext.getResources().getString(R.string.pref_browser_default_value))) {
+			// default should be chrome tabs
+			// create pending intent for share action button
+			Intent actionIntent = new Intent(Intent.ACTION_SEND);
+			actionIntent.setType("text/plain");
+			actionIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+			actionIntent.putExtra(Intent.EXTRA_TEXT, url);
+			PendingIntent pendingIntent =
+				PendingIntent.getActivity(mContext,
+										  0,
+										  actionIntent,
+										  PendingIntent.FLAG_UPDATE_CURRENT);
+			String shareLabel = mContext.getString(R.string.action_share);
+			Bitmap shareIcon = BitmapFactory.decodeResource(mContext.getResources(),
+															R.drawable.ic_share_white_48dp);
+
+			// launch custom tab
+			CustomTabsIntent customTabsIntent =
+				new CustomTabsIntent.Builder(mCustomTabsSession)
+					.setToolbarColor(mContext.getResources().getColor(R.color.primary))
+					.setShowTitle(true)
+					.setActionButton(shareIcon, shareLabel, pendingIntent)
+					.build();
+			customTabsIntent.launchUrl((Activity) mContext, uri);
+		} else {
+			// right now only alternative is external browser
+			Intent i = new Intent(Intent.ACTION_VIEW, uri);
+			startActivity(i);
+		}
 	}
 
 
@@ -201,7 +230,7 @@ public class ArticleFragment extends Fragment {
 
 		@Override
 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			launchURLInCustomTabs(url);
+			launchURL(url);
 			return true;
 		}
 	}
@@ -231,6 +260,8 @@ public class ArticleFragment extends Fragment {
 		void onStarClicked(int position, Boolean starred);
 
 		CustomTabsSession getCustomTabsSession();
+
+		String getBrowser();
 	}
 
 	private class StarClickListener implements View.OnClickListener {

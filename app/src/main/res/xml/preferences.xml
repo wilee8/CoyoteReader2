@@ -18,4 +18,11 @@
 		android:title="@string/pref_advance"
 		android:summary="@string/pref_advance_summ"
 		android:defaultValue="false" />
+	<ListPreference
+		android:key="pref_browser"
+		android:title="@string/pref_browser"
+		android:summary="%s"
+		android:entries="@array/browser_preference_entries"
+		android:entryValues="@array/browser_preference_values"
+		android:defaultValue="@string/pref_browser_default_value" />
 </PreferenceScreen>
