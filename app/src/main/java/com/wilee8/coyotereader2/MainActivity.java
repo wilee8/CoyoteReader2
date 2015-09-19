@@ -20,8 +20,10 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.util.ArrayMap;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.transition.TransitionManager;
@@ -112,6 +114,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private String               mMarkAllReadFeed;
 	private long                 mUpdated;
 	private FloatingActionButton mFab;
+	private ShareActionProvider  mShareActionProvider;
+	private String               mShareUrl;
 
 	private InoreaderRxGsonService mRxGsonService;
 	private InoreaderRxService     mRxService;
@@ -165,6 +169,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mActionBar.setDisplayShowHomeEnabled(true);
 			mActionBar.setDisplayShowTitleEnabled(true);
 		}
+
 
 		Boolean needToFetchData = false;
 
@@ -233,6 +238,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			} else {
 				mShowMarkAllRead = false;
 			}
+
+			mShareUrl = savedInstanceState.getString("mShareUrl", null);
 		} else {
 			needToFetchData = true;
 			mContentFrame = 0;
@@ -245,6 +252,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mTitles = new String[FRAME_IDS.length];
 			mTitles[0] = getResources().getString(R.string.app_name);
 			mShowMarkAllRead = false;
+			mShareUrl = null;
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
@@ -653,6 +661,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mActionBar.setTitle(mTitles[mContentFrame]);
 		}
 
+		mShareUrl = null;
+		invalidateOptionsMenu();
+		supportInvalidateOptionsMenu();
+
 		if (mContentFrame == 0) {
 			addRefreshButton();
 			ActionBar ab = getSupportActionBar();
@@ -684,6 +696,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.menu_main, menu);
+
+		// get the share menu item so we can add the share action
+		MenuItem item = menu.findItem(R.id.action_article_share);
+		mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
 		return true;
 	}
 
@@ -719,10 +736,26 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	protected boolean onPrepareOptionsPanel(View view, Menu menu) {
 
 		// show refresh button if mShowRefresh is true
 		menu.findItem(R.id.action_refresh).setVisible(mShowRefresh);
+
+		MenuItem menuItem = menu.findItem(R.id.action_article_share);
+
+		if (mShareUrl != null) {
+			Intent intent = new Intent(Intent.ACTION_SEND);
+			intent.setType("text/plain");
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+			intent.putExtra(Intent.EXTRA_TEXT, mShareUrl);
+			mShareActionProvider.setShareIntent(intent);
+
+			menuItem.setVisible(true);
+		} else {
+			menuItem.setVisible(false);
+		}
+
 		return super.onPrepareOptionsPanel(view, menu);
 	}
 
@@ -762,6 +795,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		if (mTitles != null) {
 			outState.putStringArray("mTitles", mTitles);
+		}
+
+		if (mShareUrl != null) {
+			outState.putString("mShareUrl", mShareUrl);
 		}
 
 		outState.putBoolean("mShowMarkAllRead", mShowMarkAllRead);
@@ -1039,6 +1076,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 			fragment.updateUnreadStatus(item.getId(), false);
 		}
+
+		mShareUrl = item.getCanonical();
+		invalidateOptionsMenu();
+		supportInvalidateOptionsMenu();
 	}
 
 	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, ResponseBody> {

@@ -11,6 +11,11 @@
         android:title="@string/action_refresh"
         android:visible="true"/>
     <item
+        android:id="@+id/action_article_share"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_share"
+        app:actionProviderClass="android.support.v7.widget.ShareActionProvider"/>
+    <item
         android:id="@+id/action_logout"
         android:title="@string/action_logout"
         android:orderInCategory="110"
