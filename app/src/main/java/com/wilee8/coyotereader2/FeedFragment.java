@@ -499,7 +499,7 @@ public class FeedFragment extends RxFragment {
 		int totalItemcount = mLayoutManager.getItemCount();
 		int lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();
 
-		if (lastVisibleItem >= (totalItemcount - 4)) {
+		if ((lastVisibleItem >= (totalItemcount - 4)) && (mContinuation != null)) {
 			getMoreArticles();
 		}
 	}
