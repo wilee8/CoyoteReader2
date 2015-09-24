@@ -110,7 +110,7 @@ public class ArticleFragment extends Fragment {
 		// Set author
 		String author = mItem.getAuthor();
 		if ((author != null) && (author.length() != 0)) {
-			authorFrame.setText("by " + author);
+			authorFrame.setText("by " + Html.fromHtml(author).toString());
 			authorFrame.setVisibility(View.VISIBLE);
 		}
 
