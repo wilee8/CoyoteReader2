@@ -71,8 +71,7 @@ import rx.schedulers.Schedulers;
 
 public class MainActivity extends RxAppCompatActivity implements NavFragment.NavFragmentListener,
 																 FeedFragment.FeedFragmentListener,
-																 ArticlePagerFragment.ArticlePagerFragmentListener,
-																 ArticleFragment.ArticleFragmentListener {
+																 ArticlePagerFragment.ArticlePagerFragmentListener {
 	private Context mContext;
 
 	private SharedPreferences mAuthPreferences;
