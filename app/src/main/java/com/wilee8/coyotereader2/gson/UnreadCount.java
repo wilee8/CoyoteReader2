@@ -7,13 +7,13 @@ import org.parceler.Parcel;
 @Parcel
 public class UnreadCount {
 	@SerializedName("newestItemTimestampUsec")
-	private long newestItemTimestampUsec;
+	long newestItemTimestampUsec;
 
 	@SerializedName("count")
-	private int count;
+	int count;
 
 	@SerializedName("id")
-	private String id;
+	String id;
 
 	public long getNewestItemTimestampUsec() {
 		return newestItemTimestampUsec;

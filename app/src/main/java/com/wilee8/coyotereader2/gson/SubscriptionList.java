@@ -1,15 +1,15 @@
 package com.wilee8.coyotereader2.gson;
 
-import java.util.ArrayList;
-
 import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
 
+import java.util.ArrayList;
+
 @Parcel
 public class SubscriptionList {
 	@SerializedName("subscriptions")
-	private ArrayList<Subscription>	subscriptions;
+	ArrayList<Subscription>	subscriptions;
 
 	public ArrayList<Subscription> getSubscriptions() {
 		return subscriptions;

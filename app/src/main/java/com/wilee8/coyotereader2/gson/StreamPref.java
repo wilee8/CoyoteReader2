@@ -7,10 +7,10 @@ import org.parceler.Parcel;
 @Parcel
 public class StreamPref {
 	@SerializedName("value")
-	private String value;
+	String value;
 
 	@SerializedName("id")
-	private String id;
+	String id;
 
 	public String getValue() {
 		return value;

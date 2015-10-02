@@ -7,7 +7,7 @@ import org.parceler.Parcel;
 @Parcel
 public class Canonical {
 	@SerializedName("href")
-	private String href;
+	String href;
 
 	public String getHref() {
 		return href;

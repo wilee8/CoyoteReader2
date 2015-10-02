@@ -4,15 +4,15 @@ import org.parceler.Parcel;
 
 @Parcel
 public class ArticleItem {
-	private String            id;
-	private String            title;
-	private String            summary;
-	private String            author;
-	private String            canonical;
-	private String            origin;
-	private Boolean           starred;
-	private Boolean           unread;
-	private Boolean           isFooter;
+	String            id;
+	String            title;
+	String            summary;
+	String            author;
+	String            canonical;
+	String            origin;
+	Boolean           starred;
+	Boolean           unread;
+	Boolean           isFooter;
 
 	public ArticleItem() {
 		isFooter = false;

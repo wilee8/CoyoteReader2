@@ -7,10 +7,10 @@ import org.parceler.Parcel;
 @Parcel
 public class Tag {
 	@SerializedName("sortid")
-	private String sortId;
+	String sortId;
 
 	@SerializedName("id")
-	private String id;
+	String id;
 
 	public String getSortId() {
 		return sortId;

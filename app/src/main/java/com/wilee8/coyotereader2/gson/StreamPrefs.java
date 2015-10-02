@@ -10,7 +10,7 @@ import java.util.Map;
 @Parcel
 public class StreamPrefs {
 	@SerializedName("streamprefs")
-	private Map<String, ArrayList<StreamPref>> streamPrefs;
+	Map<String, ArrayList<StreamPref>> streamPrefs;
 
 	public Map<String, ArrayList<StreamPref>> getStreamPrefs() {
 		return streamPrefs;

@@ -9,40 +9,40 @@ import java.util.ArrayList;
 @Parcel
 public class Item {
 	@SerializedName("canonical")
-	private ArrayList<Canonical> canonical;
+	ArrayList<Canonical> canonical;
 
 	@SerializedName("origin")
-	private Origin origin;
+	Origin origin;
 
 	@SerializedName("author")
-	private String author;
+	String author;
 
 	@SerializedName("categories")
-	private ArrayList<String> categories;
+	ArrayList<String> categories;
 
 	@SerializedName("published")
-	private long published;
+	long published;
 
 	@SerializedName("timestampUsec")
-	private long timestampUsec;
+	long timestampUsec;
 
 	@SerializedName("summary")
-	private Summary summary;
+	Summary summary;
 
 	@SerializedName("crawlTimeMsec")
-	private long crawlTimeMsec;
+	long crawlTimeMsec;
 
 	@SerializedName("id")
-	private String id;
+	String id;
 
 	@SerializedName("title")
-	private String title;
+	String title;
 
 	@SerializedName("updated")
-	private long updated;
+	long updated;
 
 	@SerializedName("alternate")
-	private ArrayList<Alternate> alternate;
+	ArrayList<Alternate> alternate;
 
 	public ArrayList<Alternate> getAlternate() {
 		return alternate;

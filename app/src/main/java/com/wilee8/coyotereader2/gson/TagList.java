@@ -9,7 +9,7 @@ import java.util.ArrayList;
 @Parcel
 public class TagList {
 	@SerializedName("tags")
-	private ArrayList<Tag> tags;
+	ArrayList<Tag> tags;
 
 	public ArrayList<Tag> getTags() {
 		return tags;

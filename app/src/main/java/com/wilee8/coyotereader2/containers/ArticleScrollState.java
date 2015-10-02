@@ -4,8 +4,8 @@ import org.parceler.Parcel;
 
 @Parcel
 public class ArticleScrollState {
-	private int scrollX;
-	private int scrollY;
+	int scrollX;
+	int scrollY;
 
 	public ArticleScrollState () {
 		this.scrollX = -1;

@@ -9,28 +9,28 @@ import java.util.ArrayList;
 @Parcel
 public class StreamContents {
 	@SerializedName("self")
-	private Self self;
+	Self self;
 
 	@SerializedName("description")
-	private String description;
+	String description;
 
 	@SerializedName("direction")
-	private String direction;
+	String direction;
 
 	@SerializedName("continuation")
-	private String continuation;
+	String continuation;
 
 	@SerializedName("id")
-	private String id;
+	String id;
 
 	@SerializedName("title")
-	private String title;
+	String title;
 
 	@SerializedName("updated")
-	private long updated;
+	long updated;
 
 	@SerializedName("items")
-	private ArrayList<Item> items;
+	ArrayList<Item> items;
 
 	public String getContinuation() {
 		return continuation;

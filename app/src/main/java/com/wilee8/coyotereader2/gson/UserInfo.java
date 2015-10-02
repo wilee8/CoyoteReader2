@@ -7,25 +7,25 @@ import org.parceler.Parcel;
 @Parcel
 public class UserInfo {
 	@SerializedName("userId")
-	private String userId;
+	String userId;
 
 	@SerializedName("userName")
-	private String userName;
+	String userName;
 
 	@SerializedName("userProfileId")
-	private String userProfileId;
+	String userProfileId;
 
 	@SerializedName("userEmail")
-	private String userEmail;
+	String userEmail;
 
 	@SerializedName("isBloggerUser")
-	private Boolean isBloggerUser;
+	Boolean isBloggerUser;
 
 	@SerializedName("signupTimeSec")
-	private long signupTimeSec;
+	long signupTimeSec;
 
 	@SerializedName("isMultiLoginEnabled")
-	private Boolean isMultiLoginEnabled;
+	Boolean isMultiLoginEnabled;
 
 	public String getUserId() {
 		return userId;

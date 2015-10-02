@@ -6,15 +6,15 @@ import java.util.ArrayList;
 
 @Parcel
 public class TagItem {
-	private String             id;
-	private String             name;
-	private int                unreadCount;
-	private Boolean            isFeed;
-	private int                resId;
-	private String             iconUrl;
-	private ArrayList<TagItem> feeds;
-	private Boolean            isExpanded;
-	private Boolean            isTopLevel;
+	String             id;
+	String             name;
+	int                unreadCount;
+	Boolean            isFeed;
+	int                resId;
+	String             iconUrl;
+	ArrayList<TagItem> feeds;
+	Boolean            isExpanded;
+	Boolean            isTopLevel;
 
 	public TagItem() {
 		unreadCount = 0;

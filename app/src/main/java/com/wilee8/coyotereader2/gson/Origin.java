@@ -7,13 +7,13 @@ import org.parceler.Parcel;
 @Parcel
 public class Origin {
 	@SerializedName("htmlUrl")
-	private String htmlUrl;
+	String htmlUrl;
 
 	@SerializedName("title")
-	private String title;
+	String title;
 
 	@SerializedName("streamId")
-	private String streamId;
+	String streamId;
 
 	public String getHtmlUrl() {
 		return htmlUrl;

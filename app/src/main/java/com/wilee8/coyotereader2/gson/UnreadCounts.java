@@ -9,10 +9,10 @@ import java.util.ArrayList;
 @Parcel
 public class UnreadCounts {
 	@SerializedName("unreadcounts")
-	private ArrayList<UnreadCount> unreadCounts;
+	ArrayList<UnreadCount> unreadCounts;
 
 	@SerializedName("max")
-	private int max;
+	int max;
 
 	public ArrayList<UnreadCount> getUnreadCounts() {
 		return unreadCounts;

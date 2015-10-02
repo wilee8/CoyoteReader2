@@ -7,10 +7,10 @@ import org.parceler.Parcel;
 @Parcel
 public class Summary {
 	@SerializedName("direction")
-	private String direction;
+	String direction;
 
 	@SerializedName("content")
-	private String content;
+	String content;
 
 	public String getContent() {
 		return content;
