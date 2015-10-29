@@ -12,15 +12,20 @@
         android:animateLayoutChanges="true"
         android:orientation="vertical">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
+            android:layout_height="wrap_content">
 
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/colorPrimary"
+
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+        </android.support.design.widget.AppBarLayout>
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                       android:layout_width="match_parent"
@@ -60,12 +65,12 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/feed_mark_all_read_button"
-        app:fabSize="normal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="@dimen/fab_margin_bottom"
         android:layout_marginEnd="@dimen/fab_margin_right"
         android:src="@drawable/ic_done_white_48dp"
-        app:borderWidth="0dp"/>
+        app:borderWidth="0dp"
+        app:fabSize="normal"/>
 </android.support.design.widget.CoordinatorLayout>

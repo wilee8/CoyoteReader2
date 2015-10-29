@@ -9,6 +9,7 @@ android {
     buildToolsVersion "23.0.0"
 
     defaultConfig {
+        multiDexEnabled true
         applicationId "com.wilee8.coyotereader2"
         minSdkVersion 17
         targetSdkVersion 23
