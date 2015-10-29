@@ -4,7 +4,7 @@
     tools:context="com.wilee8.coyotereader2.MainActivity">
     <item
         android:id="@+id/action_refresh"
-        android:icon="@drawable/ic_refresh_white_48dp"
+        android:icon="@drawable/ic_refresh_24dp"
         android:onClick="refreshOnClick"
         android:orderInCategory="97"
         app:showAsAction="ifRoom"

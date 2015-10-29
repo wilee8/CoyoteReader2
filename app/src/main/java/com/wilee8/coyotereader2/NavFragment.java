@@ -142,10 +142,10 @@ public class NavFragment extends Fragment {
 				if (!tagItem.getIsFeed()) {
 					if (tagItem.getIsExpanded()) {
 						navViewHolder.tagExpand.setImageDrawable(
-							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_up_grey600_48dp));
+							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_up_24dp));
 					} else {
 						navViewHolder.tagExpand.setImageDrawable(
-							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_down_grey600_48dp));
+							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_down_24dp));
 					}
 				} else {
 					navViewHolder.tagExpand.setImageDrawable(null);

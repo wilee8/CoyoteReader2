@@ -66,7 +66,7 @@
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="@dimen/fab_margin_bottom"
         android:layout_marginEnd="@dimen/fab_margin_right"
-        android:src="@drawable/ic_done_white_48dp"
+        android:src="@drawable/ic_done_all_24dp"
         app:borderWidth="0dp"
         app:fabSize="normal"/>
 </android.support.design.widget.CoordinatorLayout>

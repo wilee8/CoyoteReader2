@@ -344,10 +344,10 @@ public class FeedFragment extends RxFragment {
 
 			if (item.getStarred()) {
 				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
-					R.drawable.ic_star_grey600_48dp));
+					R.drawable.ic_star_24dp));
 			} else {
 				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
-					R.drawable.ic_star_outline_grey600_48dp));
+					R.drawable.ic_star_outline_24dp));
 			}
 
 			viewHolder.articleInfo.setOnClickListener(new FeedSelectClickListener(position));

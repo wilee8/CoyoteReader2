@@ -435,7 +435,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			tagItemStarred.setIsFeed(true);
 			tagItemStarred.setIsTopLevel(true);
 
-			tagItemStarred.setResId(R.drawable.ic_star_grey600_48dp);
+			tagItemStarred.setResId(R.drawable.ic_star_24dp);
 
 			mNavList.add(tagItemStarred);
 
@@ -457,7 +457,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				tagItem.setIsFeed(false);
 				tagItem.setIsTopLevel(true);
 
-				tagItem.setResId(R.drawable.ic_folder_grey600_48dp);
+				tagItem.setResId(R.drawable.ic_folder_24dp);
 
 				// Get feeds for this tag
 				if (!tagItem.getIsFeed()) {

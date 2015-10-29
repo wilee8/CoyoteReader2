@@ -256,10 +256,10 @@ public class ArticlePagerFragment extends Fragment {
 	private void setStarDrawable(ImageView starFrame, Boolean starred) {
 		if (starred) {
 			starFrame.setImageDrawable(mContext.getResources().getDrawable(
-				R.drawable.ic_star_grey600_48dp));
+				R.drawable.ic_star_24dp));
 		} else {
 			starFrame.setImageDrawable(mContext.getResources().getDrawable(
-				R.drawable.ic_star_outline_grey600_48dp));
+				R.drawable.ic_star_outline_24dp));
 		}
 	}
 
