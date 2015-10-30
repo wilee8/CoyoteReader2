@@ -6,7 +6,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -280,16 +281,27 @@ public class ArticlePagerFragment extends Fragment {
 										  actionIntent,
 										  PendingIntent.FLAG_UPDATE_CURRENT);
 			String shareLabel = mContext.getString(R.string.action_share);
-			Bitmap shareIcon = BitmapFactory.decodeResource(mContext.getResources(),
-															R.drawable.ic_share_white_48dp);
 
 			// launch custom tab
-			CustomTabsIntent customTabsIntent =
+			CustomTabsIntent.Builder customTabsIntentBuilder =
 				new CustomTabsIntent.Builder(mCustomTabsSession)
 					.setToolbarColor(mContext.getResources().getColor(R.color.primary))
-					.setShowTitle(true)
-					.setActionButton(shareIcon, shareLabel, pendingIntent)
-					.build();
+					.setShowTitle(true);
+
+			Drawable drawable = mContext.getResources().getDrawable(R.drawable.ic_share_24dp);
+			if (drawable != null) {
+				int width = drawable.getIntrinsicWidth();
+				int height = drawable.getIntrinsicHeight();
+				Bitmap shareIcon = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+				Canvas canvas = new Canvas(shareIcon);
+				drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+				drawable.draw(canvas);
+
+				customTabsIntentBuilder = customTabsIntentBuilder.
+					setActionButton(shareIcon, shareLabel, pendingIntent);
+			}
+
+			CustomTabsIntent customTabsIntent = customTabsIntentBuilder.build();
 			customTabsIntent.launchUrl((Activity) mContext, uri);
 		} else {
 			// right now only alternative is external browser
