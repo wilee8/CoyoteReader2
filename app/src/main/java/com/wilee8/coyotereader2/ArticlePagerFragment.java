@@ -157,7 +157,9 @@ public class ArticlePagerFragment extends Fragment {
 			// Set author
 			String author = item.getAuthor();
 			if ((author != null) && (author.length() != 0)) {
-				authorFrame.setText("by " + Html.fromHtml(author).toString());
+				authorFrame.setText(
+					String.format(getString(R.string.article_byline),
+								  Html.fromHtml(Html.fromHtml(author).toString()).toString()));
 				authorFrame.setVisibility(View.VISIBLE);
 			}
 

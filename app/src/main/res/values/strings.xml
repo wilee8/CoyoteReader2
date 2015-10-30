@@ -44,4 +44,6 @@
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>
 
+    <!-- miscellaneous -->
+    <string name="article_byline">by %1$s</string>
 </resources>
