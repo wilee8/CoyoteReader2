@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="blue_700">#1976D2</color>
-	<color name="blue_900">#0D47A1</color>
-	<color name="orange_a700">#FF6D00</color>
-	<color name="orange_a200">#FFAB40</color>
-	<color name="primary">@color/blue_700</color>
-	<color name="primary_dark">@color/blue_900</color>
-	<color name="accent">@color/orange_a700</color>
-	<color name="accent_pressed">@color/orange_a200</color>
+    <color name="blue_700">#1976D2</color>
+    <color name="blue_900">#0D47A1</color>
+    <color name="orange_a700">#FF6D00</color>
+    <color name="orange_a200">#FFAB40</color>
+    <color name="primary">@color/blue_700</color>
+    <color name="primary_dark">@color/blue_900</color>
+    <color name="accent">@color/orange_a700</color>
+    <color name="accent_pressed">@color/orange_a200</color>
+    <color name="frame_background">#FAFAFAFA</color>
+    <color name="text_color_primary">#8A000000</color>
 </resources>

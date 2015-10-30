@@ -27,36 +27,37 @@
                 app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
         </android.support.design.widget.AppBarLayout>
 
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent"
-                      android:background="@color/background_material_light"
-                      android:baselineAligned="false"
-                      android:fitsSystemWindows="true"
-                      android:orientation="horizontal">
+        <LinearLayout
+            style="@style/ContentFrameStyle"
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:baselineAligned="false"
+            android:fitsSystemWindows="true"
+            android:orientation="horizontal">
 
             <FrameLayout
                 android:id="@+id/frame0"
+                style="@style/ContentFrameStyle"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@color/background_material_light">
+                android:layout_weight="1">
             </FrameLayout>
 
             <FrameLayout
                 android:id="@+id/frame1"
+                style="@style/ContentFrameStyle"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@color/background_material_light">
+                android:layout_weight="1">
             </FrameLayout>
 
             <FrameLayout
                 android:id="@+id/frame2"
+                style="@style/ContentFrameStyle"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@color/background_material_light">
+                android:layout_weight="1">
             </FrameLayout>
 
         </LinearLayout>

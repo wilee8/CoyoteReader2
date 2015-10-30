@@ -19,8 +19,12 @@
         <!-- Used for the buttons -->
         <item name="colorAccent">@color/accent</item>
         <!-- Used for the title and text -->
-        <item name="android:textColorPrimary">@color/secondary_text_default_material_light</item>
+        <item name="android:textColorPrimary">@color/text_color_primary</item>
         <!-- Used for the background -->
-        <item name="android:background">@color/background_material_light</item>
+        <item name="android:background">@color/frame_background</item>
+    </style>
+
+    <style name="ContentFrameStyle" parent="AlertDialog.AppCompat.Light">
+        <item name="android:background">@color/frame_background</item>
     </style>
 </resources>

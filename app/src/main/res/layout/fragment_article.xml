@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
+    android:id="@+id/articleScroll"
+    style="@style/ContentFrameStyle"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/articleScroll"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/background_material_light" >
+    android:layout_height="wrap_content">
 
     <LinearLayout
+        style="@style/ContentFrameStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/background_material_light"
         android:orientation="vertical">
 
         <RelativeLayout
+            style="@style/ContentFrameStyle"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background_material_light">
+            android:layout_height="wrap_content">
 
             <ImageView
                 android:id="@+id/articleStar"
+                style="@style/ContentFrameStyle"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:background="@color/background_material_light"
                 android:contentDescription="@string/item_star_image_description"
                 android:paddingBottom="10dp"
                 android:paddingLeft="10dp"
@@ -33,10 +33,10 @@
 
             <TextView
                 android:id="@+id/title_frame"
+                style="@style/ContentFrameStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@+id/articleStar"
-                android:background="@color/background_material_light"
                 android:paddingBottom="8dp"
                 android:paddingEnd="16dp"
                 android:paddingStart="0dp"
@@ -46,9 +46,9 @@
 
         <TextView
             android:id="@+id/author_frame"
+            style="@style/ContentFrameStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_material_light"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:textAppearance="?android:textAppearanceMedium"
@@ -58,7 +58,6 @@
             android:id="@+id/summary_frame"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_material_light"
             tools:ignore="WebViewLayout"/>
     </LinearLayout>
 

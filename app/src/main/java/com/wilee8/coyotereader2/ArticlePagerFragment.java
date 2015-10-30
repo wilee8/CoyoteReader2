@@ -173,7 +173,7 @@ public class ArticlePagerFragment extends Fragment {
 			ws.setLoadWithOverviewMode(true);
 			ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
-			summaryFrame.setBackgroundColor(getResources().getColor(R.color.background_material_light));
+			summaryFrame.setBackgroundColor(getResources().getColor(R.color.frame_background));
 			if ((mScrollX != -1) && (mScrollY != -1)) {
 				summaryFrame.setWebViewClient(new MyWebViewClient(mScrollX, mScrollY));
 				mScrollX = -1;
