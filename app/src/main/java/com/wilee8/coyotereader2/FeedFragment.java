@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -322,7 +323,6 @@ public class FeedFragment extends RxFragment {
 			}
 		}
 
-		@SuppressWarnings("deprecation")
 		@Override
 		public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 			ArticleItem item = mItems.get(position);
@@ -343,20 +343,23 @@ public class FeedFragment extends RxFragment {
 			}
 
 			if (item.getStarred()) {
-				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
-					R.drawable.ic_star_24dp));
+				viewHolder.articleStar.setImageDrawable(
+					ContextCompat.getDrawable(mContext, R.drawable.ic_star_24dp));
 			} else {
-				viewHolder.articleStar.setImageDrawable(mContext.getResources().getDrawable(
-					R.drawable.ic_star_outline_24dp));
+				viewHolder.articleStar.setImageDrawable(
+					ContextCompat.getDrawable(mContext, R.drawable.ic_star_outline_24dp));
 			}
 
 			viewHolder.articleInfo.setOnClickListener(new FeedSelectClickListener(position));
 			viewHolder.articleInfo.setOnTouchListener(new FeedSelectTouchListener(position));
 			viewHolder.articleStar.setOnClickListener(new StarClickListener(position));
 
-			viewHolder.articleInfo.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
-			viewHolder.articleStar.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
-			viewHolder.articleWrapper.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
+			viewHolder.articleInfo.setBackground(
+				ContextCompat.getDrawable(mContext, R.drawable.ripple_selector));
+			viewHolder.articleStar.setBackground(
+				ContextCompat.getDrawable(mContext, R.drawable.ripple_selector));
+			viewHolder.articleWrapper.setBackground(
+				ContextCompat.getDrawable(mContext, R.drawable.ripple_selector));
 			if ((mSelected != -1) && (position == mSelected)) {
 				viewHolder.articleWrapper.setSelected(true);
 			} else {
@@ -537,7 +540,6 @@ public class FeedFragment extends RxFragment {
 			this.position = position;
 		}
 
-		@SuppressWarnings("deprecation")
 		@Override
 		public void onClick(View view) {
 			ArticleItem item = mItems.get(position);

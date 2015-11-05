@@ -7,6 +7,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -130,7 +131,6 @@ public class NavFragment extends Fragment {
 				inflate(R.layout.row_nav_card, parent, false));
 		}
 
-		@SuppressWarnings("deprecation")
 		@Override
 		public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
 
@@ -142,10 +142,10 @@ public class NavFragment extends Fragment {
 				if (!tagItem.getIsFeed()) {
 					if (tagItem.getIsExpanded()) {
 						navViewHolder.tagExpand.setImageDrawable(
-							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_up_24dp));
+							ContextCompat.getDrawable(mContext, R.drawable.ic_arrow_drop_up_24dp));
 					} else {
 						navViewHolder.tagExpand.setImageDrawable(
-							mContext.getResources().getDrawable(R.drawable.ic_arrow_drop_down_24dp));
+							ContextCompat.getDrawable(mContext, R.drawable.ic_arrow_drop_down_24dp));
 					}
 				} else {
 					navViewHolder.tagExpand.setImageDrawable(null);
@@ -158,8 +158,8 @@ public class NavFragment extends Fragment {
 					String iconUrl = tagItem.getIconUrl();
 					if ((iconUrl.length() == 0) || (iconUrl.matches("ICON_PATH/feed.png"))) {
 						navViewHolder.tagIcon.
-							setImageDrawable(mContext.getResources().
-								getDrawable(R.drawable.clear_favicon));
+							setImageDrawable(
+								ContextCompat.getDrawable(mContext, R.drawable.clear_favicon));
 					} else {
 						Picasso.with(mContext)
 							.load(iconUrl)
@@ -173,10 +173,10 @@ public class NavFragment extends Fragment {
 				case VIEW_TYPE_LOCAL_RESOURCE:
 					if (tagItem.getResId() == 0) {
 						navViewHolder.tagIcon.setImageDrawable(
-							mContext.getResources().getDrawable(R.drawable.clear_favicon));
+							ContextCompat.getDrawable(mContext, R.drawable.clear_favicon));
 					} else {
 						navViewHolder.tagIcon.setImageDrawable(
-							mContext.getResources().getDrawable(tagItem.getResId()));
+							ContextCompat.getDrawable(mContext, tagItem.getResId()));
 					}
 
 					break;
@@ -197,7 +197,8 @@ public class NavFragment extends Fragment {
 				navViewHolder.tagName.setTypeface(null, Typeface.NORMAL);
 			}
 
-			navViewHolder.tagFrame.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
+			navViewHolder.tagFrame.setBackground(
+				ContextCompat.getDrawable(mContext, R.drawable.ripple_selector));
 			if (position == mSelected) {
 				navViewHolder.tagFrame.setSelected(true);
 			} else {

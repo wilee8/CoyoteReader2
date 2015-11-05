@@ -17,6 +17,7 @@ import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsSession;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.Html;
@@ -131,7 +132,6 @@ public class ArticlePagerFragment extends Fragment {
 		}
 
 		@SuppressLint("SetJavaScriptEnabled")
-		@SuppressWarnings("deprecation")
 		@Override
 		public Object instantiateItem(ViewGroup container, int position) {
 			LayoutInflater inflater = LayoutInflater.from(mContext);
@@ -152,7 +152,8 @@ public class ArticlePagerFragment extends Fragment {
 			titleFrame.setText(Html.fromHtml("<b><a href=\"" + item.getCanonical() + "\">"
 												 + item.getTitle() + "</a></b>"));
 			titleFrame.setOnClickListener(new TitleOnClickListener(item.getCanonical()));
-			titleFrame.setBackground(getResources().getDrawable(R.drawable.ripple_selector));
+			titleFrame.setBackground(ContextCompat.getDrawable(getActivity(),
+															   R.drawable.ripple_selector));
 
 			// Set author
 			String author = item.getAuthor();
@@ -175,7 +176,8 @@ public class ArticlePagerFragment extends Fragment {
 			ws.setLoadWithOverviewMode(true);
 			ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
-			summaryFrame.setBackgroundColor(getResources().getColor(R.color.frame_background));
+			summaryFrame.setBackgroundColor(ContextCompat.getColor(getActivity(),
+																   R.color.frame_background));
 			if ((mScrollX != -1) && (mScrollY != -1)) {
 				summaryFrame.setWebViewClient(new MyWebViewClient(mScrollX, mScrollY));
 				mScrollX = -1;
@@ -255,14 +257,13 @@ public class ArticlePagerFragment extends Fragment {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private void setStarDrawable(ImageView starFrame, Boolean starred) {
 		if (starred) {
-			starFrame.setImageDrawable(mContext.getResources().getDrawable(
-				R.drawable.ic_star_24dp));
+			starFrame.setImageDrawable(
+				ContextCompat.getDrawable(getActivity(), R.drawable.ic_star_24dp));
 		} else {
-			starFrame.setImageDrawable(mContext.getResources().getDrawable(
-				R.drawable.ic_star_outline_24dp));
+			starFrame.setImageDrawable(
+				ContextCompat.getDrawable(getActivity(), R.drawable.ic_star_outline_24dp));
 		}
 	}
 
@@ -275,7 +276,11 @@ public class ArticlePagerFragment extends Fragment {
 			// create pending intent for share action button
 			Intent actionIntent = new Intent(Intent.ACTION_SEND);
 			actionIntent.setType("text/plain");
-			actionIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+				actionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+			} else {
+				actionIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+			}
 			actionIntent.putExtra(Intent.EXTRA_TEXT, url);
 			PendingIntent pendingIntent =
 				PendingIntent.getActivity(mContext,
@@ -287,10 +292,11 @@ public class ArticlePagerFragment extends Fragment {
 			// launch custom tab
 			CustomTabsIntent.Builder customTabsIntentBuilder =
 				new CustomTabsIntent.Builder(mCustomTabsSession)
-					.setToolbarColor(mContext.getResources().getColor(R.color.primary))
+					.setToolbarColor(
+						ContextCompat.getColor(getActivity(), R.color.primary))
 					.setShowTitle(true);
 
-			Drawable drawable = mContext.getResources().getDrawable(R.drawable.ic_share_24dp);
+			Drawable drawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_share_24dp);
 			if (drawable != null) {
 				int width = drawable.getIntrinsicWidth();
 				int height = drawable.getIntrinsicHeight();

@@ -746,7 +746,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		if (mShareUrl != null) {
 			Intent intent = new Intent(Intent.ACTION_SEND);
 			intent.setType("text/plain");
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+			} else {
+				intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+			}
 			intent.putExtra(Intent.EXTRA_TEXT, mShareUrl);
 			mShareActionProvider.setShareIntent(intent);
 
