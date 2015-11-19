@@ -1,6 +1,7 @@
 package com.wilee8.coyotereader2;
 
 import android.accounts.Account;
+import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -8,7 +9,6 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.util.ArrayMap;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -52,11 +52,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
-
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-		if (toolbar != null) {
-			setSupportActionBar(toolbar);
-		}
 
 		// Set up the login form.
 		mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
