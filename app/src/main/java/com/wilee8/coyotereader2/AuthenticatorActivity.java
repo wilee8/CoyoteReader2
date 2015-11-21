@@ -46,7 +46,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	private InoreaderRxService mService;
 	private Subscription       mLoginSubscription;
 	private String             mUsername;
-	private String             mPassword;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +54,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		// Set up the login form.
 		mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+		String accountName = getIntent().getStringExtra(AccountAuthenticator.ARG_ACCOUNT_NAME);
+		if (accountName != null) {
+			mEmailView.setText(accountName);
+		}
 
 		mPasswordView = (EditText) findViewById(R.id.password);
 		mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -144,7 +147,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			showProgress(true);
 
 			mUsername = email;
-			mPassword = password;
 
 			Map queryMap = new ArrayMap<>();
 			queryMap.put("Email", email);
@@ -198,10 +200,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			String token = holder[1].replaceAll("\n", "");
 
 			// return username and authToken to authenticator
-			String accountType = getIntent().getStringExtra("ACCOUNT_TYPE");
-			String authType = getIntent().getStringExtra("AUTH_TYPE");
-			if (authType == null) {
-				authType = "Full Access";
+			String accountType = getIntent().getStringExtra(AccountAuthenticator.ARG_ACCOUNT_TYPE);
+			String authTokenType = getIntent().getStringExtra(AccountAuthenticator.ARG_AUTH_TYPE);
+			if (authTokenType == null) {
+				authTokenType = AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD;
 			}
 			Bundle result = new Bundle();
 			result.putString(AccountManager.KEY_ACCOUNT_NAME, mUsername);
@@ -210,12 +212,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			final Account account = new Account(mUsername, accountType);
 			AccountManager accountManager = AccountManager.get(getBaseContext());
-			if (getIntent().getBooleanExtra("IS_ADDING_ACCOUNT", false)) {
-				accountManager.addAccountExplicitly(account, mPassword, null);
-				accountManager.setAuthToken(account, authType, token);
-			} else {
-				accountManager.setPassword(account, mPassword);
+			if (getIntent().getBooleanExtra(AccountAuthenticator.ARG_IS_ADDING_NEW_ACCOUNT, false)) {
+				// we don't need to save the password, so pass null
+				accountManager.addAccountExplicitly(account, null, null);
 			}
+
+			accountManager.setAuthToken(account, authTokenType, token);
 
 			setAccountAuthenticatorResult(result);
 			setResult(RESULT_OK);
