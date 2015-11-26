@@ -1,5 +1,10 @@
 package com.wilee8.coyotereader2;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.ComponentName;
@@ -74,7 +79,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 																 ArticlePagerFragment.ArticlePagerFragmentListener {
 	private Context mContext;
 
-	private SharedPreferences mAuthPreferences;
+	private AccountManager    mAccountManager;
 	private String            mAuthToken;
 
 	private SharedPreferences mSettings;
@@ -131,16 +136,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		super.onCreate(savedInstanceState);
 
 		mContext = this;
-
-		// Get the saved login credentials
-		mAuthPreferences = getSharedPreferences(getString(R.string.auth_prefs), MODE_PRIVATE);
-		mAuthToken = mAuthPreferences.getString(getString(R.string.auth_token), "");
-
-		if (mAuthToken.equals("")) {
-			// logout and skip the rest of this function
-			logout();
-			return;
-		}
 
 		// get the saved settings
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -239,6 +234,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			mShareUrl = savedInstanceState.getString("mShareUrl", null);
+
+			mAuthToken = savedInstanceState.getString("mAuthToken", null);
 		} else {
 			needToFetchData = true;
 			mContentFrame = 0;
@@ -252,6 +249,39 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mTitles[0] = getResources().getString(R.string.app_name);
 			mShowMarkAllRead = false;
 			mShareUrl = null;
+			mAuthToken = null;
+		}
+
+		mAccountManager = AccountManager.get(this);
+
+		// go get authToken from AccountManager if we don't have one saved from previous fetch
+		if (mAuthToken == null) {
+			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+			Account account;
+
+			if (accounts.length == 0) {
+				// TODO go to LoginActivity to login
+				logout();
+				return;
+			} else {
+				account = accounts[0];
+				AccountManagerFuture<Bundle> accountManagerFuture =
+					mAccountManager.getAuthToken(account,
+												 AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
+												 null,
+												 null,
+												 null,
+												 null);
+				Bundle authTokenBundle;
+				try {
+					authTokenBundle = accountManagerFuture.getResult();
+				} catch (OperationCanceledException | IOException | AuthenticatorException e) {
+					// TODO go to LoginActivity
+					e.printStackTrace();
+					return;
+				}
+				mAuthToken = authTokenBundle.getString(AccountManager.KEY_AUTHTOKEN);
+			}
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
@@ -809,6 +839,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			outState.putString("mMarkAllReadFeed", mMarkAllReadFeed);
 			outState.putLong("mUpdated", mUpdated);
 		}
+
+		if (mAuthToken != null) {
+			outState.putString("mAuthToken", mAuthToken);
+		}
 	}
 
 	public void logout(MenuItem item) {
@@ -816,16 +850,13 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	private void logout() {
-		// clear old auth token
-		SharedPreferences.Editor editor = mAuthPreferences.edit();
-		editor.remove(getString(R.string.auth_token));
-		editor.apply();
+		// TODO
+		mAccountManager.invalidateAuthToken(AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD, mAuthToken);
 
 		// launch login activity
 		Intent intent = new Intent(this, LoginActivity.class);
 		startActivity(intent);
 		finish();
-
 	}
 
 	public void refreshOnClick(MenuItem item) {

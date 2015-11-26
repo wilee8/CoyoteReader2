@@ -35,6 +35,19 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
 
 	@Override
 	public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) throws NetworkErrorException {
+		// only allow one account
+		// if an account of this type already exists, return error
+		AccountManager accountManager = AccountManager.get(mContext);
+		Account[] accounts = accountManager.getAccountsByType(accountType);
+
+		if (accounts.length > 0) {
+			final Bundle result = new Bundle();
+			result.putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_UNSUPPORTED_OPERATION);
+			result.putString(AccountManager.KEY_ERROR_MESSAGE, mContext.getString(R.string.error_one_account_allowed));
+
+			return result;
+		}
+
 		final Intent intent = new Intent(this.mContext, AuthenticatorActivity.class);
 		intent.putExtra(ARG_ACCOUNT_TYPE, ACCOUNT_TYPE);
 		intent.putExtra(ARG_AUTH_TYPE, authTokenType);

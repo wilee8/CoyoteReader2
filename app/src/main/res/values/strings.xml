@@ -10,6 +10,7 @@
     <string name="error_null_items">Error loading article list, reload feed</string>
     <string name="error_mark_unread">Error updating unread articles</string>
     <string name="error_update_starred">Error updating starred status on server</string>
+    <string name="error_one_account_allowed">Only one account allowed</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
