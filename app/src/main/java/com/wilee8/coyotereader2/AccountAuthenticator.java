@@ -35,7 +35,7 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
 
 	@Override
 	public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) throws NetworkErrorException {
-		final Intent intent = new Intent(mContext, AuthenticatorActivity.class);
+		final Intent intent = new Intent(this.mContext, AuthenticatorActivity.class);
 		intent.putExtra(ARG_ACCOUNT_TYPE, ACCOUNT_TYPE);
 		intent.putExtra(ARG_AUTH_TYPE, authTokenType);
 		intent.putExtra(ARG_IS_ADDING_NEW_ACCOUNT, true);
