@@ -154,17 +154,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		setContentView(R.layout.activity_main);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-		if (toolbar != null) {
-			setSupportActionBar(toolbar);
-		}
-		mActionBar = getSupportActionBar();
-		if (mActionBar != null) {
-			mActionBar.setDisplayShowHomeEnabled(true);
-			mActionBar.setDisplayShowTitleEnabled(true);
-		}
-
-
 		Boolean needToFetchData = false;
 
 		if (savedInstanceState != null) {
@@ -252,43 +241,21 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mAuthToken = null;
 		}
 
-		mAccountManager = AccountManager.get(this);
-
-		// go get authToken from AccountManager if we don't have one saved from previous fetch
-		if (mAuthToken == null) {
-			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
-			Account account;
-
-			if (accounts.length == 0) {
-				// TODO go to LoginActivity to login
-				logout();
-				return;
-			} else {
-				account = accounts[0];
-				AccountManagerFuture<Bundle> accountManagerFuture =
-					mAccountManager.getAuthToken(account,
-												 AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
-												 null,
-												 null,
-												 null,
-												 null);
-				Bundle authTokenBundle;
-				try {
-					authTokenBundle = accountManagerFuture.getResult();
-				} catch (OperationCanceledException | IOException | AuthenticatorException e) {
-					// TODO go to LoginActivity
-					e.printStackTrace();
-					return;
-				}
-				mAuthToken = authTokenBundle.getString(AccountManager.KEY_AUTHTOKEN);
-			}
-		}
-
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
 
 		mSceneRoot = (ViewGroup) findViewById(R.id.sceneRoot);
 
 		mShowRefresh = (mContentFrame == 0);
+
+		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		if (toolbar != null) {
+			setSupportActionBar(toolbar);
+		}
+		mActionBar = getSupportActionBar();
+		if (mActionBar != null) {
+			mActionBar.setDisplayShowHomeEnabled(true);
+			mActionBar.setDisplayShowTitleEnabled(true);
+		}
 
 		mFrames = new FrameLayout[FRAME_IDS.length];
 
@@ -351,40 +318,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		mFab.setOnClickListener(new MarkAllReadClickListener());
 
-		Retrofit restAdapter = new Retrofit.Builder()
-			.baseUrl("https://www.inoreader.com")
-			.addConverterFactory(GsonConverterFactory.create())
-			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-			.build();
-
-		restAdapter.client()
-			.networkInterceptors()
-			.add(new HeaderInterceptor(mAuthToken));
-
-		mRxGsonService = restAdapter.create(InoreaderRxGsonService.class);
-
-		restAdapter = new Retrofit.Builder()
-			.baseUrl("https://www.inoreader.com")
-			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-			.build();
-
-		restAdapter.client()
-			.networkInterceptors()
-			.add(new HeaderInterceptor(mAuthToken));
-
-		mRxService = restAdapter.create(InoreaderRxService.class);
-
-		restAdapter = new Retrofit.Builder()
-			.baseUrl("https://www.inoreader.com")
-			.addConverterFactory(GsonConverterFactory.create())
-			.build();
-
-		restAdapter.client()
-			.networkInterceptors()
-			.add(new HeaderInterceptor(mAuthToken));
-
-		mGsonService = restAdapter.create(InoreaderGsonService.class);
-
 		mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
 			@Override
 			public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient customTabsClient) {
@@ -401,6 +334,28 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		if (!CustomTabsClient.bindCustomTabsService(this, PACKAGE_NAME, mCustomTabsServiceConnection)) {
 			mCustomTabsServiceConnection = null;
+		}
+
+		mAccountManager = AccountManager.get(this);
+
+		// go get authToken from AccountManager if we don't have one saved from previous fetch
+		if (mAuthToken == null) {
+
+			// get mAuthToken in background task
+			HandleAuthToken handleAuthToken = new HandleAuthToken();
+			Observable<String> getAuthToken = Observable.create(new GetAuthToken());
+
+			getAuthToken
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.compose(this.<String>bindToLifecycle())
+				.subscribe(handleAuthToken);
+
+			// since mAuthToken is being fetched by a background task, don't fetch data now
+			// and let the task do it after it gets the token
+			needToFetchData = false;
+		} else {
+			createRetrofitServices();
 		}
 
 		if (needToFetchData) {
@@ -850,7 +805,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	private void logout() {
-		// TODO
 		mAccountManager.invalidateAuthToken(AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD, mAuthToken);
 
 		// launch login activity
@@ -1446,5 +1400,102 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 					fadeOut.setAlpha(1f);
 				}
 			});
+	}
+
+	private class GetAuthToken implements Observable.OnSubscribe<String> {
+
+		@Override
+		public void call(Subscriber<? super String> subscriber) {
+			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+			Account account;
+
+			if (accounts.length == 0) {
+				logout();
+			} else {
+				account = accounts[0];
+				AccountManagerFuture<Bundle> accountManagerFuture =
+					mAccountManager.getAuthToken(account,
+												 AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
+												 null,
+												 null,
+												 null,
+												 null);
+				Bundle authTokenBundle;
+				try {
+					authTokenBundle = accountManagerFuture.getResult();
+				} catch (OperationCanceledException | IOException | AuthenticatorException e) {
+					subscriber.onError(e);
+					subscriber.onCompleted();
+					return;
+				}
+
+				subscriber.onNext(authTokenBundle.getString(AccountManager.KEY_AUTHTOKEN));
+				subscriber.onCompleted();
+			}
+		}
+	}
+
+	private class HandleAuthToken extends Subscriber<String> {
+
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_login,
+					  Snackbar.LENGTH_LONG)
+				.show();
+			logout();
+		}
+
+		@Override
+		public void onNext(String s) {
+			mAuthToken = s;
+
+			createRetrofitServices();
+
+			// now that we have an authToken, fetch data from the server
+			refreshOnClick();
+		}
+	}
+
+	private void createRetrofitServices() {
+		Retrofit restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.addConverterFactory(GsonConverterFactory.create())
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
+
+		mRxGsonService = restAdapter.create(InoreaderRxGsonService.class);
+
+		restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
+
+		mRxService = restAdapter.create(InoreaderRxService.class);
+
+		restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.addConverterFactory(GsonConverterFactory.create())
+			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
+
+		mGsonService = restAdapter.create(InoreaderGsonService.class);
 	}
 }
