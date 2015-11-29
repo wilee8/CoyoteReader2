@@ -13,7 +13,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -1060,10 +1059,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		mTitles[mContentFrame] = Html.fromHtml(item.getOrigin()).toString();
 		mActionBar.setTitle(mTitles[mContentFrame]);
-
-		if (mCustomTabsSession != null) {
-			mCustomTabsSession.mayLaunchUrl(Uri.parse(item.getCanonical()), null, null);
-		}
 
 		// check if already unread before marking unread
 		if (item.getUnread()) {
