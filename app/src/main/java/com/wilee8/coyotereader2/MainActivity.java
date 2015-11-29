@@ -79,8 +79,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 																 ArticlePagerFragment.ArticlePagerFragmentListener {
 	private Context mContext;
 
-	private AccountManager    mAccountManager;
-	private String            mAuthToken;
+	private AccountManager mAccountManager;
+	private String         mAuthToken;
 
 	private SharedPreferences mSettings;
 	private Boolean           mSortAlpha;
@@ -801,16 +801,35 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	public void logout(MenuItem item) {
-		logout();
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+		builder.setMessage(R.string.alert_logout);
+
+		builder.setPositiveButton(
+			R.string.alert_ok,
+			new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					logout();
+				}
+			});
+
+		builder.setNegativeButton(R.string.alert_cancel, null);
+
+		builder.show();
 	}
 
 	private void logout() {
-		mAccountManager.invalidateAuthToken(AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD, mAuthToken);
+		// log out in background task
+		HandleLogoutResult handleLogoutResult = new HandleLogoutResult();
+		Observable<Void> doRemoveAccount = Observable.create(new DoRemoveAccount());
 
-		// launch login activity
-		Intent intent = new Intent(this, LoginActivity.class);
-		startActivity(intent);
-		finish();
+		doRemoveAccount
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.compose(this.<Void>bindToLifecycle())
+			.subscribe(handleLogoutResult);
 	}
 
 	public void refreshOnClick(MenuItem item) {
@@ -1497,5 +1516,89 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			.add(new HeaderInterceptor(mAuthToken));
 
 		mGsonService = restAdapter.create(InoreaderGsonService.class);
+	}
+
+	private class DoRemoveAccount implements Observable.OnSubscribe<Void> {
+
+		@SuppressWarnings("deprecation")
+		@Override
+		public void call(Subscriber<? super Void> subscriber) {
+			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+
+			for (Account account : accounts) {
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+					AccountManagerFuture<Bundle> accountManagerFuture =
+						mAccountManager.removeAccount(account, null, null, null);
+
+					Bundle result;
+					try {
+						result = accountManagerFuture.getResult();
+					} catch (OperationCanceledException | IOException | AuthenticatorException e) {
+						subscriber.onError(e);
+						return;
+					}
+
+					Boolean success =
+						result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, Boolean.FALSE);
+
+					if (success) {
+						// account was successfully removed
+						subscriber.onNext(null);
+					} else {
+						subscriber.onError(null);
+					}
+
+					subscriber.onCompleted();
+				} else {
+					// this is deprecated, but need something for before API 22
+					AccountManagerFuture<Boolean> accountManagerFuture =
+						mAccountManager.removeAccount(account, null, null);
+
+					Boolean result;
+					try {
+						result = accountManagerFuture.getResult();
+					} catch (OperationCanceledException | IOException | AuthenticatorException e) {
+						subscriber.onError(e);
+						return;
+					}
+
+					if (result) {
+						// account was successfully removed
+						subscriber.onNext(null);
+					} else {
+						subscriber.onError(null);
+					}
+				}
+			}
+
+			subscriber.onCompleted();
+		}
+	}
+
+	private class HandleLogoutResult extends Subscriber<Void> {
+
+		@Override
+		public void onCompleted() {
+			// launch login activity
+			Intent intent = new Intent(mContext, LoginActivity.class);
+			startActivity(intent);
+			finish();
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_login,
+					  Snackbar.LENGTH_LONG)
+				.show();
+		}
+
+		@Override
+		public void onNext(Void aVoid) {
+			// do nothing
+		}
 	}
 }

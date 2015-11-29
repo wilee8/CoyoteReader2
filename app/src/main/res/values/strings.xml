@@ -42,6 +42,7 @@
     <string name="alert_mark_all_as_read">Mark all as read?</string>
     <string name="alert_ok">OK</string>
     <string name="alert_cancel">Cancel</string>
+    <string name="alert_logout">Are you sure you want to log out?</string>
 
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>
