@@ -318,22 +318,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		mFab.setOnClickListener(new MarkAllReadClickListener());
 
-		mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
-			@Override
-			public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient customTabsClient) {
-				mCustomTabsClient = customTabsClient;
-
-				mCustomTabsClient.warmup(0L);
-				mCustomTabsSession = mCustomTabsClient.newSession(null);
-			}
-
-			@Override
-			public void onServiceDisconnected(ComponentName componentName) {
-			}
-		};
-
-		if (!CustomTabsClient.bindCustomTabsService(this, PACKAGE_NAME, mCustomTabsServiceConnection)) {
-			mCustomTabsServiceConnection = null;
+		// start custom tabs if needed
+		if (mBrowser.matches(
+			mContext.getResources().getString(R.string.pref_browser_default_value))) {
+			startCustomTabs();
 		}
 
 		mAccountManager = AccountManager.get(this);
@@ -668,12 +656,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			// can't really do anything, we're exiting
 		}
 
-		if (mCustomTabsServiceConnection != null) {
-			unbindService(mCustomTabsServiceConnection);
-		}
-		mCustomTabsServiceConnection = null;
-		mCustomTabsClient = null;
-		mCustomTabsSession = null;
+		stopCustomTabs();
 	}
 
 	@Override
@@ -1253,6 +1236,12 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			} else if (key.matches("pref_browser")) {
 				mBrowser = sharedPreferences.getString("pref_browser",
 													   getResources().getString(R.string.pref_browser_default_value));
+				if (mBrowser.matches(
+					mContext.getResources().getString(R.string.pref_browser_default_value))) {
+					startCustomTabs();
+				} else {
+					stopCustomTabs();
+				}
 			}
 		}
 
@@ -1600,5 +1589,34 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onNext(Void aVoid) {
 			// do nothing
 		}
+	}
+
+	private void startCustomTabs() {
+		mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
+			@Override
+			public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient customTabsClient) {
+				mCustomTabsClient = customTabsClient;
+
+				mCustomTabsClient.warmup(0L);
+				mCustomTabsSession = mCustomTabsClient.newSession(null);
+			}
+
+			@Override
+			public void onServiceDisconnected(ComponentName componentName) {
+			}
+		};
+
+		if (!CustomTabsClient.bindCustomTabsService(this, PACKAGE_NAME, mCustomTabsServiceConnection)) {
+			mCustomTabsServiceConnection = null;
+		}
+	}
+
+	private void stopCustomTabs() {
+		if (mCustomTabsServiceConnection != null) {
+			unbindService(mCustomTabsServiceConnection);
+		}
+		mCustomTabsServiceConnection = null;
+		mCustomTabsClient = null;
+		mCustomTabsSession = null;
 	}
 }

@@ -47,7 +47,6 @@ public class ArticlePagerFragment extends Fragment {
 	private ViewPager                    mPager;
 	private ArticlePagerAdapter          mPagerAdapter;
 	private ArrayList<ArticleItem>       mItems;
-	private CustomTabsSession            mCustomTabsSession;
 	private int                          mScrollX;
 	private int                          mScrollY;
 
@@ -66,7 +65,6 @@ public class ArticlePagerFragment extends Fragment {
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mContext = getActivity();
-		mCustomTabsSession = mCallback.getCustomTabsSession();
 
 		// always assume no scroll, restoreState will change these if there is a scroll to restore
 		mScrollX = -1;
@@ -291,7 +289,7 @@ public class ArticlePagerFragment extends Fragment {
 
 			// launch custom tab
 			CustomTabsIntent.Builder customTabsIntentBuilder =
-				new CustomTabsIntent.Builder(mCustomTabsSession)
+				new CustomTabsIntent.Builder(mCallback.getCustomTabsSession())
 					.setToolbarColor(
 						ContextCompat.getColor(getActivity(), R.color.primary))
 					.setShowTitle(true);
