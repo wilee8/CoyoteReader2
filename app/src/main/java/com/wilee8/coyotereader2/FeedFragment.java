@@ -32,9 +32,6 @@ import org.parceler.Parcels;
 import java.util.ArrayList;
 import java.util.Map;
 
-import retrofit.GsonConverterFactory;
-import retrofit.Retrofit;
-import retrofit.RxJavaCallAdapterFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -117,17 +114,8 @@ public class FeedFragment extends RxFragment {
 		mRecyclerView.setAdapter(mAdapter);
 		mRecyclerView.addOnScrollListener(new RecyclerScrollListener());
 
-		Retrofit restAdapter = new Retrofit.Builder()
-			.baseUrl("https://www.inoreader.com")
-			.addConverterFactory(GsonConverterFactory.create())
-			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-			.build();
+		mService = mCallback.getRxGsonService();
 
-		restAdapter.client()
-			.networkInterceptors()
-			.add(new HeaderInterceptor(mCallback.getAuthToken()));
-
-		mService = restAdapter.create(InoreaderRxGsonService.class);
 		if (mItems.size() == 0) {
 			mProgress.setVisibility(View.VISIBLE);
 
@@ -281,8 +269,6 @@ public class FeedFragment extends RxFragment {
 	}
 
 	public interface FeedFragmentListener {
-		String getAuthToken();
-
 		Boolean getUnreadOnly();
 
 		void clearStreamContents();
@@ -294,6 +280,8 @@ public class FeedFragment extends RxFragment {
 		void selectArticle(int position);
 
 		void onStarClicked(int position, Boolean starred);
+
+		InoreaderRxGsonService getRxGsonService();
 	}
 
 	private class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {

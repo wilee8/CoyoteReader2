@@ -919,11 +919,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	@Override
-	public String getAuthToken() {
-		return mAuthToken;
-	}
-
-	@Override
 	public Boolean getUnreadOnly() {
 		return mShowUnreadOnly;
 	}
@@ -1334,6 +1329,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			.observeOn(AndroidSchedulers.mainThread())
 			.compose(this.<ResponseBody>bindToLifecycle())
 			.subscribe(starredSubscriber);
+	}
+
+	@Override
+	public InoreaderRxGsonService getRxGsonService() {
+		return mRxGsonService;
 	}
 
 	@Override
