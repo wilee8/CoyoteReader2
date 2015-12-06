@@ -15,7 +15,6 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsSession;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
@@ -31,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.trello.rxlifecycle.components.support.RxFragment;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.ArticleScrollState;
 
@@ -40,7 +40,12 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ArticlePagerFragment extends Fragment {
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+
+public class ArticlePagerFragment extends RxFragment {
 
 	private ArticlePagerFragmentListener mCallback;
 	private Context                      mContext;
@@ -77,15 +82,15 @@ public class ArticlePagerFragment extends Fragment {
 		View rootView = inflater.inflate(R.layout.fragment_article_pager, container, false);
 
 		mPager = (ViewPager) rootView.findViewById(R.id.pager);
-		// For some reason using page transformers causes other fragments to render incorrectly until refreshed
-		mPager.setPageTransformer(true, new ZoomOutPageTransformer());
-		mPager.addOnPageChangeListener(new ArticleOnPageChangeListener());
 
-		mItems = mCallback.getItems();
-		int position = getArguments().getInt("position", 0);
-		mPagerAdapter = new ArticlePagerAdapter();
-		mPager.setAdapter(mPagerAdapter);
-		mPager.setCurrentItem(position);
+		Observable<Integer> initTask = Observable.create(new InitTask());
+		InitFinish initFinish = new InitFinish();
+
+		initTask
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.compose(this.<Integer>bindToLifecycle())
+			.subscribe(initFinish);
 
 		return rootView;
 	}
@@ -403,6 +408,37 @@ public class ArticlePagerFragment extends Fragment {
 		@Override
 		public void onClick(View view) {
 			launchURL(url);
+		}
+	}
+
+	private class InitTask implements Observable.OnSubscribe<Integer> {
+		@Override
+		public void call(Subscriber<? super Integer> subscriber) {
+			mPager.setPageTransformer(true, new ZoomOutPageTransformer());
+			mPager.addOnPageChangeListener(new ArticleOnPageChangeListener());
+
+			mItems = mCallback.getItems();
+			mPagerAdapter = new ArticlePagerAdapter();
+			subscriber.onNext(getArguments().getInt("position", 0));
+			subscriber.onCompleted();
+		}
+	}
+
+	private class InitFinish extends Subscriber<Integer> {
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			unsubscribe();
+		}
+
+		@Override
+		public void onNext(Integer position) {
+			mPager.setAdapter(mPagerAdapter);
+			mPager.setCurrentItem(position);
 		}
 	}
 }
