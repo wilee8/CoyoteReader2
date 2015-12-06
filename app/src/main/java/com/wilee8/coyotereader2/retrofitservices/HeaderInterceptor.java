@@ -1,8 +1,9 @@
-package com.wilee8.coyotereader2;
+package com.wilee8.coyotereader2.retrofitservices;
 
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import com.wilee8.coyotereader2.BuildConfig;
 
 import java.io.IOException;
 

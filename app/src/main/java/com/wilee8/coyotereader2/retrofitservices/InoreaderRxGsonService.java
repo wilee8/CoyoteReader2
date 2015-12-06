@@ -1,4 +1,4 @@
-package com.wilee8.coyotereader2;
+package com.wilee8.coyotereader2.retrofitservices;
 
 import com.wilee8.coyotereader2.gson.StreamContents;
 import com.wilee8.coyotereader2.gson.StreamPrefs;

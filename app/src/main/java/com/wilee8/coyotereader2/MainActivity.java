@@ -53,6 +53,10 @@ import com.wilee8.coyotereader2.gson.Tag;
 import com.wilee8.coyotereader2.gson.TagList;
 import com.wilee8.coyotereader2.gson.UnreadCounts;
 import com.wilee8.coyotereader2.gson.UserInfo;
+import com.wilee8.coyotereader2.retrofitservices.HeaderInterceptor;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderGsonService;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
 
 import org.parceler.Parcels;
 

@@ -26,6 +26,7 @@ import com.trello.rxlifecycle.components.support.RxFragment;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamContents;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
 
 import org.parceler.Parcels;
 

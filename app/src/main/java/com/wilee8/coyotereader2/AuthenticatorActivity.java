@@ -20,6 +20,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.squareup.okhttp.ResponseBody;
+import com.wilee8.coyotereader2.retrofitservices.HeaderInterceptor;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
 
 import java.io.IOException;
 import java.util.Map;
