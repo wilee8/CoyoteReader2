@@ -52,6 +52,7 @@ public class ArticlePagerFragment extends RxFragment {
 	private ViewPager                    mPager;
 	private ArticlePagerAdapter          mPagerAdapter;
 	private ArrayList<ArticleItem>       mItems;
+	private int                          mPosition;
 	private int                          mScrollX;
 	private int                          mScrollY;
 
@@ -74,6 +75,12 @@ public class ArticlePagerFragment extends RxFragment {
 		// always assume no scroll, restoreState will change these if there is a scroll to restore
 		mScrollX = -1;
 		mScrollY = -1;
+
+		if (savedInstanceState != null) {
+			mPosition = savedInstanceState.getInt("mPosition", 0);
+		} else {
+			mPosition = getArguments().getInt("position", 0);
+		}
 	}
 
 	@Nullable
@@ -95,12 +102,20 @@ public class ArticlePagerFragment extends RxFragment {
 		return rootView;
 	}
 
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+
+		outState.putInt("mPosition", mPosition);
+	}
+
 	public void updateItems() {
 		mPagerAdapter.notifyDataSetChanged();
 	}
 
 	public void changeSelected(int position) {
 		mPager.setCurrentItem(position);
+		mPosition = position;
 	}
 
 	public interface ArticlePagerFragmentListener {
@@ -419,7 +434,7 @@ public class ArticlePagerFragment extends RxFragment {
 
 			mItems = mCallback.getItems();
 			mPagerAdapter = new ArticlePagerAdapter();
-			subscriber.onNext(getArguments().getInt("position", 0));
+			subscriber.onNext(mPosition);
 			subscriber.onCompleted();
 		}
 	}
