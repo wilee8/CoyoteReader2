@@ -257,6 +257,7 @@ public class ArticlePagerFragment extends RxFragment {
 		@Override
 		public void onPageSelected(int position) {
 			super.onPageSelected(position);
+			mPosition = position;
 
 			mCallback.onArticleSelected(position);
 		}
