@@ -119,6 +119,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private Boolean mShowRefresh;
 
 	private Boolean              mShowMarkAllRead;
+	private Boolean              mShowMarkUnread;
+	private int                  mMarkUnreadPosition;
 	private String               mMarkAllReadFeed;
 	private long                 mUpdated;
 	private FloatingActionButton mFab;
@@ -161,7 +163,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		Boolean needToFetchData = false;
 
 		if (savedInstanceState != null) {
-			mContentFrame = savedInstanceState.getInt("mContentFrame", 0);
+			if (savedInstanceState.containsKey("mContentFrame")) {
+				mContentFrame = savedInstanceState.getInt("mContentFrame");
+				mShowMarkUnread = mContentFrame == (FRAME_IDS.length - 1);
+				mMarkUnreadPosition = savedInstanceState.getInt("mMarkUnreadPosition", -1);
+			} else {
+				mContentFrame = 0;
+				mShowMarkUnread = false;
+				mMarkUnreadPosition = -1;
+			}
 
 			if (savedInstanceState.containsKey("mUnreadCounts")) {
 				mUnreadCounts = Parcels.unwrap(savedInstanceState.getParcelable("mUnreadCounts"));
@@ -241,6 +251,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mTitles = new String[FRAME_IDS.length];
 			mTitles[0] = getResources().getString(R.string.app_name);
 			mShowMarkAllRead = false;
+			mShowMarkUnread = false;
+			mMarkUnreadPosition = -1;
 			mShareUrl = null;
 			mAuthToken = null;
 		}
@@ -635,6 +647,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			mActionBar.setTitle(mTitles[mContentFrame]);
+
+			mShowMarkUnread = false;
+			mMarkUnreadPosition = -1;
 		}
 
 		mShareUrl = null;
@@ -698,6 +713,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				fragment.show(fm, null);
 
 				return true;
+			case R.id.action_article_mark_unread:
+				markUnread();
+				return true;
 			case android.R.id.home:
 				onBackPressed();
 				return true;
@@ -712,6 +730,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		// show refresh button if mShowRefresh is true
 		menu.findItem(R.id.action_refresh).setVisible(mShowRefresh);
+
+		menu.findItem(R.id.action_article_mark_unread).setVisible(mShowMarkUnread);
 
 		MenuItem menuItem = menu.findItem(R.id.action_article_share);
 
@@ -785,6 +805,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		if (mAuthToken != null) {
 			outState.putString("mAuthToken", mAuthToken);
 		}
+
+		outState.putInt("mMarkUnreadPosition", mMarkUnreadPosition);
 	}
 
 	public void logout(MenuItem item) {
@@ -1047,10 +1069,31 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mCustomTabsSession.mayLaunchUrl(Uri.parse(item.getCanonical()), null, null);
 		}
 
+		updateArticleUnreadStatus(item, false);
+
+		mShareUrl = item.getCanonical();
+		mShowMarkUnread = true;
+		mMarkUnreadPosition = position;
+		invalidateOptionsMenu();
+		supportInvalidateOptionsMenu();
+	}
+
+	private void markUnread() {
+		if (mMarkUnreadPosition != -1) {
+			updateArticleUnreadStatus(mItems.get(mMarkUnreadPosition), true);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void updateArticleUnreadStatus(ArticleItem item, boolean unread) {
 		// check if already unread before marking unread
-		if (item.getUnread()) {
+		if (item.getUnread() != unread) {
 			Map queryMap = new ArrayMap<>();
-			queryMap.put("a", "user/-/state/com.google/read");
+			if (unread) {
+				queryMap.put("r", "user/-/state/com.google/read");
+			} else {
+				queryMap.put("a", "user/-/state/com.google/read");
+			}
 			queryMap.put("i", item.getId());
 
 			// mark item as read
@@ -1063,12 +1106,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				.compose(this.<String>bindToLifecycle())
 				.subscribe(updateUnreadDisplays);
 
-			fragment.updateUnreadStatus(item.getId(), false);
+			FeedFragment fragment =
+				(FeedFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[mContentFrame - 1]);
+			fragment.updateUnreadStatus(item.getId(), unread);
 		}
-
-		mShareUrl = item.getCanonical();
-		invalidateOptionsMenu();
-		supportInvalidateOptionsMenu();
 	}
 
 	private class GetUnreadCountsOperator implements Observable.Operator<UnreadCounts, ResponseBody> {

@@ -11,7 +11,7 @@
     <string name="error_mark_unread">Error updating unread articles</string>
     <string name="error_update_starred">Error updating starred status on server</string>
     <string name="error_one_account_allowed">Only one account allowed</string>
-    <string name="error_login">Error retrieving loging credentials</string>
+    <string name="error_login">Error retrieving login credentials</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
@@ -31,6 +31,7 @@
     <string name="action_logout">Logout</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_share">Share</string>
+    <string name="action_mark_article_unread">Mark Article Unread</string>
 
     <!-- image descriptions -->
     <string name="nav_expand_image_description">Expand/Collapse</string>
