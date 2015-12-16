@@ -113,7 +113,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private static int FRAME_IDS[]         = {R.id.frame0, R.id.frame1, R.id.frame2};
 	// constant for what frame to go back to when automatically advancing, points to frame1
 	@SuppressWarnings("FieldCanBeLocal")
+	private static int NAV_FRAGMENT_FRAME = 0;
 	private static int FEED_FRAGMENT_FRAME = 1;
+	private static int ARTICLE_FRAGMENT_FRAME = 2;
 	private FrameLayout[] mFrames;
 	private String        mTitles[];
 
@@ -166,10 +168,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		if (savedInstanceState != null) {
 			if (savedInstanceState.containsKey("mContentFrame")) {
 				mContentFrame = savedInstanceState.getInt("mContentFrame");
-				mShowMarkUnread = mContentFrame == (FRAME_IDS.length - 1);
+				mShowMarkUnread = mContentFrame == ARTICLE_FRAGMENT_FRAME;
 				mMarkUnreadPosition = savedInstanceState.getInt("mMarkUnreadPosition", -1);
 			} else {
-				mContentFrame = 0;
+				mContentFrame = NAV_FRAGMENT_FRAME;
 				mShowMarkUnread = false;
 				mMarkUnreadPosition = -1;
 			}
@@ -242,7 +244,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mAuthToken = savedInstanceState.getString("mAuthToken", null);
 		} else {
 			needToFetchData = true;
-			mContentFrame = 0;
+			mContentFrame = NAV_FRAGMENT_FRAME;
 			mUnreadCounts = null;
 			mTagList = null;
 			mSubscriptionList = null;
@@ -262,7 +264,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		mSceneRoot = (ViewGroup) findViewById(R.id.sceneRoot);
 
-		mShowRefresh = (mContentFrame == 0);
+		mShowRefresh = (mContentFrame == NAV_FRAGMENT_FRAME);
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		if (toolbar != null) {
@@ -609,7 +611,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 	@Override
 	public void onBackPressed() {
-		if (mContentFrame == 0) {
+		if (mContentFrame == NAV_FRAGMENT_FRAME) {
 			super.onBackPressed();
 		} else {
 			if (mDualPane) {
@@ -642,7 +644,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 			mContentFrame--;
 
-			if (mContentFrame == 0) {
+			if (mContentFrame == NAV_FRAGMENT_FRAME) {
 				mShowMarkAllRead = false;
 				mFab.setVisibility(View.GONE);
 			}
@@ -657,7 +659,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		invalidateOptionsMenu();
 		supportInvalidateOptionsMenu();
 
-		if (mContentFrame == 0) {
+		if (mContentFrame == NAV_FRAGMENT_FRAME) {
 			addRefreshButton();
 			ActionBar ab = getSupportActionBar();
 			if (ab != null) {
@@ -916,7 +918,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		if (mDualPane) {
-			if (mContentFrame == 0) {
+			if (mContentFrame == NAV_FRAGMENT_FRAME) {
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 					TransitionManager.beginDelayedTransition(mSceneRoot);
 				}
@@ -936,7 +938,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 			// else no need to shift frames or increment mContentFrame
 		} else {
-			if (mContentFrame == 0) {
+			if (mContentFrame == NAV_FRAGMENT_FRAME) {
 				crossfade(mFrames[mContentFrame + 1], mFrames[mContentFrame]);
 
 				mContentFrame++;
@@ -975,7 +977,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mFab.setVisibility(View.VISIBLE);
 
 		// Update article pager - only exists if pager is content frame
-		if (mContentFrame == 2) {
+		if (mContentFrame == ARTICLE_FRAGMENT_FRAME) {
 			ArticlePagerFragment fragment =
 				(ArticlePagerFragment) getSupportFragmentManager().findFragmentById(FRAME_IDS[mContentFrame]);
 			fragment.updateItems();
@@ -1003,7 +1005,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		// article is always selected in frame 1
 		if (mDualPane) {
-			if (mContentFrame == 1) {
+			if (mContentFrame == FEED_FRAGMENT_FRAME) {
 				// selection made in main content frame
 				// need to shift frames
 				Fragment fragment = new ArticlePagerFragment();
