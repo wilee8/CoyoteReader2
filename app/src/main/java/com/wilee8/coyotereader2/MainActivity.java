@@ -80,7 +80,8 @@ import rx.schedulers.Schedulers;
 
 public class MainActivity extends RxAppCompatActivity implements NavFragment.NavFragmentListener,
 																 FeedFragment.FeedFragmentListener,
-																 ArticlePagerFragment.ArticlePagerFragmentListener {
+																 ArticlePagerFragment.ArticlePagerFragmentListener,
+																 AddSubscriptionDialog.AddSubscriptionListener {
 	private Context mContext;
 
 	private AccountManager mAccountManager;
@@ -730,6 +731,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		// show refresh button if mShowRefresh is true
 		menu.findItem(R.id.action_refresh).setVisible(mShowRefresh);
+		// both refresh and add are shown only on first content frame
+		menu.findItem(R.id.action_add).setVisible(mShowRefresh);
 
 		menu.findItem(R.id.action_article_mark_unread).setVisible(mShowMarkUnread);
 
@@ -845,7 +848,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		refreshOnClick();
 	}
 
-	private void refreshOnClick() {
+	public void refreshOnClick() {
 		// put progress fragment in frame 0
 		FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -870,6 +873,12 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			.observeOn(AndroidSchedulers.mainThread())
 			.compose(this.<Void>bindToLifecycle())
 			.subscribe(initFinishedSubscriber);
+	}
+
+	public void addOnClick(MenuItem item) {
+		FragmentManager fm = getSupportFragmentManager();
+		AddSubscriptionDialog fragment = new AddSubscriptionDialog();
+		fragment.show(fm, null);
 	}
 
 	@Override

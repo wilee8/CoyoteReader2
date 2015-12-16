@@ -1,5 +1,6 @@
 package com.wilee8.coyotereader2.retrofitservices;
 
+import com.wilee8.coyotereader2.gson.AddedFeed;
 import com.wilee8.coyotereader2.gson.StreamContents;
 import com.wilee8.coyotereader2.gson.StreamPrefs;
 import com.wilee8.coyotereader2.gson.SubscriptionList;
@@ -33,4 +34,7 @@ public interface InoreaderRxGsonService {
 
 	@POST("/reader/api/0/stream/contents/{feedId}")
 	Observable<StreamContents> streamContents(@Path("feedId") String feedId, @QueryMap Map<String, String> options);
+
+	@POST("/reader/api/0/subscription/quickadd")
+	Observable<AddedFeed> quickAdd(@QueryMap Map<String, String> options);
 }
