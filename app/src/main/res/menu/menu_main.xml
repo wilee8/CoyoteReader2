@@ -25,6 +25,11 @@
         app:actionProviderClass="android.support.v7.widget.ShareActionProvider"
         app:showAsAction="ifRoom"/>
     <item
+        android:id="@+id/action_feed_unsubscribe"
+        android:orderInCategory="103"
+        android:title="@string/action_feed_unsubscribe"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_article_mark_unread"
         android:orderInCategory="105"
         android:title="@string/action_mark_article_unread"

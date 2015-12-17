@@ -14,6 +14,7 @@
     <string name="error_login">Error retrieving login credentials</string>
     <string name="error_subscription_empty">Subscription address can\'t be empty</string>
     <string name="error_adding_subscription">Error adding subscription</string>
+    <string name="error_unsubscribe">Error unsubscribing from feed</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
@@ -35,6 +36,7 @@
     <string name="action_add">Add Feed</string>
     <string name="action_share">Share</string>
     <string name="action_mark_article_unread">Mark Article Unread</string>
+    <string name="action_feed_unsubscribe">Unsubscribe</string>
 
     <!-- image descriptions -->
     <string name="nav_expand_image_description">Expand/Collapse</string>
@@ -52,6 +54,7 @@
 
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>
+    <string name="unsubscribe_successful">Unsubscribe successful</string>
 
     <!-- miscellaneous -->
     <string name="article_byline">by %1$s</string>

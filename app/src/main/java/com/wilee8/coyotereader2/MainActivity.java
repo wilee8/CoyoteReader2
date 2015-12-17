@@ -110,17 +110,16 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
 
-	private static int FRAME_IDS[]         = {R.id.frame0, R.id.frame1, R.id.frame2};
+	private static int FRAME_IDS[]            = {R.id.frame0, R.id.frame1, R.id.frame2};
 	// constant for what frame to go back to when automatically advancing, points to frame1
 	@SuppressWarnings("FieldCanBeLocal")
-	private static int NAV_FRAGMENT_FRAME = 0;
-	private static int FEED_FRAGMENT_FRAME = 1;
+	private static int NAV_FRAGMENT_FRAME     = 0;
+	private static int FEED_FRAGMENT_FRAME    = 1;
 	private static int ARTICLE_FRAGMENT_FRAME = 2;
 	private FrameLayout[] mFrames;
 	private String        mTitles[];
 
-	private Boolean mShowRefresh;
-
+	private Boolean              mShowRefresh;
 	private Boolean              mShowMarkAllRead;
 	private Boolean              mShowMarkUnread;
 	private int                  mMarkUnreadPosition;
@@ -719,6 +718,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			case R.id.action_article_mark_unread:
 				markUnread();
 				return true;
+			case R.id.action_feed_unsubscribe:
+				unsubscribe();
+				return true;
 			case android.R.id.home:
 				onBackPressed();
 				return true;
@@ -755,6 +757,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		} else {
 			menuItem.setVisible(false);
 		}
+
+		// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
+		menu.findItem(R.id.action_feed_unsubscribe)
+			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
+							&& (mMarkAllReadFeed.startsWith("feed")));
 
 		return super.onPrepareOptionsPanel(view, menu);
 	}
@@ -945,6 +952,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 		}
 
+		mMarkAllReadFeed = id;
 		mTitles[mContentFrame] = title;
 		mActionBar.setTitle(title);
 		ActionBar ab = getSupportActionBar();
@@ -971,7 +979,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	public void setFeedContents(ArrayList<ArticleItem> items, String id, long updated) {
 		mItems = items;
 
-		mMarkAllReadFeed = id;
 		mUpdated = updated;
 		mShowMarkAllRead = true;
 		mFab.setVisibility(View.VISIBLE);
@@ -1674,5 +1681,66 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mCustomTabsServiceConnection = null;
 		mCustomTabsClient = null;
 		mCustomTabsSession = null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void unsubscribe() {
+		// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
+		Map queryMap = new ArrayMap<>();
+		queryMap.put("ac", "unsubscribe");
+		queryMap.put("s", mMarkAllReadFeed);
+
+		UnsubscribeSubscriber unsubscribeSubscriber = new UnsubscribeSubscriber();
+		mRxService.editSubscription(queryMap)
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.compose(this.<ResponseBody>bindToLifecycle())
+			.subscribe(unsubscribeSubscriber);
+	}
+
+	private class UnsubscribeSubscriber extends Subscriber<ResponseBody> {
+
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_unsubscribe,
+					  Snackbar.LENGTH_LONG)
+				.show();
+		}
+
+		@Override
+		public void onNext(ResponseBody responseBody) {
+			String response;
+			try {
+				response = responseBody.string();
+			} catch (IOException e) {
+				onError(e);
+				return;
+			}
+
+			if (response.equalsIgnoreCase("OK")) {
+				Snackbar
+					.make(findViewById(R.id.sceneRoot),
+						  R.string.unsubscribe_successful,
+						  Snackbar.LENGTH_SHORT)
+					.show();
+
+				// go back to nav frame and refresh feed list
+				while (mContentFrame > NAV_FRAGMENT_FRAME) {
+					onBackPressed();
+				}
+				refreshOnClick();
+			} else {
+				onError(null);
+			}
+
+			unsubscribe();
+		}
 	}
 }

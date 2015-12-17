@@ -17,4 +17,7 @@ public interface InoreaderRxService {
 
 	@POST("/reader/api/0/mark-all-as-read")
 	Observable<ResponseBody> markAllAsRead(@QueryMap Map<String, String> options);
+
+	@POST("reader/api/0/subscription/edit")
+	Observable<ResponseBody> editSubscription(@QueryMap Map<String, String> options);
 }
