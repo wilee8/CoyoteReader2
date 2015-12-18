@@ -58,7 +58,8 @@ public class AddSubscriptionDialog extends RxDialogFragment {
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(),
+															  R.style.MyAlertDialogStyle);
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
 		builder.setTitle(R.string.alert_add_subscription);
