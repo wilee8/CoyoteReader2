@@ -102,6 +102,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private StreamPrefs        mStreamPrefs;
 	private ArrayList<TagItem> mNavList;
 
+	private static int FAVORITES_ROW = 1;
+
 	private ArrayList<ArticleItem> mItems;
 
 	private ActionBar mActionBar;
@@ -1187,29 +1189,32 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				public void onNext(UnreadCounts unreadCounts) {
 					// update unread displays for every id that changed
 					for (int i = 0; i < mNavList.size(); i++) {
-						// check if unread count changed on top level item
-						TagItem tagItem = mNavList.get(i);
-						String id = tagItem.getId();
+						// Skip updating unread for favorites
+						if (i != FAVORITES_ROW) {
+							// check if unread count changed on top level item
+							TagItem tagItem = mNavList.get(i);
+							String id = tagItem.getId();
 
-						int oldUnreadNumber = tagItem.getUnreadCount();
-						int newUnreadNumber = unreadCounts.getUnreadCount(id);
-						if (oldUnreadNumber != newUnreadNumber) {
-							tagItem.setUnreadCount(newUnreadNumber);
-							subscriber.onNext(id);
-						}
+							int oldUnreadNumber = tagItem.getUnreadCount();
+							int newUnreadNumber = unreadCounts.getUnreadCount(id);
+							if (oldUnreadNumber != newUnreadNumber) {
+								tagItem.setUnreadCount(newUnreadNumber);
+								subscriber.onNext(id);
+							}
 
-						// update unread counts on child items
-						ArrayList<TagItem> subNavList = tagItem.getFeeds();
-						if (subNavList != null) {
-							for (int j = 0; j < subNavList.size(); j++) {
-								tagItem = subNavList.get(j);
-								id = tagItem.getId();
+							// update unread counts on child items
+							ArrayList<TagItem> subNavList = tagItem.getFeeds();
+							if (subNavList != null) {
+								for (int j = 0; j < subNavList.size(); j++) {
+									tagItem = subNavList.get(j);
+									id = tagItem.getId();
 
-								oldUnreadNumber = tagItem.getUnreadCount();
-								newUnreadNumber = unreadCounts.getUnreadCount(id);
-								if (oldUnreadNumber != newUnreadNumber) {
-									tagItem.setUnreadCount(newUnreadNumber);
-									subscriber.onNext(id);
+									oldUnreadNumber = tagItem.getUnreadCount();
+									newUnreadNumber = unreadCounts.getUnreadCount(id);
+									if (oldUnreadNumber != newUnreadNumber) {
+										tagItem.setUnreadCount(newUnreadNumber);
+										subscriber.onNext(id);
+									}
 								}
 							}
 						}
