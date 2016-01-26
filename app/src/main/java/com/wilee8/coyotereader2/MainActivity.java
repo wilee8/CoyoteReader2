@@ -1714,17 +1714,29 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 	@SuppressWarnings("unchecked")
 	private void unsubscribe() {
-		// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
-		Map queryMap = new ArrayMap<>();
-		queryMap.put("ac", "unsubscribe");
-		queryMap.put("s", mMarkAllReadFeed);
+		final RxAppCompatActivity activity = this;
+		new AlertDialog.Builder(this)
+			.setTitle(R.string.alert_unsubscribe_title)
+			.setMessage(R.string.alert_unsubscribe_prompt)
+			.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
 
-		UnsubscribeSubscriber unsubscribeSubscriber = new UnsubscribeSubscriber();
-		mRxService.editSubscription(queryMap)
-			.subscribeOn(Schedulers.io())
-			.observeOn(AndroidSchedulers.mainThread())
-			.compose(this.<ResponseBody>bindToLifecycle())
-			.subscribe(unsubscribeSubscriber);
+				@Override
+				public void onClick(DialogInterface dialogInterface, int i) {
+					// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
+					Map queryMap = new ArrayMap<>();
+					queryMap.put("ac", "unsubscribe");
+					queryMap.put("s", mMarkAllReadFeed);
+
+					UnsubscribeSubscriber unsubscribeSubscriber = new UnsubscribeSubscriber();
+					mRxService.editSubscription(queryMap)
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.compose(activity.<ResponseBody>bindToLifecycle())
+						.subscribe(unsubscribeSubscriber);
+				}
+			})
+			.setNegativeButton(R.string.alert_cancel, null)
+			.show();
 	}
 
 	private class UnsubscribeSubscriber extends Subscriber<ResponseBody> {

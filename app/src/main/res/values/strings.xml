@@ -52,6 +52,8 @@
     <string name="alert_logout">Are you sure you want to log out?</string>
     <string name="alert_add_subscription">Add Subscription</string>
     <string name="prompt_subscription_url">Enture Feed URL</string>
+    <string name="alert_unsubscribe_title">Unsubscribe</string>
+    <string name="alert_unsubscribe_prompt">Are you sure you want to unsubscribe?</string>
 
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>
