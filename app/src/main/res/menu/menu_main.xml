@@ -25,6 +25,11 @@
         app:actionProviderClass="android.support.v7.widget.ShareActionProvider"
         app:showAsAction="ifRoom"/>
     <item
+        android:id="@+id/action_feed_change_folders"
+        android:orderInCategory="102"
+        android:title="@string/action_feed_change_folders"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_feed_unsubscribe"
         android:orderInCategory="103"
         android:title="@string/action_feed_unsubscribe"

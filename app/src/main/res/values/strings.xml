@@ -3,7 +3,6 @@
 
     <!-- Main strings -->
     <string name="app_name">Coyote Reader</string>
-    <string name="title_activity_main">MainActivity</string>
 
     <!-- errors -->
     <string name="error_fetch_data">Error retrieving data from server</string>
@@ -15,6 +14,7 @@
     <string name="error_subscription_empty">Subscription address can\'t be empty</string>
     <string name="error_adding_subscription">Error adding subscription</string>
     <string name="error_unsubscribe">Error unsubscribing from feed</string>
+    <string name="error_change_folder">Error changing folders</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
@@ -37,6 +37,7 @@
     <string name="action_share">Share</string>
     <string name="action_mark_article_unread">Mark Article Unread</string>
     <string name="action_feed_unsubscribe">Unsubscribe</string>
+    <string name="action_feed_change_folders">Change Folders</string>
 
     <!-- image descriptions -->
     <string name="nav_expand_image_description">Expand/Collapse</string>
@@ -55,6 +56,7 @@
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>
     <string name="unsubscribe_successful">Unsubscribe successful</string>
+    <string name="change_folder_successful">Folders changed successfully</string>
 
     <!-- miscellaneous -->
     <string name="article_byline">by %1$s</string>

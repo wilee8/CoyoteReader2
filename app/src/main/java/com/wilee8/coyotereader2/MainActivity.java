@@ -81,7 +81,8 @@ import rx.schedulers.Schedulers;
 public class MainActivity extends RxAppCompatActivity implements NavFragment.NavFragmentListener,
 																 FeedFragment.FeedFragmentListener,
 																 ArticlePagerFragment.ArticlePagerFragmentListener,
-																 AddSubscriptionDialog.AddSubscriptionListener {
+																 AddSubscriptionDialog.AddSubscriptionListener,
+																 ChangeSubscriptionFolderDialog.ChangeSubsciptionFolderListener {
 	private Context mContext;
 
 	private AccountManager mAccountManager;
@@ -723,6 +724,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			case R.id.action_feed_unsubscribe:
 				unsubscribe();
 				return true;
+			case R.id.action_feed_change_folders:
+				changeFoldersOnClick();
+				return true;
 			case android.R.id.home:
 				onBackPressed();
 				return true;
@@ -762,6 +766,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
 		menu.findItem(R.id.action_feed_unsubscribe)
+			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
+							&& (mMarkAllReadFeed.startsWith("feed")));
+
+		// only show change folders at the same time unsubscribe is visible
+		menu.findItem(R.id.action_feed_change_folders)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
 							&& (mMarkAllReadFeed.startsWith("feed")));
 
@@ -860,6 +869,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	public void refreshOnClick() {
+		// go back to nav frame
+		while (mContentFrame > NAV_FRAGMENT_FRAME) {
+			onBackPressed();
+		}
+
 		// put progress fragment in frame 0
 		FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -895,6 +909,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	@Override
 	public ArrayList<TagItem> getNavList() {
 		return mNavList;
+	}
+
+	@Override
+	public SubscriptionList getSubscriptionList() {
+		return mSubscriptionList;
 	}
 
 	@Override
@@ -1405,6 +1424,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	@Override
+	public InoreaderRxService getRxService() {
+		return mRxService;
+	}
+
+	@Override
 	public CustomTabsSession getCustomTabsSession() {
 		return mCustomTabsSession;
 	}
@@ -1736,10 +1760,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 						  Snackbar.LENGTH_SHORT)
 					.show();
 
-				// go back to nav frame and refresh feed list
-				while (mContentFrame > NAV_FRAGMENT_FRAME) {
-					onBackPressed();
-				}
 				refreshOnClick();
 			} else {
 				onError(null);
@@ -1747,5 +1767,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 			unsubscribe();
 		}
+	}
+
+	public void changeFoldersOnClick() {
+		Bundle args = new Bundle();
+		// mMarkAllRead feed will be the same as the feed we wish to change
+		args.putString("id", mMarkAllReadFeed);
+		FragmentManager fm = getSupportFragmentManager();
+		ChangeSubscriptionFolderDialog fragment = new ChangeSubscriptionFolderDialog();
+		fragment.setArguments(args);
+		fragment.show(fm, null);
 	}
 }
