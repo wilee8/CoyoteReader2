@@ -53,4 +53,5 @@ dependencies {
     compile('com.android.support:support-v4-preferencefragment:1.+@aar') {
         exclude module: 'support-v4'
     }
+    compile 'ch.acra:acra:4.6.2'
 }
