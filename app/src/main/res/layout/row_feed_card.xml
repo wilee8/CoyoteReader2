@@ -19,20 +19,68 @@
         android:paddingTop="10dp"
         tools:ignore="RtlHardcoded"/>
 
-    <TextView
-        android:id="@+id/articleInfo"
+    <RelativeLayout
+        android:id="@+id/articleInfoWrapper"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/articleStar"
-        android:maxLines="2"
-        android:minLines="2"
-        android:paddingBottom="8dp"
-        android:paddingLeft="0dp"
-        android:paddingRight="8dp"
-        android:paddingTop="8dp"
-        android:textAppearance="?android:textAppearanceMedium"
-        android:textColor="@color/primary_text_default_material_light"
-        tools:ignore="RtlHardcoded"/>
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/articleStar">
+
+        <TextView
+            android:id="@+id/articleTitle"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:gravity="center_vertical"
+            android:maxLines="2"
+            android:minLines="2"
+            android:paddingBottom="0dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/primary_text_default_material_light"
+            tools:ignore="RtlHardcoded"/>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentStart="true"
+            android:layout_below="@id/articleTitle">
+
+            <TextView
+                android:id="@+id/articleFeedName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:minLines="1"
+                android:paddingBottom="8dp"
+                android:paddingLeft="0dp"
+                android:paddingRight="8dp"
+                android:paddingTop="0dp"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textColor="@color/primary_text_default_material_light"
+                tools:ignore="RtlHardcoded"/>
+
+            <TextView
+                android:id="@+id/articleCrawlTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:maxLines="1"
+                android:minLines="1"
+                android:paddingBottom="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="0dp"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textColor="@color/primary_text_default_material_light"
+                tools:ignore="RtlHardcoded"/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
 
 </RelativeLayout>

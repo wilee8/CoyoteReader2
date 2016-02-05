@@ -4,15 +4,16 @@ import org.parceler.Parcel;
 
 @Parcel
 public class ArticleItem {
-	String            id;
-	String            title;
-	String            summary;
-	String            author;
-	String            canonical;
-	String            origin;
-	Boolean           starred;
-	Boolean           unread;
-	Boolean           isFooter;
+	String  id;
+	String  title;
+	String  summary;
+	String  author;
+	String  canonical;
+	String  origin;
+	Boolean starred;
+	Boolean unread;
+	Boolean isFooter;
+	long    crawlTimeMsec;
 
 	public ArticleItem() {
 		isFooter = false;
@@ -88,5 +89,13 @@ public class ArticleItem {
 
 	public void setUnread(Boolean unread) {
 		this.unread = unread;
+	}
+
+	public long getCrawlTimeMsec() {
+		return crawlTimeMsec;
+	}
+
+	public void setCrawlTimeMsec(long crawlTimeMsec) {
+		this.crawlTimeMsec = crawlTimeMsec;
 	}
 }

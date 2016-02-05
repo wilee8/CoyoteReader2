@@ -30,7 +30,12 @@ import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
 
 import org.parceler.Parcels;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.Map;
 
 import rx.Observable;
@@ -48,6 +53,9 @@ public class FeedFragment extends RxFragment {
 	private long                   mUpdated;
 	private InoreaderRxGsonService mService;
 	private Boolean                mFetchInProgress;
+
+	private long mStartOfToday;
+	private long mStartOfYear;
 
 	private ArrayList<ArticleItem> mItems;
 	private FeedAdapter            mAdapter;
@@ -86,6 +94,23 @@ public class FeedFragment extends RxFragment {
 			mUpdated = -1;
 			mFetchInProgress = false;
 		}
+
+		// get dates for display comparisons later
+		GregorianCalendar today = new GregorianCalendar();
+		mStartOfToday = new GregorianCalendar(
+			today.get(Calendar.YEAR),
+			today.get(Calendar.MONTH),
+			today.get(Calendar.DAY_OF_MONTH),
+			today.getMinimum(Calendar.HOUR_OF_DAY),
+			today.getMinimum(Calendar.MINUTE),
+			today.getMinimum(Calendar.SECOND)).getTime().getTime();
+		mStartOfYear = new GregorianCalendar(
+			today.get(Calendar.YEAR),
+			today.getMinimum(Calendar.MONTH),
+			today.getMinimum(Calendar.DAY_OF_MONTH),
+			today.getMinimum(Calendar.HOUR_OF_DAY),
+			today.getMinimum(Calendar.MINUTE),
+			today.getMinimum(Calendar.SECOND)).getTime().getTime();
 	}
 
 	@Override
@@ -204,6 +229,7 @@ public class FeedFragment extends RxFragment {
 						article.setCanonical(item.getCanonical().get(0).getHref());
 						article.setOrigin(item.getOrigin().getTitle());
 						article.setIsFooter(false);
+						article.setCrawlTimeMsec(item.getCrawlTimeMsec());
 
 						ArrayList<String> categories = item.getCategories();
 						article.setUnread(true);
@@ -324,11 +350,9 @@ public class FeedFragment extends RxFragment {
 			ArticleViewHolder viewHolder = (ArticleViewHolder) holder;
 
 			if (item.getUnread()) {
-				viewHolder.articleInfo.setText(
-					Html.fromHtml("<b>" + item.getTitle() + "</b> - " + item.getOrigin()));
+				viewHolder.articleTitle.setText(Html.fromHtml("<b>" + item.getTitle() + "</b>"));
 			} else {
-				viewHolder.articleInfo.setText(
-					Html.fromHtml(item.getTitle() + " - " + item.getOrigin()));
+				viewHolder.articleTitle.setText(Html.fromHtml(item.getTitle()));
 			}
 
 			if (item.getStarred()) {
@@ -339,11 +363,28 @@ public class FeedFragment extends RxFragment {
 					ContextCompat.getDrawable(mContext, R.drawable.ic_star_outline_24dp));
 			}
 
-			viewHolder.articleInfo.setOnClickListener(new FeedSelectClickListener(position));
-			viewHolder.articleInfo.setOnTouchListener(new FeedSelectTouchListener(position));
+			viewHolder.articleFeedName.setText(Html.fromHtml(item.getOrigin()));
+
+			// determine which date format to use
+			SimpleDateFormat sdf;
+			if(item.getCrawlTimeMsec() > mStartOfToday) {
+				// display time as HH:MM
+				sdf = new SimpleDateFormat("h:mm a", Locale.getDefault());
+			} else if (item.getCrawlTimeMsec() > mStartOfYear) {
+				// display date without year
+				sdf = new SimpleDateFormat("LLL d", Locale.getDefault());
+			} else {
+				// from previous year, include year in display date
+				sdf = new SimpleDateFormat("LLL d, yyyy", Locale.getDefault());
+			}
+
+			viewHolder.articleCrawlTime.setText(sdf.format(new Date(item.getCrawlTimeMsec())));
+
+			viewHolder.articleInfoWrapper.setOnClickListener(new FeedSelectClickListener(position));
+			viewHolder.articleInfoWrapper.setOnTouchListener(new FeedSelectTouchListener(position));
 			viewHolder.articleStar.setOnClickListener(new StarClickListener(position));
 
-			viewHolder.articleInfo.setBackground(
+			viewHolder.articleInfoWrapper.setBackground(
 				ContextCompat.getDrawable(mContext, R.drawable.ripple_selector));
 			viewHolder.articleStar.setBackground(
 				ContextCompat.getDrawable(mContext, R.drawable.ripple_selector));
@@ -374,13 +415,19 @@ public class FeedFragment extends RxFragment {
 
 		public RelativeLayout articleWrapper;
 		public ImageView      articleStar;
-		public TextView       articleInfo;
+		public TextView       articleTitle;
+		public TextView       articleFeedName;
+		public TextView       articleCrawlTime;
+		public RelativeLayout articleInfoWrapper;
 
 		public ArticleViewHolder(View itemView) {
 			super(itemView);
 			articleWrapper = (RelativeLayout) itemView.findViewById(R.id.articleWrapper);
 			articleStar = (ImageView) itemView.findViewById(R.id.articleStar);
-			articleInfo = (TextView) itemView.findViewById(R.id.articleInfo);
+			articleTitle = (TextView) itemView.findViewById(R.id.articleTitle);
+			articleFeedName = (TextView) itemView.findViewById(R.id.articleFeedName);
+			articleCrawlTime = (TextView) itemView.findViewById(R.id.articleCrawlTime);
+			articleInfoWrapper = (RelativeLayout) itemView.findViewById(R.id.articleInfoWrapper);
 		}
 	}
 
