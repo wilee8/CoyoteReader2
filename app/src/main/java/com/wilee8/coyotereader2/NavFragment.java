@@ -381,7 +381,7 @@ public class NavFragment extends Fragment {
 				// search for non-"All Items" feed with unread items
 				// offset starts loop at last selected feed
 				int offset = (mSelected == -1) ? 0 : mSelected;
-				int lastNavIndex = mNavList.size() - 1;
+				int lastNavIndex = mNavList.size();
 
 				for (int i = 0; i < mNavList.size(); i++) {
 					int thisIndex = (offset + i) % lastNavIndex;
