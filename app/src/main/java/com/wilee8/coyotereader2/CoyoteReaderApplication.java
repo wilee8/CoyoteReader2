@@ -7,7 +7,7 @@ import org.acra.ReportField;
 import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 
-@ReportsCrashes(mailTo = "allan.yaklin@gmail.com",
+@ReportsCrashes(mailTo = "coyote.reader.rss@gmail.com",
 	customReportContent = {ReportField.BRAND,
 						   ReportField.PHONE_MODEL,
 						   ReportField.ANDROID_VERSION,
