@@ -27,7 +27,7 @@
     <string name="pref_advance">Advance on mark all read</string>
     <string name="pref_advance_summ">Will open next unread feed</string>
     <string name="pref_browser">Browser for external links</string>
-    <string name="pref_browser_default_value">chrome_tabs</string>
+    <string name="pref_browser_default_value">external_browser</string>
 
     <!-- Menu items -->
     <string name="action_settings">Settings</string>
