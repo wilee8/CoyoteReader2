@@ -291,7 +291,11 @@ public class ArticlePagerFragment extends RxFragment {
 		Uri uri = Uri.parse(url);
 		if (mCallback.getBrowser().matches(
 			mContext.getResources().getString(R.string.pref_browser_default_value))) {
-			// default should be chrome tabs
+			// default should be external browser
+			Intent i = new Intent(Intent.ACTION_VIEW, uri);
+			startActivity(i);
+		} else {
+			// right now only alternative is chrome tabs
 			// create pending intent for share action button
 			Intent actionIntent = new Intent(Intent.ACTION_SEND);
 			actionIntent.setType("text/plain");
@@ -330,10 +334,6 @@ public class ArticlePagerFragment extends RxFragment {
 
 			CustomTabsIntent customTabsIntent = customTabsIntentBuilder.build();
 			customTabsIntent.launchUrl((Activity) mContext, uri);
-		} else {
-			// right now only alternative is external browser
-			Intent i = new Intent(Intent.ACTION_VIEW, uri);
-			startActivity(i);
 		}
 	}
 
