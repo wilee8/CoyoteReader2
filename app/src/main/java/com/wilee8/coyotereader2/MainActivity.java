@@ -103,8 +103,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private StreamPrefs        mStreamPrefs;
 	private ArrayList<TagItem> mNavList;
 
-	private static int FAVORITES_ROW = 1;
-
 	private ArrayList<ArticleItem> mItems;
 
 	private ActionBar mActionBar;
@@ -468,9 +466,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			// add untagged subscriptions
 			ArrayList<Subscription> subscriptions = mSubscriptionList.getSubscriptions();
 
-			for (int i = 0; i < subscriptions.size(); i++) {
-				Subscription subscription = subscriptions.get(i);
-
+			for (Subscription subscription: subscriptions) {
 				// only add a subscription to the nav bar if it has no tags
 				if (subscription.getCategories().size() == 0) {
 					TagItem tagItem = new TagItem();
@@ -522,8 +518,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		String subscriptionOrderingString = "";
 
 		if (!mSortAlpha) {
-			for (int i = 0; i < preferences.size(); i++) {
-				StreamPref pref = preferences.get(i);
+			for (StreamPref pref: preferences) {
 				if (pref.getId().matches("subscription-ordering")) {
 					subscriptionOrderingString = pref.getValue();
 				}
@@ -548,13 +543,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		// add tag feeds to the list
-		for (int i = 0; i < subscriptions.size(); i++) {
-			Subscription sub = subscriptions.get(i);
-
+		for (Subscription sub: subscriptions) {
 			ArrayList<Category> categories = sub.getCategories();
 
-			for (int j = 0; j < categories.size(); j++) {
-				Category category = categories.get(j);
+			for (Category category: categories) {
 				String subCategory = category.getId();
 				if (subCategory.matches(tagId)) {
 					// add to mViewData
@@ -1207,11 +1199,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				@Override
 				public void onNext(UnreadCounts unreadCounts) {
 					// update unread displays for every id that changed
-					for (int i = 0; i < mNavList.size(); i++) {
+					for (TagItem tagItem: mNavList) {
 						// Skip updating unread for favorites
-						if (i != FAVORITES_ROW) {
+						if (!tagItem.getId().matches("user/" + mUserId + "/state/com.google/starred")) {
 							// check if unread count changed on top level item
-							TagItem tagItem = mNavList.get(i);
 							String id = tagItem.getId();
 
 							int oldUnreadNumber = tagItem.getUnreadCount();
@@ -1224,14 +1215,13 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 							// update unread counts on child items
 							ArrayList<TagItem> subNavList = tagItem.getFeeds();
 							if (subNavList != null) {
-								for (int j = 0; j < subNavList.size(); j++) {
-									tagItem = subNavList.get(j);
-									id = tagItem.getId();
+								for (TagItem subTagItem: subNavList) {
+									id = subTagItem.getId();
 
-									oldUnreadNumber = tagItem.getUnreadCount();
+									oldUnreadNumber = subTagItem.getUnreadCount();
 									newUnreadNumber = unreadCounts.getUnreadCount(id);
 									if (oldUnreadNumber != newUnreadNumber) {
-										tagItem.setUnreadCount(newUnreadNumber);
+										subTagItem.setUnreadCount(newUnreadNumber);
 										subscriber.onNext(id);
 									}
 								}

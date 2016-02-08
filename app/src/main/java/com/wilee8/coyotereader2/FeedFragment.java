@@ -218,9 +218,8 @@ public class FeedFragment extends RxFragment {
 					int firstNewIndex = mItems.size();
 
 					ArrayList<Item> items = streamContents.getItems();
-					for (int i = 0; i < items.size(); i++) {
+					for (Item item: items) {
 						ArticleItem article = new ArticleItem();
-						Item item = items.get(i);
 
 						article.setId(item.getId());
 						article.setTitle(item.getTitle());
@@ -235,8 +234,7 @@ public class FeedFragment extends RxFragment {
 						article.setUnread(true);
 						article.setStarred(false);
 
-						for (int j = 0; j < categories.size(); j++) {
-							String category = categories.get(j);
+						for (String category: categories) {
 							if (category.equals("user/" + mCallback.getUserId() + "/state/com.google/read")) {
 								article.setUnread(false);
 							}

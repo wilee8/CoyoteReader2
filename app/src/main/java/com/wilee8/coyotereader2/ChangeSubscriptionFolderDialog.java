@@ -69,8 +69,7 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		ArrayList<TagItem> navList = mCallback.getNavList();
 		mFolderList = new Vector<>();
 
-		for (int i = 0; i < navList.size(); i++) {
-			TagItem item = navList.get(i);
+		for (TagItem item: navList) {
 			if (!item.getIsFeed()) {
 				FolderHolder folder = new FolderHolder();
 				folder.setFolderName(item.getName());
