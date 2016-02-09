@@ -12,9 +12,11 @@
     <string name="error_one_account_allowed">Only one account allowed</string>
     <string name="error_login">Error retrieving login credentials</string>
     <string name="error_subscription_empty">Subscription address can\'t be empty</string>
+    <string name="error_subscription_name_empty">Subscription name can\'t be empty</string>
     <string name="error_adding_subscription">Error adding subscription</string>
     <string name="error_unsubscribe">Error unsubscribing from feed</string>
     <string name="error_change_folder">Error changing folders</string>
+    <string name="error_change_name">Error changing name</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
@@ -38,6 +40,7 @@
     <string name="action_mark_article_unread">Mark Article Unread</string>
     <string name="action_feed_unsubscribe">Unsubscribe</string>
     <string name="action_feed_change_folders">Change Folders</string>
+    <string name="action_feed_change_name">Change Name</string>
 
     <!-- image descriptions -->
     <string name="nav_expand_image_description">Expand/Collapse</string>
@@ -51,14 +54,17 @@
     <string name="alert_cancel">Cancel</string>
     <string name="alert_logout">Are you sure you want to log out?</string>
     <string name="alert_add_subscription">Add Subscription</string>
-    <string name="prompt_subscription_url">Enture Feed URL</string>
+    <string name="prompt_subscription_url">Enter Feed URL</string>
     <string name="alert_unsubscribe_title">Unsubscribe</string>
     <string name="alert_unsubscribe_prompt">Are you sure you want to unsubscribe?</string>
+    <string name="alert_subscription_name">Change Subscription Name</string>
+    <string name="prompt_subscription_name">Enter Feed Name</string>
 
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>
     <string name="unsubscribe_successful">Unsubscribe successful</string>
     <string name="change_folder_successful">Folders changed successfully</string>
+    <string name="change_folder_name_successful">Name changed successfully</string>
 
     <!-- miscellaneous -->
     <string name="article_byline">by %1$s</string>

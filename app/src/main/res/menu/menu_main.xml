@@ -30,8 +30,13 @@
         android:title="@string/action_feed_change_folders"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/action_feed_unsubscribe"
+        android:id="@+id/action_feed_change_name"
         android:orderInCategory="103"
+        android:title="@string/action_feed_change_name"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_feed_unsubscribe"
+        android:orderInCategory="104"
         android:title="@string/action_feed_unsubscribe"
         app:showAsAction="never"/>
     <item

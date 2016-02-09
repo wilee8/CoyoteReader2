@@ -232,14 +232,15 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 	private class ChangeFolderSubscriber extends Subscriber<ResponseBody> {
 		@Override
 		public void onCompleted() {
-			System.out.println("ChangeFolderSubscriber onCompleted");
+			dismiss();
+			unsubscribe();
 		}
 
 		@Override
 		public void onError(Throwable e) {
 			Snackbar
 				.make(mContext.findViewById(R.id.sceneRoot),
-					R.string.error_unsubscribe,
+					R.string.error_change_folder,
 					Snackbar.LENGTH_SHORT)
 				.show();
 		}

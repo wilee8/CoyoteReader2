@@ -82,7 +82,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 																 FeedFragment.FeedFragmentListener,
 																 ArticlePagerFragment.ArticlePagerFragmentListener,
 																 AddSubscriptionDialog.AddSubscriptionListener,
-																 ChangeSubscriptionFolderDialog.ChangeSubsciptionFolderListener {
+																 ChangeSubscriptionFolderDialog.ChangeSubsciptionFolderListener,
+																 ChangeSubscriptionNameDialog.ChangeSubscriptionNameListener {
 	private Context mContext;
 
 	private AccountManager mAccountManager;
@@ -125,6 +126,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private Boolean              mShowMarkUnread;
 	private int                  mMarkUnreadPosition;
 	private String               mMarkAllReadFeed;
+	private String               mMarkAllReadFeedName;
 	private long                 mUpdated;
 	private FloatingActionButton mFab;
 	private ShareActionProvider  mShareActionProvider;
@@ -234,6 +236,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			if (savedInstanceState.containsKey("mMarkAllReadFeed")) {
 				mShowMarkAllRead = savedInstanceState.getBoolean("mShowMarkAllRead", false);
 				mMarkAllReadFeed = savedInstanceState.getString("mMarkAllReadFeed", "");
+				mMarkAllReadFeedName = savedInstanceState.getString("mMarkAllReadFeedName", "");
 				mUpdated = savedInstanceState.getLong("mUpdated", -1);
 			} else {
 				mShowMarkAllRead = false;
@@ -719,6 +722,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			case R.id.action_feed_change_folders:
 				changeFoldersOnClick();
 				return true;
+			case R.id.action_feed_change_name:
+				changeNameOnClick();
+				return true;
 			case android.R.id.home:
 				onBackPressed();
 				return true;
@@ -761,8 +767,12 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
 							&& (mMarkAllReadFeed.startsWith("feed")));
 
-		// only show change folders at the same time unsubscribe is visible
+		// only show change folders and name at the same time unsubscribe is visible
 		menu.findItem(R.id.action_feed_change_folders)
+			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
+							&& (mMarkAllReadFeed.startsWith("feed")));
+
+		menu.findItem(R.id.action_feed_change_name)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
 							&& (mMarkAllReadFeed.startsWith("feed")));
 
@@ -814,6 +824,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		outState.putBoolean("mShowMarkAllRead", mShowMarkAllRead);
 		if (mShowMarkAllRead) {
 			outState.putString("mMarkAllReadFeed", mMarkAllReadFeed);
+			outState.putString("mMarkAllReadFeedName", mMarkAllReadFeedName);
 			outState.putLong("mUpdated", mUpdated);
 		}
 
@@ -966,6 +977,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		mMarkAllReadFeed = id;
+		mMarkAllReadFeedName = title;
 		mTitles[mContentFrame] = title;
 		mActionBar.setTitle(title);
 		ActionBar ab = getSupportActionBar();
@@ -1771,12 +1783,23 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 	}
 
-	public void changeFoldersOnClick() {
+	private void changeFoldersOnClick() {
 		Bundle args = new Bundle();
 		// mMarkAllRead feed will be the same as the feed we wish to change
 		args.putString("id", mMarkAllReadFeed);
 		FragmentManager fm = getSupportFragmentManager();
 		ChangeSubscriptionFolderDialog fragment = new ChangeSubscriptionFolderDialog();
+		fragment.setArguments(args);
+		fragment.show(fm, null);
+	}
+
+	private void changeNameOnClick() {
+		Bundle args = new Bundle();
+		// mMarkAllRead feed will be the same as the feed we wish to change
+		args.putString("id", mMarkAllReadFeed);
+		args.putString("name", mMarkAllReadFeedName);
+		FragmentManager fm = getSupportFragmentManager();
+		ChangeSubscriptionNameDialog fragment = new ChangeSubscriptionNameDialog();
 		fragment.setArguments(args);
 		fragment.show(fm, null);
 	}
