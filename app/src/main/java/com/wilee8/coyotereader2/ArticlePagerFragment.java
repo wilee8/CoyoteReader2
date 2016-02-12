@@ -215,7 +215,7 @@ public class ArticlePagerFragment extends RxFragment {
 			}
 
 			// Set summary
-			String imageCss = "<style>img{display: inline;max-width: 95%;display: block;margin-left: auto;margin-right: auto;}</style>" +
+			String imageCss = "<style>img{display: inline;max-width: 95%; height: auto;display: block;margin-left: auto;margin-right: auto;}</style>" +
 				"<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
 			summaryFrame.loadUrl("about:blank");
 			summaryFrame.loadData(imageCss + item.getSummary(), "text/html; charset=UTF-8", null);
