@@ -17,6 +17,7 @@
     <string name="error_unsubscribe">Error unsubscribing from feed</string>
     <string name="error_change_folder">Error changing folders</string>
     <string name="error_change_name">Error changing name</string>
+    <string name="error_new_folder_empty">Folder Name can\'t be empty</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>
@@ -59,6 +60,8 @@
     <string name="alert_unsubscribe_prompt">Are you sure you want to unsubscribe?</string>
     <string name="alert_subscription_name">Change Subscription Name</string>
     <string name="prompt_subscription_name">Enter Feed Name</string>
+    <string name="alert_new_folder">New Folder</string>
+    <string name="prompt_new_folder_name">Enter New Folder Name</string>
 
     <!-- notifications -->
     <string name="notify_marking_all_read">Marking all as read</string>

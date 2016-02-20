@@ -83,7 +83,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 																 ArticlePagerFragment.ArticlePagerFragmentListener,
 																 AddSubscriptionDialog.AddSubscriptionListener,
 																 ChangeSubscriptionFolderDialog.ChangeSubsciptionFolderListener,
-																 ChangeSubscriptionNameDialog.ChangeSubscriptionNameListener {
+																 ChangeSubscriptionNameDialog.ChangeSubscriptionNameListener,
+																 NewFolderDialog.NewFolderListener {
 	private Context mContext;
 
 	private AccountManager mAccountManager;
@@ -917,6 +918,33 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	@Override
 	public SubscriptionList getSubscriptionList() {
 		return mSubscriptionList;
+	}
+
+	@Override
+	public void addNewFolder(ArrayList<String> newFolderList) {
+		Bundle args = new Bundle();
+		// mMarkAllRead feed will be the same as the feed we wish to change
+		args.putStringArrayList("newFolderList", newFolderList);
+
+		FragmentManager fm = getSupportFragmentManager();
+		NewFolderDialog fragment = new NewFolderDialog();
+		fragment.setArguments(args);
+		fragment.show(fm, null);
+
+
+	}
+
+	@Override
+	public void launchChangeFolder(ArrayList<String> newFolderList) {
+		Bundle args = new Bundle();
+		// mMarkAllRead feed will be the same as the feed we wish to change
+		args.putString("id", mMarkAllReadFeed);
+		args.putStringArrayList("newFolderList", newFolderList);
+
+		FragmentManager fm = getSupportFragmentManager();
+		ChangeSubscriptionFolderDialog fragment = new ChangeSubscriptionFolderDialog();
+		fragment.setArguments(args);
+		fragment.show(fm, null);
 	}
 
 	@Override

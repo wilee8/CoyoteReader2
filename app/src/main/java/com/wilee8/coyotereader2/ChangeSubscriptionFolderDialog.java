@@ -33,7 +33,8 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 
 	private InoreaderRxService mRxService;
 
-	private String mId;
+	private String               mId;
+	private ArrayList<String>    mNewFolderList;
 	private Vector<FolderHolder> mFolderList;
 
 	private RxAppCompatActivity mContext;
@@ -46,7 +47,7 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 			mCallback = (ChangeSubsciptionFolderListener) activity;
 		} catch (ClassCastException e) {
 			throw new ClassCastException(activity.toString() +
-				" must implement ChangeSubscriptionFolderListener");
+											 " must implement ChangeSubscriptionFolderListener");
 		}
 	}
 
@@ -58,7 +59,16 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 
 		mContext = (RxAppCompatActivity) getActivity();
 
-		mId = getArguments().getString("id");
+		Bundle args = getArguments();
+		mId = args.getString("id");
+
+		if (args.containsKey("newFolderList")) {
+			mNewFolderList = args.getStringArrayList("newFolderList");
+		} else {
+			mNewFolderList = new ArrayList<>();
+		}
+
+
 	}
 
 	@NonNull
@@ -69,7 +79,7 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		ArrayList<TagItem> navList = mCallback.getNavList();
 		mFolderList = new Vector<>();
 
-		for (TagItem item: navList) {
+		for (TagItem item : navList) {
 			if (!item.getIsFeed()) {
 				FolderHolder folder = new FolderHolder();
 				folder.setFolderName(item.getName());
@@ -104,6 +114,18 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 				break;
 			}
 		}
+
+		// add new folders if they exist
+		for (String newFolder : mNewFolderList) {
+			FolderHolder folder = new FolderHolder();
+			folder.setFolderName(newFolder);
+			folder.setFolderId("user/-/label/" + newFolder);
+			folder.setWasChecked(false);
+			folder.setIsChecked(true);
+
+			mFolderList.add(folder);
+		}
+
 		// create arrays
 		String[] folderNames = new String[mFolderList.size()];
 		boolean[] folderChecked = new boolean[mFolderList.size()];
@@ -111,13 +133,14 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		for (int i = 0; i < mFolderList.size(); i++) {
 			FolderHolder folder = mFolderList.get(i);
 			folderNames[i] = folder.getFolderName();
-			folderChecked[i] = folder.getWasChecked();
+			folderChecked[i] = folder.getIsChecked();
 		}
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.MyAlertDialogStyle);
 		builder.setMultiChoiceItems(folderNames, folderChecked, new FolderClickListener());
 		builder.setPositiveButton(R.string.alert_ok, new PositiveButtonListener());
 		builder.setNegativeButton(R.string.alert_cancel, new NegativeButtonListener());
+		builder.setNeutralButton(R.string.alert_new_folder, new NeutralButtonListener());
 		return builder.create();
 	}
 
@@ -129,11 +152,13 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		ArrayList<TagItem> getNavList();
 
 		SubscriptionList getSubscriptionList();
+
+		void addNewFolder(ArrayList<String> newFolderList);
 	}
 
 	private class FolderHolder {
-		private String folderName;
-		private String folderId;
+		private String  folderName;
+		private String  folderId;
 		private Boolean wasChecked;
 		private Boolean isChecked;
 
@@ -229,6 +254,14 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		}
 	}
 
+	private class NeutralButtonListener implements DialogInterface.OnClickListener {
+		@Override
+		public void onClick(DialogInterface dialogInterface, int i) {
+			mCallback.addNewFolder(mNewFolderList);
+			dismiss();
+		}
+	}
+
 	private class ChangeFolderSubscriber extends Subscriber<ResponseBody> {
 		@Override
 		public void onCompleted() {
@@ -240,8 +273,8 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		public void onError(Throwable e) {
 			Snackbar
 				.make(mContext.findViewById(R.id.sceneRoot),
-					R.string.error_change_folder,
-					Snackbar.LENGTH_SHORT)
+					  R.string.error_change_folder,
+					  Snackbar.LENGTH_SHORT)
 				.show();
 		}
 
@@ -258,8 +291,8 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 			if (response.equalsIgnoreCase("OK")) {
 				Snackbar
 					.make(mContext.findViewById(R.id.sceneRoot),
-						R.string.change_folder_successful,
-						Snackbar.LENGTH_SHORT)
+						  R.string.change_folder_successful,
+						  Snackbar.LENGTH_SHORT)
 					.show();
 
 				mCallback.refreshOnClick();
