@@ -398,9 +398,11 @@ public class NavFragment extends Fragment {
 								int oldSelected = mSelected;
 								mSelected = thisIndex;
 
+								// selected doesn't show up if it is off screen
+								// so scroll to it first before marking it as selected
+								mLayoutManager.scrollToPosition(thisIndex);
 								changeSelected(mSelected, oldSelected, -1, -1);
 
-								mLayoutManager.scrollToPosition(thisIndex);
 								mCallback.selectNav(thisItem.getId(), thisItem.getName());
 								break;
 							}
