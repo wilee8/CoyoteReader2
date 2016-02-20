@@ -289,7 +289,8 @@ public class NavFragment extends Fragment {
 			if (thisItem.getIsExpanded()) {
 				// expanded, remove all sub feeds so we can close
 				int count = 0;
-				while (!mNavList.get(index + 1).getIsTopLevel()) {
+				while ((index + 1 < mNavList.size()) &&
+					(!mNavList.get(index + 1).getIsTopLevel())) {
 					mNavList.remove(index + 1);
 					mAdapter.notifyItemRemoved(index + 1);
 					count++;
