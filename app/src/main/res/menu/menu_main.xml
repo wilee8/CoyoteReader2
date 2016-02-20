@@ -45,6 +45,11 @@
         android:title="@string/action_mark_article_unread"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_folder_change_name"
+        android:orderInCategory="106"
+        android:title="@string/action_folder_change_name"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_logout"
         android:onClick="logout"
         android:orderInCategory="110"

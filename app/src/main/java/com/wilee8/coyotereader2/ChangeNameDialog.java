@@ -29,7 +29,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class ChangeSubscriptionNameDialog extends DialogFragment {
+public class ChangeNameDialog extends DialogFragment {
 
 	private ChangeSubscriptionNameListener mCallback;
 
@@ -42,6 +42,8 @@ public class ChangeSubscriptionNameDialog extends DialogFragment {
 
 	private EditText    mEditText;
 	private ProgressBar mProgressBar;
+
+	private boolean mChangeSubscription;
 
 	@Override
 	public void onAttach(Context context) {
@@ -63,8 +65,11 @@ public class ChangeSubscriptionNameDialog extends DialogFragment {
 
 		mContext = (RxAppCompatActivity) getActivity();
 
-		mId = getArguments().getString("id");
-		mName = getArguments().getString("name");
+		Bundle args = getArguments();
+
+		mId = args.getString("id");
+		mName = args.getString("name");
+		mChangeSubscription = args.getBoolean("changeSubscription");
 	}
 
 	@NonNull
@@ -75,15 +80,21 @@ public class ChangeSubscriptionNameDialog extends DialogFragment {
 															  R.style.MyAlertDialogStyle);
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
-		builder.setTitle(R.string.alert_subscription_name);
 		View view = inflater.inflate(R.layout.fragment_change_subscription_name_dialog,
 									 (ViewGroup) getView(),
 									 true);
 
-		mEditText = (EditText) view.findViewById(R.id.subscription);
+		mEditText = (EditText) view.findViewById(R.id.nameToChange);
 		mEditText.setText(mName);
 		mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar1);
 
+		if (mChangeSubscription) {
+			builder.setTitle(R.string.alert_subscription_name);
+			mEditText.setHint(R.string.prompt_subscription_name);
+		} else {
+			builder.setTitle(R.string.alert_folder_name);
+			mEditText.setHint(R.string.prompt_folder_name);
+		}
 		builder.setView(view);
 		builder.setNegativeButton(R.string.alert_cancel, new NegativeOnClickListener());
 		builder.setPositiveButton(R.string.alert_ok, null);
@@ -122,28 +133,44 @@ public class ChangeSubscriptionNameDialog extends DialogFragment {
 													 InputMethodManager.HIDE_NOT_ALWAYS);
 			}
 
-			String feedName = mEditText.getText().toString();
-			if (feedName.length() == 0) {
-				Toast.makeText(getActivity(),
-							   getActivity().getString(R.string.error_subscription_name_empty),
-							   Toast.LENGTH_SHORT).show();
+			String newName = mEditText.getText().toString();
+			if (newName.length() == 0) {
+				if (mChangeSubscription) {
+					Toast.makeText(getActivity(),
+								   getActivity().getString(R.string.error_subscription_name_empty),
+								   Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getActivity(),
+								   getActivity().getString(R.string.error_folder_name_empty),
+								   Toast.LENGTH_SHORT).show();
+				}
 				return;
 			}
 
-			if (!feedName.contentEquals(mName)) {
+			if (!newName.contentEquals(mName)) {
 				mEditText.setVisibility(View.GONE);
 				mProgressBar.setVisibility(View.VISIBLE);
 
 				Map queryMap = new ArrayMap<>();
 				queryMap.put("s", mId);
-				queryMap.put("t", feedName);
 
 				ChangeNameSubscriber changeFolderSubscriber = new ChangeNameSubscriber();
-				mRxService.editSubscription(queryMap)
-					.subscribeOn(Schedulers.io())
-					.observeOn(AndroidSchedulers.mainThread())
-					.compose(mContext.<ResponseBody>bindToLifecycle())
-					.subscribe(changeFolderSubscriber);
+
+				if (mChangeSubscription) {
+					queryMap.put("t", newName);
+					mRxService.editSubscription(queryMap)
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.compose(mContext.<ResponseBody>bindToLifecycle())
+						.subscribe(changeFolderSubscriber);
+				} else {
+					queryMap.put("dest", "user/-/label/" + newName);
+					mRxService.renameTag(queryMap)
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.compose(mContext.<ResponseBody>bindToLifecycle())
+						.subscribe(changeFolderSubscriber);
+				}
 			} else {
 				dismiss();
 			}
@@ -177,11 +204,19 @@ public class ChangeSubscriptionNameDialog extends DialogFragment {
 			}
 
 			if (response.equalsIgnoreCase("OK")) {
-				Snackbar
-					.make(mContext.findViewById(R.id.sceneRoot),
-						  R.string.change_folder_name_successful,
-						  Snackbar.LENGTH_SHORT)
-					.show();
+				if (mChangeSubscription) {
+					Snackbar
+						.make(mContext.findViewById(R.id.sceneRoot),
+							  R.string.change_subscription_name_successful,
+							  Snackbar.LENGTH_SHORT)
+						.show();
+				} else {
+					Snackbar
+						.make(mContext.findViewById(R.id.sceneRoot),
+							  R.string.change_folder_name_successful,
+							  Snackbar.LENGTH_SHORT)
+						.show();
+				}
 
 				mCallback.refreshOnClick();
 			} else {

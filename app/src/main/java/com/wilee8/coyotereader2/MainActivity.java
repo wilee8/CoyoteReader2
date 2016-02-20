@@ -83,7 +83,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 																 ArticlePagerFragment.ArticlePagerFragmentListener,
 																 AddSubscriptionDialog.AddSubscriptionListener,
 																 ChangeSubscriptionFolderDialog.ChangeSubsciptionFolderListener,
-																 ChangeSubscriptionNameDialog.ChangeSubscriptionNameListener,
+																 ChangeNameDialog.ChangeSubscriptionNameListener,
 																 NewFolderDialog.NewFolderListener {
 	private Context mContext;
 
@@ -724,10 +724,13 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				changeFoldersOnClick();
 				return true;
 			case R.id.action_feed_change_name:
-				changeNameOnClick();
+				changeNameOnClick(true);
 				return true;
 			case android.R.id.home:
 				onBackPressed();
+				return true;
+			case R.id.action_folder_change_name:
+				changeNameOnClick(false);
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);
@@ -776,6 +779,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		menu.findItem(R.id.action_feed_change_name)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
 							&& (mMarkAllReadFeed.startsWith("feed")));
+
+		// only show change folder name if in feed fragment but not a feed
+		menu.findItem(R.id.action_folder_change_name)
+			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
+					   && (!mMarkAllReadFeed.startsWith("feed")));
 
 		return super.onPrepareOptionsPanel(view, menu);
 	}
@@ -1821,13 +1829,14 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		fragment.show(fm, null);
 	}
 
-	private void changeNameOnClick() {
+	private void changeNameOnClick(boolean changeSubscription) {
 		Bundle args = new Bundle();
 		// mMarkAllRead feed will be the same as the feed we wish to change
 		args.putString("id", mMarkAllReadFeed);
 		args.putString("name", mMarkAllReadFeedName);
+		args.putBoolean("changeSubscription", changeSubscription);
 		FragmentManager fm = getSupportFragmentManager();
-		ChangeSubscriptionNameDialog fragment = new ChangeSubscriptionNameDialog();
+		ChangeNameDialog fragment = new ChangeNameDialog();
 		fragment.setArguments(args);
 		fragment.show(fm, null);
 	}
