@@ -1131,7 +1131,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		return mItems;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void onArticleSelected(int position) {
 		ArticleItem item = mItems.get(position);
@@ -1163,11 +1162,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void updateArticleUnreadStatus(ArticleItem item, boolean unread) {
 		// check if already unread before marking unread
 		if (item.getUnread() != unread) {
-			Map queryMap = new ArrayMap<>();
+			Map<String, String> queryMap = new ArrayMap<>();
 			if (unread) {
 				queryMap.put("r", "user/-/state/com.google/read");
 			} else {
@@ -1401,9 +1399,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void markAllAsReadConfirmed() {
-		Map queryMap = new ArrayMap<>();
+		Map<String, String> queryMap = new ArrayMap<>();
 		queryMap.put("ts", Long.toString(mUpdated));
 		queryMap.put("s", mMarkAllReadFeed);
 
@@ -1421,7 +1418,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		fragment.markAllAsRead();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void onStarClicked(int position, Boolean starred) {
 		// update FeedFragment star status
@@ -1438,7 +1434,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		ArticleItem item = mItems.get(position);
 
-		Map queryMap = new ArrayMap<>();
+		Map<String, String> queryMap = new ArrayMap<>();
 
 		// item has already been updated, so set string to match status
 		if (item.getStarred()) {
@@ -1750,7 +1746,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mCustomTabsSession = null;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void unsubscribe() {
 		final RxAppCompatActivity activity = this;
 		new AlertDialog.Builder(this)
@@ -1761,7 +1756,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				@Override
 				public void onClick(DialogInterface dialogInterface, int i) {
 					// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
-					Map queryMap = new ArrayMap<>();
+					Map<String, String> queryMap = new ArrayMap<>();
 					queryMap.put("ac", "unsubscribe");
 					queryMap.put("s", mMarkAllReadFeed);
 

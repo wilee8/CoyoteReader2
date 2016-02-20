@@ -110,7 +110,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	 * If there are form errors (invalid email, missing fields, etc.), the
 	 * errors are presented and no actual login attempt is made.
 	 */
-	@SuppressWarnings("unchecked")
 	public void attemptLogin() {
 
 		// Reset errors.
@@ -150,7 +149,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 			mUsername = email;
 
-			Map queryMap = new ArrayMap<>();
+			Map<String, String> queryMap = new ArrayMap<>();
 			queryMap.put("Email", email);
 			queryMap.put("Passwd", password);
 

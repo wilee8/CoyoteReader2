@@ -109,7 +109,6 @@ public class AddSubscriptionDialog extends RxDialogFragment {
 			this.fragment = fragment;
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void onClick(View v) {
 
@@ -132,7 +131,7 @@ public class AddSubscriptionDialog extends RxDialogFragment {
 			mEditText.setVisibility(View.GONE);
 			mProgressBar.setVisibility(View.VISIBLE);
 
-			Map queryMap = new ArrayMap<>();
+			Map<String, String> queryMap = new ArrayMap<>();
 			queryMap.put("quickadd", feedUrl);
 			HandleResult handleResult = new HandleResult();
 

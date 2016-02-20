@@ -121,7 +121,6 @@ public class ChangeNameDialog extends DialogFragment {
 
 	private class PositiveOnClickListener implements View.OnClickListener {
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void onClick(View view) {
 
@@ -151,7 +150,7 @@ public class ChangeNameDialog extends DialogFragment {
 				mEditText.setVisibility(View.GONE);
 				mProgressBar.setVisibility(View.VISIBLE);
 
-				Map queryMap = new ArrayMap<>();
+				Map<String, String> queryMap = new ArrayMap<>();
 				queryMap.put("s", mId);
 
 				ChangeNameSubscriber changeFolderSubscriber = new ChangeNameSubscriber();

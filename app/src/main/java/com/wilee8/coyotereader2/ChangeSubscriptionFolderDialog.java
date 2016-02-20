@@ -223,13 +223,12 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 
 	private class PositiveButtonListener implements DialogInterface.OnClickListener {
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void onClick(DialogInterface dialog, int which) {
 			// don't make a network call if nothing was changed
 			boolean changedFolder = false;
 
-			Map queryMap = new ArrayMap<>();
+			Map<String, String> queryMap = new ArrayMap<>();
 			queryMap.put("s", mId);
 
 			for (FolderHolder folder : mFolderList) {

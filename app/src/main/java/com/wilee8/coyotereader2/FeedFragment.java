@@ -161,11 +161,10 @@ public class FeedFragment extends RxFragment {
 		outState.putLong("mUpdated", mUpdated);
 	}
 
-	@SuppressWarnings("unchecked")
 	private void getMoreArticles() {
 		mFetchInProgress = true;
 
-		Map queryMap = new ArrayMap<>();
+		Map<String, String> queryMap = new ArrayMap<>();
 		if (mCallback.getUnreadOnly()) {
 			queryMap.put("xt", "user/-/state/com.google/read");
 		}
