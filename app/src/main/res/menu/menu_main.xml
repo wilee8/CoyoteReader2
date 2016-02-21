@@ -50,6 +50,11 @@
         android:title="@string/action_folder_change_name"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_folder_delete"
+        android:orderInCategory="107"
+        android:title="@string/action_folder_delete"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_logout"
         android:onClick="logout"
         android:orderInCategory="110"

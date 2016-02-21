@@ -732,6 +732,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			case R.id.action_folder_change_name:
 				changeNameOnClick(false);
 				return true;
+			case R.id.action_folder_delete:
+				deleteFolder();
+				return true;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -784,6 +787,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		menu.findItem(R.id.action_folder_change_name)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
 					   && (!mMarkAllReadFeed.startsWith("feed")));
+
+		menu.findItem(R.id.action_folder_delete)
+			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
+							&& (!mMarkAllReadFeed.startsWith("feed")));
 
 		return super.onPrepareOptionsPanel(view, menu);
 	}
@@ -1748,7 +1755,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 	private void unsubscribe() {
 		final RxAppCompatActivity activity = this;
-		new AlertDialog.Builder(this)
+		new AlertDialog.Builder(this, R.style.MyAlertDialogStyle)
 			.setTitle(R.string.alert_unsubscribe_title)
 			.setMessage(R.string.alert_unsubscribe_prompt)
 			.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
@@ -1802,6 +1809,73 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				Snackbar
 					.make(findViewById(R.id.sceneRoot),
 						  R.string.unsubscribe_successful,
+						  Snackbar.LENGTH_SHORT)
+					.show();
+
+				refreshOnClick();
+			} else {
+				onError(null);
+			}
+
+			unsubscribe();
+		}
+	}
+
+	private void deleteFolder() {
+		final RxAppCompatActivity activity = this;
+		new AlertDialog.Builder(this, R.style.MyAlertDialogStyle)
+			.setTitle(R.string.alert_delete_folder_title)
+			.setMessage(R.string.alert_delete_folder_prompt)
+			.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialogInterface, int i) {
+					// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
+					Map<String, String> queryMap = new ArrayMap<>();
+					queryMap.put("s", mMarkAllReadFeed);
+
+					DeleteFolderSubscriber deleteFolderSubscriber = new DeleteFolderSubscriber();
+					mRxService.disableTag(queryMap)
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.compose(activity.<ResponseBody>bindToLifecycle())
+						.subscribe(deleteFolderSubscriber);
+				}
+			})
+			.setNegativeButton(R.string.alert_cancel, null)
+			.show();
+	}
+
+	private class DeleteFolderSubscriber extends Subscriber<ResponseBody> {
+
+		@Override
+		public void onCompleted() {
+			unsubscribe();
+		}
+
+		@Override
+		public void onError(Throwable e) {
+			Snackbar
+				.make(findViewById(R.id.sceneRoot),
+					  R.string.error_delete_folder,
+					  Snackbar.LENGTH_LONG)
+				.show();
+		}
+
+		@Override
+		public void onNext(ResponseBody responseBody) {
+			String response;
+			try {
+				response = responseBody.string();
+			} catch (IOException e) {
+				onError(e);
+				return;
+			}
+
+			if (response.equalsIgnoreCase("OK")) {
+				Snackbar
+					.make(findViewById(R.id.sceneRoot),
+						  R.string.delete_folder_successful,
 						  Snackbar.LENGTH_SHORT)
 					.show();
 

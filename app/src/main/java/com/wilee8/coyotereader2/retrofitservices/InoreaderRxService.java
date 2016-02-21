@@ -23,4 +23,7 @@ public interface InoreaderRxService {
 
 	@POST("reader/api/0/rename-tag")
 	Observable<ResponseBody> renameTag(@QueryMap Map<String, String> options);
+
+	@POST("reader/api/0/disable-tag")
+	Observable<ResponseBody> disableTag(@QueryMap Map<String, String> options);
 }
