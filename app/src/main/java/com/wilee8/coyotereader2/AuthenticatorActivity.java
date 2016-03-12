@@ -19,15 +19,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.squareup.okhttp.ResponseBody;
 import com.wilee8.coyotereader2.retrofitservices.HeaderInterceptor;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
 
 import java.io.IOException;
 import java.util.Map;
 
-import retrofit.Retrofit;
-import retrofit.RxJavaCallAdapterFactory;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -84,14 +85,15 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		mLoginFormView = findViewById(R.id.login_form);
 		mProgressView = findViewById(R.id.login_progress);
 
-		Retrofit restAdapter = new Retrofit.Builder()
-			.baseUrl("https://www.inoreader.com")
-			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+		OkHttpClient client = new OkHttpClient.Builder()
+			.addInterceptor(new HeaderInterceptor(null))
 			.build();
 
-		restAdapter.client()
-			.networkInterceptors()
-			.add(new HeaderInterceptor(null));
+		Retrofit restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.client(client)
+			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+			.build();
 
 		mService = restAdapter.create(InoreaderRxService.class);
 	}

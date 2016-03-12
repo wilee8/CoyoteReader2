@@ -1,13 +1,13 @@
 package com.wilee8.coyotereader2.gson;
 
-import com.google.gson.annotations.SerializedName;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-import org.parceler.Parcel;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 
-@Parcel
-public class Item {
+public class Item implements Parcelable {
 	@SerializedName("canonical")
 	ArrayList<Canonical> canonical;
 
@@ -139,4 +139,53 @@ public class Item {
 	public void setUpdated(long updated) {
 		this.updated = updated;
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeTypedList(canonical);
+		dest.writeParcelable(this.origin, 0);
+		dest.writeString(this.author);
+		dest.writeStringList(this.categories);
+		dest.writeLong(this.published);
+		dest.writeLong(this.timestampUsec);
+		dest.writeParcelable(this.summary, 0);
+		dest.writeLong(this.crawlTimeMsec);
+		dest.writeString(this.id);
+		dest.writeString(this.title);
+		dest.writeLong(this.updated);
+		dest.writeTypedList(alternate);
+	}
+
+	public Item() {
+	}
+
+	protected Item(Parcel in) {
+		this.canonical = in.createTypedArrayList(Canonical.CREATOR);
+		this.origin = in.readParcelable(Origin.class.getClassLoader());
+		this.author = in.readString();
+		this.categories = in.createStringArrayList();
+		this.published = in.readLong();
+		this.timestampUsec = in.readLong();
+		this.summary = in.readParcelable(Summary.class.getClassLoader());
+		this.crawlTimeMsec = in.readLong();
+		this.id = in.readString();
+		this.title = in.readString();
+		this.updated = in.readLong();
+		this.alternate = in.createTypedArrayList(Alternate.CREATOR);
+	}
+
+	public static final Parcelable.Creator<Item> CREATOR = new Parcelable.Creator<Item>() {
+		public Item createFromParcel(Parcel source) {
+			return new Item(source);
+		}
+
+		public Item[] newArray(int size) {
+			return new Item[size];
+		}
+	};
 }

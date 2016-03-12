@@ -34,8 +34,6 @@ import com.trello.rxlifecycle.components.support.RxFragment;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.ArticleScrollState;
 
-import org.parceler.Parcels;
-
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -231,7 +229,7 @@ public class ArticlePagerFragment extends RxFragment {
 
 		@Override
 		public void restoreState(Parcelable state, ClassLoader loader) {
-			ArticleScrollState scrollState = Parcels.unwrap(state);
+			ArticleScrollState scrollState = (ArticleScrollState) state;
 			mScrollX = scrollState.getScrollX();
 			mScrollY = scrollState.getScrollY();
 		}
@@ -240,9 +238,8 @@ public class ArticlePagerFragment extends RxFragment {
 		public Parcelable saveState() {
 			ViewGroup currentPage = mPagerAdapter.getCurrentPage();
 			ScrollView articleScroll = (ScrollView) currentPage.findViewById(R.id.articleScroll);
-			ArticleScrollState state = new ArticleScrollState(articleScroll.getScrollX(),
+			return new ArticleScrollState(articleScroll.getScrollX(),
 															  articleScroll.getScrollY());
-			return Parcels.wrap(state);
 		}
 
 		@Override

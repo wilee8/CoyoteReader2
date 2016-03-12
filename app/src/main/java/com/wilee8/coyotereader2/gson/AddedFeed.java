@@ -1,11 +1,11 @@
 package com.wilee8.coyotereader2.gson;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
-import org.parceler.Parcel;
-
-@Parcel
-public class AddedFeed {
+public class AddedFeed implements Parcelable {
 
 	@SerializedName("query")
 	String query;
@@ -50,4 +50,37 @@ public class AddedFeed {
 	public void setStreamName(String streamName) {
 		this.streamName = streamName;
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(this.query);
+		dest.writeInt(this.numResults);
+		dest.writeString(this.streamId);
+		dest.writeString(this.streamName);
+	}
+
+	public AddedFeed() {
+	}
+
+	protected AddedFeed(Parcel in) {
+		this.query = in.readString();
+		this.numResults = in.readInt();
+		this.streamId = in.readString();
+		this.streamName = in.readString();
+	}
+
+	public static final Parcelable.Creator<AddedFeed> CREATOR = new Parcelable.Creator<AddedFeed>() {
+		public AddedFeed createFromParcel(Parcel source) {
+			return new AddedFeed(source);
+		}
+
+		public AddedFeed[] newArray(int size) {
+			return new AddedFeed[size];
+		}
+	};
 }
