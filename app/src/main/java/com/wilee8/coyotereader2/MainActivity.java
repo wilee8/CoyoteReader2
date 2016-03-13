@@ -228,7 +228,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mItems")) {
-				mItems = savedInstanceState.getParcelable("mItems");
+				mItems = savedInstanceState.getParcelableArrayList("mItems");
 			}
 			// else punt so we don't write over data from FeedFragment
 
