@@ -4,7 +4,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class TagItem implements Parcelable {
 	String             id;
@@ -108,7 +107,7 @@ public class TagItem implements Parcelable {
 		dest.writeValue(this.isFeed);
 		dest.writeInt(this.resId);
 		dest.writeString(this.iconUrl);
-		dest.writeList(this.feeds);
+		dest.writeTypedList(this.feeds);
 		dest.writeValue(this.isExpanded);
 		dest.writeValue(this.isTopLevel);
 	}
@@ -120,8 +119,7 @@ public class TagItem implements Parcelable {
 		this.isFeed = (Boolean) in.readValue(Boolean.class.getClassLoader());
 		this.resId = in.readInt();
 		this.iconUrl = in.readString();
-		this.feeds = new ArrayList<TagItem>();
-		in.readList(this.feeds, List.class.getClassLoader());
+		in.readTypedList(this.feeds, TagItem.CREATOR);
 		this.isExpanded = (Boolean) in.readValue(Boolean.class.getClassLoader());
 		this.isTopLevel = (Boolean) in.readValue(Boolean.class.getClassLoader());
 	}

@@ -214,7 +214,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mNavList")) {
-				mNavList = savedInstanceState.getParcelable("mNavList");
+				mNavList = savedInstanceState.getParcelableArrayList("mNavList");
 			} else {
 				needToFetchData = true;
 				mNavList = null;
