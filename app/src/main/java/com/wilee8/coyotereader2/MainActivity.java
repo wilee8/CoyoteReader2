@@ -9,7 +9,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -61,7 +60,6 @@ import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -588,13 +586,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		// alphabetize the list if needed
 		if (mSortAlpha) {
-			Collections.sort(feedList, new Comparator<TagItem>() {
-
-				@Override
-				public int compare(TagItem lhs, TagItem rhs) {
-					Locale locale = getResources().getConfiguration().locale;
-					return lhs.getName().toLowerCase(locale).compareTo(rhs.getName().toLowerCase(locale));
-				}
+			Collections.sort(feedList, (lhs, rhs) -> {
+				Locale locale = getResources().getConfiguration().locale;
+				return lhs.getName().toLowerCase(locale).compareTo(rhs.getName().toLowerCase(locale));
 			});
 		}
 	}
@@ -851,18 +845,14 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	public void logout(MenuItem item) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyAlertDialogStyle);
 
 		builder.setMessage(R.string.alert_logout);
 
 		builder.setPositiveButton(
 			R.string.alert_ok,
-			new DialogInterface.OnClickListener() {
-
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					logout();
-				}
+			(dialog, which) -> {
+				logout();
 			});
 
 		builder.setNegativeButton(R.string.alert_cancel, null);
@@ -1380,17 +1370,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 				builder.setMessage(R.string.alert_mark_all_as_read);
 
-				builder.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-						markAllAsReadConfirmed();
-					}
+				builder.setPositiveButton(R.string.alert_ok, (dialog, id) -> {
+					markAllAsReadConfirmed();
 				});
 
-				builder.setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-						// nothing, just go back
-					}
-				});
+				builder.setNegativeButton(R.string.alert_cancel, null);
 
 				AlertDialog dialog = builder.create();
 				dialog.show();
@@ -1752,22 +1736,18 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		new AlertDialog.Builder(this, R.style.MyAlertDialogStyle)
 			.setTitle(R.string.alert_unsubscribe_title)
 			.setMessage(R.string.alert_unsubscribe_prompt)
-			.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
+			.setPositiveButton(R.string.alert_ok, (dialogInterface, i) -> {
+				// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
+				Map<String, String> queryMap = new ArrayMap<>();
+				queryMap.put("ac", "unsubscribe");
+				queryMap.put("s", mMarkAllReadFeed);
 
-				@Override
-				public void onClick(DialogInterface dialogInterface, int i) {
-					// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
-					Map<String, String> queryMap = new ArrayMap<>();
-					queryMap.put("ac", "unsubscribe");
-					queryMap.put("s", mMarkAllReadFeed);
-
-					UnsubscribeSubscriber unsubscribeSubscriber = new UnsubscribeSubscriber();
-					mRxService.editSubscription(queryMap)
-						.subscribeOn(Schedulers.io())
-						.observeOn(AndroidSchedulers.mainThread())
-						.compose(activity.<ResponseBody>bindToLifecycle())
-						.subscribe(unsubscribeSubscriber);
-				}
+				UnsubscribeSubscriber unsubscribeSubscriber = new UnsubscribeSubscriber();
+				mRxService.editSubscription(queryMap)
+					.subscribeOn(Schedulers.io())
+					.observeOn(AndroidSchedulers.mainThread())
+					.compose(activity.<ResponseBody>bindToLifecycle())
+					.subscribe(unsubscribeSubscriber);
 			})
 			.setNegativeButton(R.string.alert_cancel, null)
 			.show();
@@ -1820,21 +1800,17 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		new AlertDialog.Builder(this, R.style.MyAlertDialogStyle)
 			.setTitle(R.string.alert_delete_folder_title)
 			.setMessage(R.string.alert_delete_folder_prompt)
-			.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
+			.setPositiveButton(R.string.alert_ok, (dialogInterface, i) -> {
+				// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
+				Map<String, String> queryMap = new ArrayMap<>();
+				queryMap.put("s", mMarkAllReadFeed);
 
-				@Override
-				public void onClick(DialogInterface dialogInterface, int i) {
-					// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
-					Map<String, String> queryMap = new ArrayMap<>();
-					queryMap.put("s", mMarkAllReadFeed);
-
-					DeleteFolderSubscriber deleteFolderSubscriber = new DeleteFolderSubscriber();
-					mRxService.disableTag(queryMap)
-						.subscribeOn(Schedulers.io())
-						.observeOn(AndroidSchedulers.mainThread())
-						.compose(activity.<ResponseBody>bindToLifecycle())
-						.subscribe(deleteFolderSubscriber);
-				}
+				DeleteFolderSubscriber deleteFolderSubscriber = new DeleteFolderSubscriber();
+				mRxService.disableTag(queryMap)
+					.subscribeOn(Schedulers.io())
+					.observeOn(AndroidSchedulers.mainThread())
+					.compose(activity.<ResponseBody>bindToLifecycle())
+					.subscribe(deleteFolderSubscriber);
 			})
 			.setNegativeButton(R.string.alert_cancel, null)
 			.show();

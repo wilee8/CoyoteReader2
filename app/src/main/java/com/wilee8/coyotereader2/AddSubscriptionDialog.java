@@ -77,12 +77,9 @@ public class AddSubscriptionDialog extends RxDialogFragment {
 		final AlertDialog alert = builder.create();
 		final RxDialogFragment fragment = this;
 
-		alert.setOnShowListener(new DialogInterface.OnShowListener() {
-			@Override
-			public void onShow(DialogInterface dialog) {
-				Button b = alert.getButton(AlertDialog.BUTTON_POSITIVE);
-				b.setOnClickListener(new PositiveOnClickListener(fragment));
-			}
+		alert.setOnShowListener(dialog -> {
+			Button b = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+			b.setOnClickListener(new PositiveOnClickListener(fragment));
 		});
 
 		return alert;

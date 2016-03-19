@@ -42,12 +42,7 @@ public class SettingsDialog extends DialogFragment {
 		transaction.commit();
 
 		Button okButton = (Button) ll.findViewById(R.id.settings_button);
-		okButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				dismiss();
-			}
-		});
+		okButton.setOnClickListener(view -> dismiss());
 		return ll;
 	}
 

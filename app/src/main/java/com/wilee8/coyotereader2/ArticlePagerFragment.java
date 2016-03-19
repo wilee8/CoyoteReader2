@@ -371,14 +371,11 @@ public class ArticlePagerFragment extends RxFragment {
 		public void onPageFinished(WebView view, String url) {
 			super.onPageFinished(view, url);
 
-			view.postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					if ((scrollX != -1) && (scrollY != -1)) {
-						ViewGroup currentPage = mPagerAdapter.getCurrentPage();
-						ScrollView articleScroll = (ScrollView) currentPage.findViewById(R.id.articleScroll);
-						articleScroll.scrollTo(scrollX, scrollY);
-					}
+			view.postDelayed(() -> {
+				if ((scrollX != -1) && (scrollY != -1)) {
+					ViewGroup currentPage = mPagerAdapter.getCurrentPage();
+					ScrollView articleScroll = (ScrollView) currentPage.findViewById(R.id.articleScroll);
+					articleScroll.scrollTo(scrollX, scrollY);
 				}
 			}, 300);
 		}

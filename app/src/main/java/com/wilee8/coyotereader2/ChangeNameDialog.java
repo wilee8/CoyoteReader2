@@ -101,12 +101,9 @@ public class ChangeNameDialog extends DialogFragment {
 
 		final AlertDialog alert = builder.create();
 
-		alert.setOnShowListener(new DialogInterface.OnShowListener() {
-			@Override
-			public void onShow(DialogInterface dialog) {
-				Button b = alert.getButton(AlertDialog.BUTTON_POSITIVE);
-				b.setOnClickListener(new PositiveOnClickListener());
-			}
+		alert.setOnShowListener(dialog -> {
+			Button b = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+			b.setOnClickListener(new PositiveOnClickListener());
 		});
 		return alert;
 	}
