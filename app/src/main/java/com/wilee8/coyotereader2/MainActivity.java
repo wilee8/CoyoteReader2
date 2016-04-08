@@ -40,6 +40,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
+import com.squareup.okhttp.ResponseBody;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.TagItem;
@@ -57,6 +58,8 @@ import com.wilee8.coyotereader2.retrofitservices.InoreaderGsonService;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
 
+import org.parceler.Parcels;
+
 import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -65,12 +68,10 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 
-import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit.Call;
+import retrofit.GsonConverterFactory;
+import retrofit.Retrofit;
+import retrofit.RxJavaCallAdapterFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -157,7 +158,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mConfirm = mSettings.getBoolean("pref_confirm", true);
 		mAdvance = mSettings.getBoolean("pref_advance", false);
 		mBrowser = mSettings.getString("pref_browser",
-			getResources().getString(R.string.pref_browser_default_value));
+									   getResources().getString(R.string.pref_browser_default_value));
 
 		// listen for changed settings
 		mPrefListener = new DefPrefListener();
@@ -179,21 +180,21 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mUnreadCounts")) {
-				mUnreadCounts = savedInstanceState.getParcelable("mUnreadCounts");
+				mUnreadCounts = Parcels.unwrap(savedInstanceState.getParcelable("mUnreadCounts"));
 			} else {
 				needToFetchData = true;
 				mUnreadCounts = null;
 			}
 
 			if (savedInstanceState.containsKey("mTagList")) {
-				mTagList = savedInstanceState.getParcelable("mTagList");
+				mTagList = Parcels.unwrap(savedInstanceState.getParcelable("mTagList"));
 			} else {
 				needToFetchData = true;
 				mTagList = null;
 			}
 
 			if (savedInstanceState.containsKey("mSubscriptionList")) {
-				mSubscriptionList = savedInstanceState.getParcelable("mSubscriptionList");
+				mSubscriptionList = Parcels.unwrap(savedInstanceState.getParcelable("mSubscriptionList"));
 			} else {
 				needToFetchData = true;
 				mSubscriptionList = null;
@@ -207,14 +208,14 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mStreamPrefs")) {
-				mStreamPrefs = savedInstanceState.getParcelable("mStreamPrefs");
+				mStreamPrefs = Parcels.unwrap(savedInstanceState.getParcelable("mStreamPrefs"));
 			} else {
 				needToFetchData = true;
 				mStreamPrefs = null;
 			}
 
 			if (savedInstanceState.containsKey("mNavList")) {
-				mNavList = savedInstanceState.getParcelable("mNavList");
+				mNavList = Parcels.unwrap(savedInstanceState.getParcelable("mNavList"));
 			} else {
 				needToFetchData = true;
 				mNavList = null;
@@ -228,7 +229,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mItems")) {
-				mItems = savedInstanceState.getParcelable("mItems");
+				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 			}
 			// else punt so we don't write over data from FeedFragment
 
@@ -376,11 +377,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 			InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
 			Observable.zip(mRxGsonService.unreadCounts(),
-				mRxGsonService.tagList(),
-				mRxGsonService.subscriptionList(),
-				mRxGsonService.userInfo(),
-				mRxGsonService.streamPrefs(),
-				new ProcessDataZip())
+						   mRxGsonService.tagList(),
+						   mRxGsonService.subscriptionList(),
+						   mRxGsonService.userInfo(),
+						   mRxGsonService.streamPrefs(),
+						   new ProcessDataZip())
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.compose(this.<Void>bindToLifecycle())
@@ -469,7 +470,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			// add untagged subscriptions
 			ArrayList<Subscription> subscriptions = mSubscriptionList.getSubscriptions();
 
-			for (Subscription subscription : subscriptions) {
+			for (Subscription subscription: subscriptions) {
 				// only add a subscription to the nav bar if it has no tags
 				if (subscription.getCategories().size() == 0) {
 					TagItem tagItem = new TagItem();
@@ -499,8 +500,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable throwable) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_fetch_data,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_fetch_data,
+					  Snackbar.LENGTH_LONG)
 				.setAction(R.string.action_refresh, new SnackbarRefreshOnClickListener())
 				.show();
 		}
@@ -521,7 +522,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		String subscriptionOrderingString = "";
 
 		if (!mSortAlpha) {
-			for (StreamPref pref : preferences) {
+			for (StreamPref pref: preferences) {
 				if (pref.getId().matches("subscription-ordering")) {
 					subscriptionOrderingString = pref.getValue();
 				}
@@ -546,10 +547,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		// add tag feeds to the list
-		for (Subscription sub : subscriptions) {
+		for (Subscription sub: subscriptions) {
 			ArrayList<Category> categories = sub.getCategories();
 
-			for (Category category : categories) {
+			for (Category category: categories) {
 				String subCategory = category.getId();
 				if (subCategory.matches(tagId)) {
 					// add to mViewData
@@ -771,25 +772,25 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		// since the "mark all read" feed will be the same as the one to unsubscribe from, reuse it
 		menu.findItem(R.id.action_feed_unsubscribe)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
-						&& (mMarkAllReadFeed.startsWith("feed")));
+							&& (mMarkAllReadFeed.startsWith("feed")));
 
 		// only show change folders and name at the same time unsubscribe is visible
 		menu.findItem(R.id.action_feed_change_folders)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
-						&& (mMarkAllReadFeed.startsWith("feed")));
+							&& (mMarkAllReadFeed.startsWith("feed")));
 
 		menu.findItem(R.id.action_feed_change_name)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
-						&& (mMarkAllReadFeed.startsWith("feed")));
+							&& (mMarkAllReadFeed.startsWith("feed")));
 
 		// only show change folder name if in feed fragment but not a feed
 		menu.findItem(R.id.action_folder_change_name)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
-						&& (!mMarkAllReadFeed.startsWith("feed")));
+					   && (!mMarkAllReadFeed.startsWith("feed")));
 
 		menu.findItem(R.id.action_folder_delete)
 			.setVisible((mContentFrame == FEED_FRAGMENT_FRAME)
-						&& (!mMarkAllReadFeed.startsWith("feed")));
+							&& (!mMarkAllReadFeed.startsWith("feed")));
 
 		return super.onPrepareOptionsPanel(view, menu);
 	}
@@ -801,15 +802,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		outState.putInt("mContentFrame", mContentFrame);
 
 		if (mUnreadCounts != null) {
-			outState.putParcelable("mUnreadCounts", mUnreadCounts);
+			outState.putParcelable("mUnreadCounts", Parcels.wrap(mUnreadCounts));
 		}
 
 		if (mTagList != null) {
-			outState.putParcelable("mTagList", mTagList);
+			outState.putParcelable("mTagList", Parcels.wrap(mTagList));
 		}
 
 		if (mSubscriptionList != null) {
-			outState.putParcelable("mSubscriptionList", mSubscriptionList);
+			outState.putParcelable("mSubscriptionList", Parcels.wrap(mSubscriptionList));
 		}
 
 		if (mUserId != null) {
@@ -817,15 +818,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		if (mStreamPrefs != null) {
-			outState.putParcelable("mStreamPrefs", mStreamPrefs);
+			outState.putParcelable("mStreamPrefs", Parcels.wrap(mStreamPrefs));
 		}
 
 		if (mNavList != null) {
-			outState.putParcelableArrayList("mNavList", mNavList);
+			outState.putParcelable("mNavList", Parcels.wrap(mNavList));
 		}
 
 		if (mItems != null) {
-			outState.putParcelableArrayList("mItems", mItems);
+			outState.putParcelable("mItems", Parcels.wrap(mItems));
 		}
 
 		if (mTitles != null) {
@@ -907,11 +908,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
 		Observable.zip(mRxGsonService.unreadCounts(),
-			mRxGsonService.tagList(),
-			mRxGsonService.subscriptionList(),
-			mRxGsonService.userInfo(),
-			mRxGsonService.streamPrefs(),
-			new ProcessDataZip())
+					   mRxGsonService.tagList(),
+					   mRxGsonService.subscriptionList(),
+					   mRxGsonService.userInfo(),
+					   mRxGsonService.streamPrefs(),
+					   new ProcessDataZip())
 			.subscribeOn(Schedulers.io())
 			.observeOn(AndroidSchedulers.mainThread())
 			.compose(this.<Void>bindToLifecycle())
@@ -998,8 +999,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 				// change weight of content frame
 				LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0,
-					LayoutParams.MATCH_PARENT,
-					1.0f);
+																			 LayoutParams.MATCH_PARENT,
+																			 1.0f);
 				mFrames[mContentFrame].setLayoutParams(lp);
 
 				// unhide frame to the right of content frame
@@ -1069,8 +1070,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			// should never happen if we get to this point
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_null_items,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_null_items,
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1251,7 +1252,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				@Override
 				public void onNext(UnreadCounts unreadCounts) {
 					// update unread displays for every id that changed
-					for (TagItem tagItem : mNavList) {
+					for (TagItem tagItem: mNavList) {
 						// Skip updating unread for favorites
 						if (!tagItem.getId().matches("user/" + mUserId + "/state/com.google/starred")) {
 							// check if unread count changed on top level item
@@ -1267,7 +1268,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 							// update unread counts on child items
 							ArrayList<TagItem> subNavList = tagItem.getFeeds();
 							if (subNavList != null) {
-								for (TagItem subTagItem : subNavList) {
+								for (TagItem subTagItem: subNavList) {
 									id = subTagItem.getId();
 
 									oldUnreadNumber = subTagItem.getUnreadCount();
@@ -1318,8 +1319,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_mark_unread,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_mark_unread,
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1359,7 +1360,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				mAdvance = sharedPreferences.getBoolean("pref_advance", false);
 			} else if (key.matches("pref_browser")) {
 				mBrowser = sharedPreferences.getString("pref_browser",
-					getResources().getString(R.string.pref_browser_default_value));
+													   getResources().getString(R.string.pref_browser_default_value));
 				if (mBrowser.matches(
 					mContext.getResources().getString(R.string.pref_browser_default_value))) {
 					startCustomTabs();
@@ -1397,8 +1398,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			} else {
 				Snackbar
 					.make(findViewById(R.id.sceneRoot),
-						R.string.notify_marking_all_read,
-						Snackbar.LENGTH_SHORT)
+						  R.string.notify_marking_all_read,
+						  Snackbar.LENGTH_SHORT)
 					.show();
 				markAllAsReadConfirmed();
 			}
@@ -1489,8 +1490,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_update_starred,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_update_starred,
+					  Snackbar.LENGTH_LONG)
 				.show();
 
 			unsubscribe();
@@ -1555,11 +1556,11 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				account = accounts[0];
 				AccountManagerFuture<Bundle> accountManagerFuture =
 					mAccountManager.getAuthToken(account,
-						AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
-						null,
-						null,
-						null,
-						null);
+												 AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
+												 null,
+												 null,
+												 null,
+												 null);
 				Bundle authTokenBundle;
 				try {
 					authTokenBundle = accountManagerFuture.getResult();
@@ -1586,8 +1587,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_login,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_login,
+					  Snackbar.LENGTH_LONG)
 				.show();
 			logout();
 		}
@@ -1604,32 +1605,37 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	private void createRetrofitServices() {
-		OkHttpClient client = new OkHttpClient.Builder()
-			.addInterceptor(new HeaderInterceptor(mAuthToken))
-			.build();
-
 		Retrofit restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
-			.client(client)
 			.addConverterFactory(GsonConverterFactory.create())
 			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
 			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
 
 		mRxGsonService = restAdapter.create(InoreaderRxGsonService.class);
 
 		restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
-			.client(client)
 			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
 			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
 
 		mRxService = restAdapter.create(InoreaderRxService.class);
 
 		restAdapter = new Retrofit.Builder()
 			.baseUrl("https://www.inoreader.com")
-			.client(client)
 			.addConverterFactory(GsonConverterFactory.create())
 			.build();
+
+		restAdapter.client()
+			.networkInterceptors()
+			.add(new HeaderInterceptor(mAuthToken));
 
 		mGsonService = restAdapter.create(InoreaderGsonService.class);
 	}
@@ -1707,8 +1713,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_login,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_login,
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1784,8 +1790,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_unsubscribe,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_unsubscribe,
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1802,8 +1808,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			if (response.equalsIgnoreCase("OK")) {
 				Snackbar
 					.make(findViewById(R.id.sceneRoot),
-						R.string.unsubscribe_successful,
-						Snackbar.LENGTH_SHORT)
+						  R.string.unsubscribe_successful,
+						  Snackbar.LENGTH_SHORT)
 					.show();
 
 				refreshOnClick();
@@ -1851,8 +1857,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.sceneRoot),
-					R.string.error_delete_folder,
-					Snackbar.LENGTH_LONG)
+					  R.string.error_delete_folder,
+					  Snackbar.LENGTH_LONG)
 				.show();
 		}
 
@@ -1869,8 +1875,8 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			if (response.equalsIgnoreCase("OK")) {
 				Snackbar
 					.make(findViewById(R.id.sceneRoot),
-						R.string.delete_folder_successful,
-						Snackbar.LENGTH_SHORT)
+						  R.string.delete_folder_successful,
+						  Snackbar.LENGTH_SHORT)
 					.show();
 
 				refreshOnClick();

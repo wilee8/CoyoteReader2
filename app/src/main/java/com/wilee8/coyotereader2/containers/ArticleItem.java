@@ -1,9 +1,9 @@
 package com.wilee8.coyotereader2.containers;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import org.parceler.Parcel;
 
-public class ArticleItem implements Parcelable {
+@Parcel
+public class ArticleItem {
 	String  id;
 	String  title;
 	String  summary;
@@ -98,46 +98,4 @@ public class ArticleItem implements Parcelable {
 	public void setCrawlTimeMsec(long crawlTimeMsec) {
 		this.crawlTimeMsec = crawlTimeMsec;
 	}
-
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeString(this.id);
-		dest.writeString(this.title);
-		dest.writeString(this.summary);
-		dest.writeString(this.author);
-		dest.writeString(this.canonical);
-		dest.writeString(this.origin);
-		dest.writeValue(this.starred);
-		dest.writeValue(this.unread);
-		dest.writeValue(this.isFooter);
-		dest.writeLong(this.crawlTimeMsec);
-	}
-
-	protected ArticleItem(Parcel in) {
-		this.id = in.readString();
-		this.title = in.readString();
-		this.summary = in.readString();
-		this.author = in.readString();
-		this.canonical = in.readString();
-		this.origin = in.readString();
-		this.starred = (Boolean) in.readValue(Boolean.class.getClassLoader());
-		this.unread = (Boolean) in.readValue(Boolean.class.getClassLoader());
-		this.isFooter = (Boolean) in.readValue(Boolean.class.getClassLoader());
-		this.crawlTimeMsec = in.readLong();
-	}
-
-	public static final Parcelable.Creator<ArticleItem> CREATOR = new Parcelable.Creator<ArticleItem>() {
-		public ArticleItem createFromParcel(Parcel source) {
-			return new ArticleItem(source);
-		}
-
-		public ArticleItem[] newArray(int size) {
-			return new ArticleItem[size];
-		}
-	};
 }

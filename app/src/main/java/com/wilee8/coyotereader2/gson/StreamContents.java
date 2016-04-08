@@ -1,13 +1,13 @@
 package com.wilee8.coyotereader2.gson;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import com.google.gson.annotations.SerializedName;
+
+import org.parceler.Parcel;
 
 import java.util.ArrayList;
 
-public class StreamContents implements Parcelable {
+@Parcel
+public class StreamContents {
 	@SerializedName("self")
 	Self self;
 
@@ -95,45 +95,4 @@ public class StreamContents implements Parcelable {
 	public void setUpdated(long updated) {
 		this.updated = updated;
 	}
-
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeParcelable(this.self, 0);
-		dest.writeString(this.description);
-		dest.writeString(this.direction);
-		dest.writeString(this.continuation);
-		dest.writeString(this.id);
-		dest.writeString(this.title);
-		dest.writeLong(this.updated);
-		dest.writeTypedList(items);
-	}
-
-	public StreamContents() {
-	}
-
-	protected StreamContents(Parcel in) {
-		this.self = in.readParcelable(Self.class.getClassLoader());
-		this.description = in.readString();
-		this.direction = in.readString();
-		this.continuation = in.readString();
-		this.id = in.readString();
-		this.title = in.readString();
-		this.updated = in.readLong();
-		this.items = in.createTypedArrayList(Item.CREATOR);
-	}
-
-	public static final Parcelable.Creator<StreamContents> CREATOR = new Parcelable.Creator<StreamContents>() {
-		public StreamContents createFromParcel(Parcel source) {
-			return new StreamContents(source);
-		}
-
-		public StreamContents[] newArray(int size) {
-			return new StreamContents[size];
-		}
-	};
 }

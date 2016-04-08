@@ -10,10 +10,10 @@ import com.wilee8.coyotereader2.gson.UserInfo;
 
 import java.util.Map;
 
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.QueryMap;
+import retrofit.http.GET;
+import retrofit.http.POST;
+import retrofit.http.Path;
+import retrofit.http.QueryMap;
 import rx.Observable;
 
 public interface InoreaderRxGsonService {

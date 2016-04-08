@@ -1,12 +1,11 @@
 package com.wilee8.coyotereader2.retrofitservices;
 
+import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import com.wilee8.coyotereader2.BuildConfig;
 
 import java.io.IOException;
-
-import okhttp3.Interceptor;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class HeaderInterceptor implements Interceptor {
 

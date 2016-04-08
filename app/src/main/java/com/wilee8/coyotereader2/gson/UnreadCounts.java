@@ -1,13 +1,13 @@
 package com.wilee8.coyotereader2.gson;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import com.google.gson.annotations.SerializedName;
+
+import org.parceler.Parcel;
 
 import java.util.ArrayList;
 
-public class UnreadCounts implements Parcelable {
+@Parcel
+public class UnreadCounts {
 	@SerializedName("unreadcounts")
 	ArrayList<UnreadCount> unreadCounts;
 
@@ -54,33 +54,4 @@ public class UnreadCounts implements Parcelable {
 			return unreadCount.getCount();
 		}
 	}
-
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeTypedList(unreadCounts);
-		dest.writeInt(this.max);
-	}
-
-	public UnreadCounts() {
-	}
-
-	protected UnreadCounts(Parcel in) {
-		this.unreadCounts = in.createTypedArrayList(UnreadCount.CREATOR);
-		this.max = in.readInt();
-	}
-
-	public static final Parcelable.Creator<UnreadCounts> CREATOR = new Parcelable.Creator<UnreadCounts>() {
-		public UnreadCounts createFromParcel(Parcel source) {
-			return new UnreadCounts(source);
-		}
-
-		public UnreadCounts[] newArray(int size) {
-			return new UnreadCounts[size];
-		}
-	};
 }

@@ -1,11 +1,11 @@
 package com.wilee8.coyotereader2.gson;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import com.google.gson.annotations.SerializedName;
 
-public class Origin implements Parcelable {
+import org.parceler.Parcel;
+
+@Parcel
+public class Origin {
 	@SerializedName("htmlUrl")
 	String htmlUrl;
 
@@ -38,35 +38,4 @@ public class Origin implements Parcelable {
 	public void setTitle(String title) {
 		this.title = title;
 	}
-
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeString(this.htmlUrl);
-		dest.writeString(this.title);
-		dest.writeString(this.streamId);
-	}
-
-	public Origin() {
-	}
-
-	protected Origin(Parcel in) {
-		this.htmlUrl = in.readString();
-		this.title = in.readString();
-		this.streamId = in.readString();
-	}
-
-	public static final Parcelable.Creator<Origin> CREATOR = new Parcelable.Creator<Origin>() {
-		public Origin createFromParcel(Parcel source) {
-			return new Origin(source);
-		}
-
-		public Origin[] newArray(int size) {
-			return new Origin[size];
-		}
-	};
 }

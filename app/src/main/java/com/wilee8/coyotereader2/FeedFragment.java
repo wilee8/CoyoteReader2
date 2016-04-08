@@ -28,6 +28,8 @@ import com.wilee8.coyotereader2.gson.Item;
 import com.wilee8.coyotereader2.gson.StreamContents;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
 
+import org.parceler.Parcels;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -71,7 +73,7 @@ public class FeedFragment extends RxFragment {
 
 		if (savedInstanceState != null) {
 			if (savedInstanceState.containsKey("mItems")) {
-				mItems = savedInstanceState.getParcelableArrayList("mItems");
+				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 				mSelected = savedInstanceState.getInt("mSelected", -1);
 				mContinuation = savedInstanceState.getString("mContinuation", null);
 				mUpdated = savedInstanceState.getLong("mUpdated", -1);
@@ -153,7 +155,7 @@ public class FeedFragment extends RxFragment {
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
-		outState.putParcelableArrayList("mItems", mItems);
+		outState.putParcelable("mItems", Parcels.wrap(mItems));
 		outState.putString("mContinuation", mContinuation);
 		outState.putInt("mSelected", mSelected);
 		outState.putLong("mUpdated", mUpdated);
