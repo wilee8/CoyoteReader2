@@ -1,11 +1,10 @@
 package com.wilee8.coyotereader2.retrofitservices;
 
-import com.squareup.okhttp.ResponseBody;
-
 import java.util.Map;
 
-import retrofit.http.POST;
-import retrofit.http.QueryMap;
+import okhttp3.ResponseBody;
+import retrofit2.http.POST;
+import retrofit2.http.QueryMap;
 import rx.Observable;
 
 public interface InoreaderRxService {

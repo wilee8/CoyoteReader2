@@ -9,7 +9,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AlertDialog;
 
-import com.squareup.okhttp.ResponseBody;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.trello.rxlifecycle.components.support.RxDialogFragment;
 import com.wilee8.coyotereader2.containers.TagItem;
@@ -23,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
 
+import okhttp3.ResponseBody;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;

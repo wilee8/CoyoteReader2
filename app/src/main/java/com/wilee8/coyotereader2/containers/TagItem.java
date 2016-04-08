@@ -1,11 +1,11 @@
 package com.wilee8.coyotereader2.containers;
 
-import org.parceler.Parcel;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.util.ArrayList;
 
-@Parcel
-public class TagItem {
+public class TagItem implements Parcelable {
 	String             id;
 	String             name;
 	int                unreadCount;
@@ -93,4 +93,44 @@ public class TagItem {
 	public void setIsTopLevel(Boolean isTopLevel) {
 		this.isTopLevel = isTopLevel;
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(this.id);
+		dest.writeString(this.name);
+		dest.writeInt(this.unreadCount);
+		dest.writeValue(this.isFeed);
+		dest.writeInt(this.resId);
+		dest.writeString(this.iconUrl);
+		dest.writeTypedList(this.feeds);
+		dest.writeValue(this.isExpanded);
+		dest.writeValue(this.isTopLevel);
+	}
+
+	protected TagItem(Parcel in) {
+		this.id = in.readString();
+		this.name = in.readString();
+		this.unreadCount = in.readInt();
+		this.isFeed = (Boolean) in.readValue(Boolean.class.getClassLoader());
+		this.resId = in.readInt();
+		this.iconUrl = in.readString();
+		in.readTypedList(this.feeds, TagItem.CREATOR);
+		this.isExpanded = (Boolean) in.readValue(Boolean.class.getClassLoader());
+		this.isTopLevel = (Boolean) in.readValue(Boolean.class.getClassLoader());
+	}
+
+	public static final Parcelable.Creator<TagItem> CREATOR = new Parcelable.Creator<TagItem>() {
+		public TagItem createFromParcel(Parcel source) {
+			return new TagItem(source);
+		}
+
+		public TagItem[] newArray(int size) {
+			return new TagItem[size];
+		}
+	};
 }
