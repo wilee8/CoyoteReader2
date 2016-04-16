@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<SwitchPreference
+<android.support.v7.preference.PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:title="@string/pref_dialog_title">
+	<android.support.v14.preference.SwitchPreference
 		android:key="pref_alpha"
 		android:title="@string/pref_alpha"
 		android:summary="@string/pref_alpha_summ"
 		android:defaultValue="true" />
-	<SwitchPreference
+	<android.support.v14.preference.SwitchPreference
 		android:key="pref_unread"
 		android:title="@string/pref_unread"
 		android:defaultValue="false" />
-	<SwitchPreference
+	<android.support.v14.preference.SwitchPreference
 		android:key="pref_confirm"
 		android:title="@string/pref_confirm"
 		android:defaultValue="true" />
-	<SwitchPreference
+	<android.support.v14.preference.SwitchPreference
 		android:key="pref_advance"
 		android:title="@string/pref_advance"
 		android:summary="@string/pref_advance_summ"
 		android:defaultValue="false" />
-	<ListPreference
+	<android.support.v7.preference.ListPreference
 		android:key="pref_browser"
 		android:title="@string/pref_browser"
 		android:summary="%s"
 		android:entries="@array/browser_preference_entries"
 		android:entryValues="@array/browser_preference_values"
 		android:defaultValue="@string/pref_browser_default_value" />
-</PreferenceScreen>
+</android.support.v7.preference.PreferenceScreen>

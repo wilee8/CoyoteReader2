@@ -5,6 +5,18 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/settings_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pref_dialog_title"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:textColor="?android:textColorPrimary"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"/>
+
     <FrameLayout
         android:id="@+id/settings_frame"
         android:layout_width="wrap_content"
@@ -13,10 +25,10 @@
 
     <Button
         android:id="@+id/settings_button"
+        style="?android:borderlessButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|end"
         android:text="@string/alert_ok"
-        style="?android:borderlessButtonStyle"
         android:textColor="@color/accent"/>
 </LinearLayout>

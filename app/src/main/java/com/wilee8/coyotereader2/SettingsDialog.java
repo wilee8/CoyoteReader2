@@ -30,7 +30,6 @@ public class SettingsDialog extends DialogFragment {
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		getDialog().setTitle(R.string.pref_dialog_title);
 		LayoutInflater i = getActivity().getLayoutInflater();
 
 		LinearLayout ll = (LinearLayout) i.inflate(R.layout.dialog_settings, container, false);
