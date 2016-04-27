@@ -168,83 +168,103 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		Boolean needToFetchData = false;
 
 		if (savedInstanceState != null) {
-			if (savedInstanceState.containsKey("mContentFrame")) {
-				mContentFrame = savedInstanceState.getInt("mContentFrame");
-				mShowMarkUnread = mContentFrame == ARTICLE_FRAGMENT_FRAME;
-				mMarkUnreadPosition = savedInstanceState.getInt("mMarkUnreadPosition", -1);
-			} else {
+			try {
+				if (savedInstanceState.containsKey("mContentFrame")) {
+					mContentFrame = savedInstanceState.getInt("mContentFrame");
+					mShowMarkUnread = mContentFrame == ARTICLE_FRAGMENT_FRAME;
+					mMarkUnreadPosition = savedInstanceState.getInt("mMarkUnreadPosition", -1);
+				} else {
+					mContentFrame = NAV_FRAGMENT_FRAME;
+					mShowMarkUnread = false;
+					mMarkUnreadPosition = -1;
+				}
+
+				if (savedInstanceState.containsKey("mUnreadCounts")) {
+					mUnreadCounts = savedInstanceState.getParcelable("mUnreadCounts");
+				} else {
+					needToFetchData = true;
+					mUnreadCounts = null;
+				}
+
+				if (savedInstanceState.containsKey("mTagList")) {
+					mTagList = savedInstanceState.getParcelable("mTagList");
+				} else {
+					needToFetchData = true;
+					mTagList = null;
+				}
+
+				if (savedInstanceState.containsKey("mSubscriptionList")) {
+					mSubscriptionList = savedInstanceState.getParcelable("mSubscriptionList");
+				} else {
+					needToFetchData = true;
+					mSubscriptionList = null;
+				}
+
+				if (savedInstanceState.containsKey("mUserId")) {
+					mUserId = savedInstanceState.getString("mUserId");
+				} else {
+					needToFetchData = true;
+					mUserId = null;
+				}
+
+				if (savedInstanceState.containsKey("mStreamPrefs")) {
+					mStreamPrefs = savedInstanceState.getParcelable("mStreamPrefs");
+				} else {
+					needToFetchData = true;
+					mStreamPrefs = null;
+				}
+
+				if (savedInstanceState.containsKey("mNavList")) {
+					mNavList = savedInstanceState.getParcelableArrayList("mNavList");
+				} else {
+					needToFetchData = true;
+					mNavList = null;
+				}
+
+				if (savedInstanceState.containsKey("mTitles")) {
+					mTitles = savedInstanceState.getStringArray("mTitles");
+				} else {
+					mTitles = new String[FRAME_IDS.length];
+					mTitles[0] = getResources().getString(R.string.app_name);
+				}
+
+				if (savedInstanceState.containsKey("mItems")) {
+					mItems = savedInstanceState.getParcelableArrayList("mItems");
+				}
+				// else punt so we don't write over data from FeedFragment
+
+				// if we don't have a feed, can't mark anything read
+				if (savedInstanceState.containsKey("mMarkAllReadFeed")) {
+					mShowMarkAllRead = savedInstanceState.getBoolean("mShowMarkAllRead", false);
+					mMarkAllReadFeed = savedInstanceState.getString("mMarkAllReadFeed", "");
+					mMarkAllReadFeedName = savedInstanceState.getString("mMarkAllReadFeedName", "");
+					mUpdated = savedInstanceState.getLong("mUpdated", -1);
+				} else {
+					mShowMarkAllRead = false;
+				}
+
+				mShareUrl = savedInstanceState.getString("mShareUrl", null);
+
+				mAuthToken = savedInstanceState.getString("mAuthToken", null);
+			} catch (NullPointerException e) {
+				// sometimes the state doesn't save correctly if activity leaves memory
+				// punt and start over
+				needToFetchData = true;
 				mContentFrame = NAV_FRAGMENT_FRAME;
-				mShowMarkUnread = false;
-				mMarkUnreadPosition = -1;
-			}
-
-			if (savedInstanceState.containsKey("mUnreadCounts")) {
-				mUnreadCounts = savedInstanceState.getParcelable("mUnreadCounts");
-			} else {
-				needToFetchData = true;
 				mUnreadCounts = null;
-			}
-
-			if (savedInstanceState.containsKey("mTagList")) {
-				mTagList = savedInstanceState.getParcelable("mTagList");
-			} else {
-				needToFetchData = true;
 				mTagList = null;
-			}
-
-			if (savedInstanceState.containsKey("mSubscriptionList")) {
-				mSubscriptionList = savedInstanceState.getParcelable("mSubscriptionList");
-			} else {
-				needToFetchData = true;
 				mSubscriptionList = null;
-			}
-
-			if (savedInstanceState.containsKey("mUserId")) {
-				mUserId = savedInstanceState.getString("mUserId");
-			} else {
-				needToFetchData = true;
 				mUserId = null;
-			}
-
-			if (savedInstanceState.containsKey("mStreamPrefs")) {
-				mStreamPrefs = savedInstanceState.getParcelable("mStreamPrefs");
-			} else {
-				needToFetchData = true;
 				mStreamPrefs = null;
-			}
-
-			if (savedInstanceState.containsKey("mNavList")) {
-				mNavList = savedInstanceState.getParcelableArrayList("mNavList");
-			} else {
-				needToFetchData = true;
 				mNavList = null;
-			}
-
-			if (savedInstanceState.containsKey("mTitles")) {
-				mTitles = savedInstanceState.getStringArray("mTitles");
-			} else {
 				mTitles = new String[FRAME_IDS.length];
 				mTitles[0] = getResources().getString(R.string.app_name);
-			}
-
-			if (savedInstanceState.containsKey("mItems")) {
-				mItems = savedInstanceState.getParcelableArrayList("mItems");
-			}
-			// else punt so we don't write over data from FeedFragment
-
-			// if we don't have a feed, can't mark anything read
-			if (savedInstanceState.containsKey("mMarkAllReadFeed")) {
-				mShowMarkAllRead = savedInstanceState.getBoolean("mShowMarkAllRead", false);
-				mMarkAllReadFeed = savedInstanceState.getString("mMarkAllReadFeed", "");
-				mMarkAllReadFeedName = savedInstanceState.getString("mMarkAllReadFeedName", "");
-				mUpdated = savedInstanceState.getLong("mUpdated", -1);
-			} else {
 				mShowMarkAllRead = false;
+				mShowMarkUnread = false;
+				mMarkUnreadPosition = -1;
+				mShareUrl = null;
+				mAuthToken = null;
 			}
-
-			mShareUrl = savedInstanceState.getString("mShareUrl", null);
-
-			mAuthToken = savedInstanceState.getString("mAuthToken", null);
 		} else {
 			needToFetchData = true;
 			mContentFrame = NAV_FRAGMENT_FRAME;
