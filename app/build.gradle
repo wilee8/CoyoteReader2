@@ -4,6 +4,13 @@ def INOREADER_APP_ID = '"' + InoreaderAppId + '"' ?: '"Define Inoreader App Id"'
 def INOREADER_APP_KEY = '"' + InoreaderAppKey + '"' ?: '"Define Inoreader App Key"';
 
 android {
+
+    dexOptions {
+        incremental true
+        maxProcessCount 4
+        javaMaxHeapSize "2g"
+    }
+
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
