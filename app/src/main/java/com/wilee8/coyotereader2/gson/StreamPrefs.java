@@ -6,6 +6,7 @@ import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class StreamPrefs implements Parcelable {
@@ -40,6 +41,7 @@ public class StreamPrefs implements Parcelable {
 
     protected StreamPrefs(Parcel in) {
         int size = in.readInt();
+        this.streamPrefs = new HashMap<>();
         for (int i = 0; i < size; i++) {
             String key = in.readString();
             ArrayList<StreamPref> value = in.createTypedArrayList(StreamPref.CREATOR);

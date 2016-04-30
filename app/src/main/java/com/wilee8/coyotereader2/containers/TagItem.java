@@ -119,6 +119,7 @@ public class TagItem implements Parcelable {
 		this.isFeed = (Boolean) in.readValue(Boolean.class.getClassLoader());
 		this.resId = in.readInt();
 		this.iconUrl = in.readString();
+		this.feeds = new ArrayList<>();
 		in.readTypedList(this.feeds, TagItem.CREATOR);
 		this.isExpanded = (Boolean) in.readValue(Boolean.class.getClassLoader());
 		this.isTopLevel = (Boolean) in.readValue(Boolean.class.getClassLoader());
