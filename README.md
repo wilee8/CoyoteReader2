@@ -5,4 +5,5 @@ This app won't work without developer keys being added to gradle.properties. You
 ```
 InoreaderAppId=xxxxxxxxxx
 InoreaderAppKey=xxxxxxxxxxxxxxxxxxxxxxxxxx
+CsrfProtectionString=xxxxxxxxxxxxxxxxxxxx
 ```
