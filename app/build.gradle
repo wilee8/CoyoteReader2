@@ -2,14 +2,9 @@ apply plugin: 'com.android.application'
 
 def INOREADER_APP_ID = '"' + InoreaderAppId + '"' ?: '"Define Inoreader App Id"';
 def INOREADER_APP_KEY = '"' + InoreaderAppKey + '"' ?: '"Define Inoreader App Key"';
+def CSRF_PROTECTION_STRING = '"' + CsrfProtectionString + '"' ?: '"Define CSRF Protection String"';
 
 android {
-
-    dexOptions {
-        incremental true
-        maxProcessCount 4
-        javaMaxHeapSize "2g"
-    }
 
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
@@ -26,6 +21,7 @@ android {
         debug {
             buildConfigField 'String', 'INOREADER_APP_ID', INOREADER_APP_ID
             buildConfigField 'String', 'INOREADER_APP_KEY', INOREADER_APP_KEY
+            buildConfigField 'String', 'CSRF_PROTECTION_STRING', CSRF_PROTECTION_STRING
         }
         release {
             minifyEnabled false
@@ -33,6 +29,7 @@ android {
 
             buildConfigField 'String', 'INOREADER_APP_ID', INOREADER_APP_ID
             buildConfigField 'String', 'INOREADER_APP_KEY', INOREADER_APP_KEY
+            buildConfigField 'String', 'CSRF_PROTECTION_STRING', CSRF_PROTECTION_STRING
         }
     }
 }
