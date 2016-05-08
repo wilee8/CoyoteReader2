@@ -7,7 +7,7 @@ def CSRF_PROTECTION_STRING = '"' + CsrfProtectionString + '"' ?: '"Define CSRF P
 android {
 
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         multiDexEnabled true

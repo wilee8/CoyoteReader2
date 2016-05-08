@@ -25,4 +25,8 @@ public interface InoreaderRxService {
 
 	@POST("reader/api/0/disable-tag")
 	Observable<ResponseBody> disableTag(@QueryMap Map<String, String> options);
+
+	@POST("oauth2/token")
+	Observable<ResponseBody> oauth2GetToken(@QueryMap Map<String, String> options);
+
 }
