@@ -1,4 +1,4 @@
-package com.wilee8.coyotereader2;
+package com.wilee8.coyotereader2.accounts;
 
 import android.app.Service;
 import android.content.Intent;

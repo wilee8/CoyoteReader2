@@ -1,4 +1,4 @@
-package com.wilee8.coyotereader2;
+package com.wilee8.coyotereader2.accounts;
 
 import android.accounts.AccountAuthenticatorActivity;
 import android.annotation.SuppressLint;
@@ -9,6 +9,8 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.wilee8.coyotereader2.BuildConfig;
+import com.wilee8.coyotereader2.R;
 import com.wilee8.coyotereader2.retrofitservices.AuthHeaderInterceptor;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
 

@@ -1,4 +1,4 @@
-package com.wilee8.coyotereader2;
+package com.wilee8.coyotereader2.accounts;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+
+import com.wilee8.coyotereader2.R;
 
 public class AccountAuthenticator extends AbstractAccountAuthenticator {
 

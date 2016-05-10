@@ -11,6 +11,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
+import com.wilee8.coyotereader2.accounts.AccountAuthenticator;
 
 import java.io.IOException;
 

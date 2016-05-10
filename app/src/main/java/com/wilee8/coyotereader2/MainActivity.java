@@ -41,6 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
+import com.wilee8.coyotereader2.accounts.AccountAuthenticator;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.TagItem;
 import com.wilee8.coyotereader2.gson.Category;
