@@ -11,10 +11,9 @@ public class AuthHeaderInterceptor implements Interceptor {
 	public Response intercept(Chain chain) throws IOException {
 		Request request = chain.request();
 
-		Request.Builder builder = request.newBuilder();
-//			.addHeader("Content-type", "application/x-www-form-urlencoded");
+		Request.Builder builder = request.newBuilder()
+			.addHeader("Content-type", "application/x-www-form-urlencoded");
 
-		Request newRequest = builder.build();
-		return chain.proceed(newRequest);
+		return  chain.proceed(builder.build());
 	}
 }

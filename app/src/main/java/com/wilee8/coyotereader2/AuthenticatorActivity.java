@@ -4,6 +4,7 @@ import android.accounts.AccountAuthenticatorActivity;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.util.ArrayMap;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -96,7 +97,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 						}
 
 						if (params.get("state").matches(BuildConfig.CSRF_PROTECTION_STRING)) {
-							Map<String, String> queryMap = new HashMap<>();
+							Map<String, String> queryMap = new ArrayMap<>();
 							queryMap.put("code", params.get("code"));
 							queryMap.put("redirect_uri", URLEncoder.encode(REDIRECT_URI, "utf-8"));
 							queryMap.put("client_id", BuildConfig.INOREADER_APP_ID);
