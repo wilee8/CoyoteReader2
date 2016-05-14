@@ -3,8 +3,6 @@ package com.wilee8.coyotereader2.retrofitservices;
 import java.util.Map;
 
 import okhttp3.ResponseBody;
-import retrofit2.http.FieldMap;
-import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 import retrofit2.http.QueryMap;
 import rx.Observable;
@@ -27,9 +25,4 @@ public interface InoreaderRxService {
 
 	@POST("reader/api/0/disable-tag")
 	Observable<ResponseBody> disableTag(@QueryMap Map<String, String> options);
-
-	@FormUrlEncoded
-	@POST("oauth2/token")
-	Observable<ResponseBody> oauth2GetToken(@FieldMap Map<String, String> options);
-
 }

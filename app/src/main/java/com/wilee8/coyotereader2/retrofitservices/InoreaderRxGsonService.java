@@ -5,11 +5,14 @@ import com.wilee8.coyotereader2.gson.StreamContents;
 import com.wilee8.coyotereader2.gson.StreamPrefs;
 import com.wilee8.coyotereader2.gson.SubscriptionList;
 import com.wilee8.coyotereader2.gson.TagList;
+import com.wilee8.coyotereader2.gson.TokenResponse;
 import com.wilee8.coyotereader2.gson.UnreadCounts;
 import com.wilee8.coyotereader2.gson.UserInfo;
 
 import java.util.Map;
 
+import retrofit2.http.FieldMap;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -37,4 +40,8 @@ public interface InoreaderRxGsonService {
 
 	@POST("/reader/api/0/subscription/quickadd")
 	Observable<AddedFeed> quickAdd(@QueryMap Map<String, String> options);
+
+	@FormUrlEncoded
+	@POST("oauth2/token")
+	Observable<TokenResponse> oauth2GetToken(@FieldMap Map<String, String> options);
 }

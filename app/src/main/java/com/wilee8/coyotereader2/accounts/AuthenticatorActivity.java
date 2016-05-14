@@ -11,18 +11,18 @@ import android.view.View;
 
 import com.wilee8.coyotereader2.BuildConfig;
 import com.wilee8.coyotereader2.R;
+import com.wilee8.coyotereader2.gson.TokenResponse;
 import com.wilee8.coyotereader2.retrofitservices.AuthHeaderInterceptor;
-import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
 
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -39,8 +39,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 	private Intent mIntent;
 
-	private InoreaderRxService mService;
-	private Subscription       mLoginSubscription;
+	private InoreaderRxGsonService mService;
+	private Subscription           mLoginSubscription;
 
 	@SuppressWarnings("FieldCanBeLocal")
 	private static String OAUTH_URL       = "https://www.inoreader.com/oauth2/auth";
@@ -62,9 +62,10 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			.baseUrl("https://www.inoreader.com")
 			.client(client)
 			.addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+			.addConverterFactory(GsonConverterFactory.create())
 			.build();
 
-		mService = restAdapter.create(InoreaderRxService.class);
+		mService = restAdapter.create(InoreaderRxGsonService.class);
 
 		setContentView(R.layout.activity_authenticator);
 		mProgressView = findViewById(R.id.login_progress);
@@ -120,7 +121,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 	}
 
-	private class AuthReplyHandler extends Subscriber<ResponseBody> {
+	private class AuthReplyHandler extends Subscriber<TokenResponse> {
 
 		@Override
 		public void onCompleted() {
@@ -135,14 +136,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 
 		@Override
-		public void onNext(ResponseBody responseBody) {
-			String response;
-			try {
-				response = responseBody.string();
-			} catch (IOException e) {
-				onError(e);
-				return;
-			}
+		public void onNext(TokenResponse tokenResponse) {
 //
 //			// Get the authentication token
 //			String holder[] = response.split("Auth=");
