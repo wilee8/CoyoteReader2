@@ -88,7 +88,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private Context mContext;
 
 	private AccountManager mAccountManager;
-	private String         mAuthToken;
 
 	private SharedPreferences mSettings;
 	private Boolean           mSortAlpha;
@@ -148,6 +147,16 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		super.onCreate(savedInstanceState);
 
 		mContext = this;
+
+		mAccountManager = AccountManager.get(this);
+		Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+
+		if (accounts.length == 0) {
+			Intent intent = new Intent(mContext, LoginActivity.class);
+			startActivity(intent);
+			finish();
+			return;
+		}
 
 		// get the saved settings
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -244,8 +253,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			mShareUrl = savedInstanceState.getString("mShareUrl", null);
-
-			mAuthToken = savedInstanceState.getString("mAuthToken", null);
 		} else {
 			needToFetchData = true;
 			mContentFrame = NAV_FRAGMENT_FRAME;
@@ -261,7 +268,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			mShowMarkUnread = false;
 			mMarkUnreadPosition = -1;
 			mShareUrl = null;
-			mAuthToken = null;
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
@@ -347,27 +353,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			startCustomTabs();
 		}
 
-		mAccountManager = AccountManager.get(this);
-
-		// go get authToken from AccountManager if we don't have one saved from previous fetch
-		if (mAuthToken == null) {
-
-			// get mAuthToken in background task
-			HandleAuthToken handleAuthToken = new HandleAuthToken();
-			Observable<String> getAuthToken = Observable.create(new GetAuthToken());
-
-			getAuthToken
-				.subscribeOn(Schedulers.io())
-				.observeOn(AndroidSchedulers.mainThread())
-				.compose(this.<String>bindToLifecycle())
-				.subscribe(handleAuthToken);
-
-			// since mAuthToken is being fetched by a background task, don't fetch data now
-			// and let the task do it after it gets the token
-			needToFetchData = false;
-		} else {
-			createRetrofitServices();
-		}
+		createRetrofitServices();
 
 		if (needToFetchData) {
 			FragmentManager fragmentManager = getSupportFragmentManager();
@@ -842,10 +828,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			outState.putString("mMarkAllReadFeed", mMarkAllReadFeed);
 			outState.putString("mMarkAllReadFeedName", mMarkAllReadFeedName);
 			outState.putLong("mUpdated", mUpdated);
-		}
-
-		if (mAuthToken != null) {
-			outState.putString("mAuthToken", mAuthToken);
 		}
 
 		outState.putInt("mMarkUnreadPosition", mMarkUnreadPosition);
@@ -1543,70 +1525,9 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			});
 	}
 
-	private class GetAuthToken implements Observable.OnSubscribe<String> {
-
-		@Override
-		public void call(Subscriber<? super String> subscriber) {
-			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
-			Account account;
-
-			if (accounts.length == 0) {
-				logout();
-			} else {
-				account = accounts[0];
-				AccountManagerFuture<Bundle> accountManagerFuture =
-					mAccountManager.getAuthToken(account,
-						AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
-						null,
-						null,
-						null,
-						null);
-				Bundle authTokenBundle;
-				try {
-					authTokenBundle = accountManagerFuture.getResult();
-				} catch (OperationCanceledException | IOException | AuthenticatorException e) {
-					subscriber.onError(e);
-					subscriber.onCompleted();
-					return;
-				}
-
-				subscriber.onNext(authTokenBundle.getString(AccountManager.KEY_AUTHTOKEN));
-				subscriber.onCompleted();
-			}
-		}
-	}
-
-	private class HandleAuthToken extends Subscriber<String> {
-
-		@Override
-		public void onCompleted() {
-			unsubscribe();
-		}
-
-		@Override
-		public void onError(Throwable e) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_login,
-					Snackbar.LENGTH_LONG)
-				.show();
-			logout();
-		}
-
-		@Override
-		public void onNext(String s) {
-			mAuthToken = s;
-
-			createRetrofitServices();
-
-			// now that we have an authToken, fetch data from the server
-			refreshOnClick();
-		}
-	}
-
 	private void createRetrofitServices() {
 		OkHttpClient client = new OkHttpClient.Builder()
-			.addInterceptor(new HeaderInterceptor(mAuthToken))
+			.addInterceptor(new HeaderInterceptor(mAccountManager, MainActivity.this))
 			.build();
 
 		Retrofit restAdapter = new Retrofit.Builder()

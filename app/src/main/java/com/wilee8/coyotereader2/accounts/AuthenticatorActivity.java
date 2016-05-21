@@ -1,6 +1,8 @@
 package com.wilee8.coyotereader2.accounts;
 
+import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
+import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
@@ -137,33 +139,38 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
 		@Override
 		public void onNext(TokenResponse tokenResponse) {
-//
-//			// Get the authentication token
-//			String holder[] = response.split("Auth=");
-//			String token = holder[1].replaceAll("\n", "");
-//
-//			// return username and authToken to authenticator
-//			String accountType = getIntent().getStringExtra(AccountAuthenticator.ARG_ACCOUNT_TYPE);
-//			String authTokenType = getIntent().getStringExtra(AccountAuthenticator.ARG_AUTH_TYPE);
-//			if (authTokenType == null) {
-//				authTokenType = AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD;
-//			}
-//			Bundle result = new Bundle();
-//			result.putString(AccountManager.KEY_ACCOUNT_NAME, mUsername);
-//			result.putString(AccountManager.KEY_AUTHTOKEN, token);
-//			result.putString(AccountManager.KEY_ACCOUNT_TYPE, accountType);
-//
-//			final Account account = new Account(mUsername, accountType);
-//			AccountManager accountManager = AccountManager.get(getBaseContext());
-//			if (getIntent().getBooleanExtra(AccountAuthenticator.ARG_IS_ADDING_NEW_ACCOUNT, false)) {
-//				// we don't need to save the password, so pass null
-//				accountManager.addAccountExplicitly(account, null, null);
-//			}
-//
-//			accountManager.setAuthToken(account, authTokenType, token);
-//
-//			setAccountAuthenticatorResult(result);
-//			setResult(RESULT_OK);
+
+			Bundle userData = new Bundle();
+			userData.putString(AccountAuthenticator.USER_DATA_TOKEN_TYPE,
+				tokenResponse.getTokenType());
+			userData.putString(AccountAuthenticator.USER_DATA_REFRESH_TOKEN,
+				tokenResponse.getRefreshToken());
+			// figure out expiration time
+			// expires_in is seconds, need to divide milliseconds by 1000 to get current time in seconds
+			String expireString = Long.toString((System.currentTimeMillis() / 1000) + tokenResponse.getExpiresIn()
+							  - AccountAuthenticator.BUFFER_SECONDS);
+			userData.putString(AccountAuthenticator.USER_DATA_EXPIRATION_TIME, expireString);
+
+
+			final Account account = new Account(AccountAuthenticator.ARG_ACCOUNT_NAME,
+				AccountAuthenticator.ACCOUNT_TYPE);
+			AccountManager accountManager = AccountManager.get(getBaseContext());
+			if (getIntent().getBooleanExtra(AccountAuthenticator.ARG_IS_ADDING_NEW_ACCOUNT, false)) {
+				// we don't need to save the password, so pass null
+				accountManager.addAccountExplicitly(account, null, userData);
+			}
+
+			accountManager.setAuthToken(account,
+				AccountAuthenticator.AUTHTOKEN_TYPE_OAUTH2,
+				tokenResponse.getAccessToken());
+
+			Bundle result = new Bundle();
+			result.putString(AccountManager.KEY_AUTHTOKEN, tokenResponse.getAccessToken());
+			result.putString(AccountAuthenticator.USER_DATA_TOKEN_TYPE,
+				tokenResponse.getTokenType());
+
+			setAccountAuthenticatorResult(result);
+			setResult(RESULT_OK);
 			unsubscribe();
 			finish();
 		}

@@ -10,17 +10,35 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import com.wilee8.coyotereader2.BuildConfig;
 import com.wilee8.coyotereader2.R;
+import com.wilee8.coyotereader2.gson.TokenResponse;
+import com.wilee8.coyotereader2.retrofitservices.InoreaderGsonService;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AccountAuthenticator extends AbstractAccountAuthenticator {
 
 	// public strings
-	public static final String ACCOUNT_TYPE = "com.wilee8.coyotereader2";
-	public static final String AUTHTOKEN_TYPE_STANDARD = "Standard";
-	public static final String ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE";
-	public static final String ARG_AUTH_TYPE = "AUTH_TYPE";
-	public static final String ARG_ACCOUNT_NAME = "ACCOUNT_NAME";
+	public static final String ACCOUNT_TYPE              = "com.wilee8.coyotereader2";
+	//	public static final String AUTHTOKEN_TYPE_STANDARD = "Standard";
+	public static final String AUTHTOKEN_TYPE_OAUTH2     = "OAuth2";
+	public static final String ARG_ACCOUNT_TYPE          = "ACCOUNT_TYPE";
+	public static final String ARG_AUTH_TYPE             = "AUTH_TYPE";
+	public static final String ARG_ACCOUNT_NAME          = "OAUTH_ACCOUNT";
 	public static final String ARG_IS_ADDING_NEW_ACCOUNT = "IS_ADDING_ACCOUNT";
+	public static final String USER_DATA_TOKEN_TYPE      = "token_type";
+	public static final String USER_DATA_REFRESH_TOKEN   = "refresh_token";
+	public static final String USER_DATA_EXPIRATION_TIME = "expiration_time";
+
+	// a buffer period to make sure oauth token doesn't expire in the middle of requests
+	public static final int BUFFER_SECONDS = 15;
 
 	private final Context mContext;
 
@@ -72,27 +90,40 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
 		String authToken = accountManager.peekAuthToken(account, authTokenType);
 
 		if (!TextUtils.isEmpty(authToken)) {
-			// we have an auth token, return it
-			final Bundle result = new Bundle();
-			result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-			result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-			result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
-			return result;
+			// we have an auth token, check if it is expired
+			Long expirationTime = Long.valueOf(accountManager.getUserData(account,
+				AccountAuthenticator.USER_DATA_EXPIRATION_TIME));
+
+			if ((System.currentTimeMillis() / 1000) > expirationTime) {
+				try {
+					renewToken(accountManager, account);
+					authToken = accountManager.peekAuthToken(account, authTokenType);
+				} catch (IOException e) {
+					throw new NetworkErrorException();
+				}
+			}
+		} else {
+			// need to renew auth token
+			try {
+				renewToken(accountManager, account);
+				authToken = accountManager.peekAuthToken(account, authTokenType);
+			} catch (IOException e) {
+				throw new NetworkErrorException();
+			}
 		}
 
-		// if we get here, we need to prompt the user for username/password to get authtoken
-		final Intent intent = new Intent(mContext, AuthenticatorActivity.class);
-		intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
-		intent.putExtra(ARG_ACCOUNT_TYPE, account.type);
-		intent.putExtra(ARG_AUTH_TYPE, authTokenType);
-		final Bundle bundle = new Bundle();
-		bundle.putParcelable(AccountManager.KEY_INTENT, intent);
-		return bundle;
+		final Bundle result = new Bundle();
+		result.putString(AccountAuthenticator.USER_DATA_TOKEN_TYPE,
+			accountManager.getUserData(account, AccountAuthenticator.USER_DATA_TOKEN_TYPE));
+		result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+		result.putString(AccountManager.KEY_ACCOUNT_NAME, AccountAuthenticator.ARG_ACCOUNT_NAME);
+		result.putString(AccountManager.KEY_ACCOUNT_TYPE, AccountAuthenticator.ACCOUNT_TYPE);
+		return result;
 	}
 
 	@Override
 	public String getAuthTokenLabel(String authTokenType) {
-		return AUTHTOKEN_TYPE_STANDARD;
+		return AUTHTOKEN_TYPE_OAUTH2;
 	}
 
 	@Override
@@ -105,5 +136,39 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
 		final Bundle result = new Bundle();
 		result.putBoolean(AccountManager.KEY_BOOLEAN_RESULT, false);
 		return result;
+	}
+
+	private void renewToken(AccountManager accountManager, Account account) throws IOException {
+		Map<String, String> queryMap = new HashMap<>();
+		queryMap.put("client_id", BuildConfig.INOREADER_APP_ID);
+		queryMap.put("client_secret", BuildConfig.INOREADER_APP_KEY);
+		queryMap.put("grant_type", "refresh_token");
+		queryMap.put("refresh_token",
+			accountManager.getUserData(account, AccountAuthenticator.USER_DATA_REFRESH_TOKEN));
+
+		OkHttpClient client = new OkHttpClient.Builder()
+			.build();
+
+		Retrofit restAdapter = new Retrofit.Builder()
+			.baseUrl("https://www.inoreader.com")
+			.client(client)
+			.addConverterFactory(GsonConverterFactory.create())
+			.build();
+
+		InoreaderGsonService service = restAdapter.create(InoreaderGsonService.class);
+		TokenResponse tokenResponse = service.oauth2GetToken(queryMap).execute().body();
+
+		accountManager.setAuthToken(account, AUTHTOKEN_TYPE_OAUTH2, tokenResponse.getAccessToken());
+		accountManager.setUserData(account,
+			AccountAuthenticator.USER_DATA_TOKEN_TYPE,
+			tokenResponse.getTokenType());
+		accountManager.setUserData(account,
+			AccountAuthenticator.USER_DATA_REFRESH_TOKEN,
+			tokenResponse.getRefreshToken());
+		// figure out expiration time
+		// expires_in is seconds, need to divide milliseconds by 1000 to get current time in seconds
+		accountManager.setUserData(account,
+			AccountAuthenticator.USER_DATA_EXPIRATION_TIME,
+			Long.toString((System.currentTimeMillis() / 1000) + tokenResponse.getExpiresIn() - BUFFER_SECONDS));
 	}
 }

@@ -9,6 +9,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
 
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.wilee8.coyotereader2.accounts.AccountAuthenticator;
@@ -28,6 +31,9 @@ public class LoginActivity extends RxAppCompatActivity {
 	private static final int ACTIVITY_REQUEST_CODE = 1;
 
 	// UI references.
+	ProgressBar mProgress;
+	Button      mButton;
+
 	private Context        mContext;
 	private AccountManager mAccountManager;
 
@@ -35,6 +41,12 @@ public class LoginActivity extends RxAppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
+
+		mProgress = (ProgressBar) findViewById(R.id.login_progress);
+		mButton = (Button) findViewById(R.id.login_button);
+
+		mProgress.setVisibility(View.GONE);
+		mButton.setVisibility(View.VISIBLE);
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		if (toolbar != null) {
@@ -44,15 +56,23 @@ public class LoginActivity extends RxAppCompatActivity {
 		mContext = this;
 		mAccountManager = AccountManager.get(this);
 
-		// Create login intent in background task
-		LaunchLoginIntent launchLoginIntent = new LaunchLoginIntent();
-		Observable<Intent> doLogin = Observable.create(new DoLogin());
+		mButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				mProgress.setVisibility(View.VISIBLE);
+				mButton.setVisibility(View.GONE);
 
-		doLogin
-			.subscribeOn(Schedulers.io())
-			.observeOn(AndroidSchedulers.mainThread())
-			.compose(this.<Intent>bindToLifecycle())
-			.subscribe(launchLoginIntent);
+				// Create login intent in background task
+				LaunchLoginIntent launchLoginIntent = new LaunchLoginIntent();
+				Observable<Intent> doLogin = Observable.create(new DoLogin());
+
+				doLogin
+					.subscribeOn(Schedulers.io())
+					.observeOn(AndroidSchedulers.mainThread())
+					.compose(LoginActivity.this.<Intent>bindToLifecycle())
+					.subscribe(launchLoginIntent);
+			}
+		});
 	}
 
 	@Override
@@ -60,10 +80,13 @@ public class LoginActivity extends RxAppCompatActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 
 		if (resultCode != RESULT_OK) {
+			mProgress.setVisibility(View.GONE);
+			mButton.setVisibility(View.VISIBLE);
+
 			Snackbar
-				.make(findViewById(R.id.login_progress),
-					  R.string.error_login,
-					  Snackbar.LENGTH_LONG)
+				.make(findViewById(R.id.relative_layout),
+					R.string.error_login,
+					Snackbar.LENGTH_LONG)
 				.show();
 		} else {
 			// now that we have logged in, start main activity
@@ -78,12 +101,12 @@ public class LoginActivity extends RxAppCompatActivity {
 		public void call(Subscriber<? super Intent> subscriber) {
 			AccountManagerFuture<Bundle> accountManagerFuture =
 				mAccountManager.addAccount(AccountAuthenticator.ACCOUNT_TYPE,
-										   AccountAuthenticator.AUTHTOKEN_TYPE_STANDARD,
-										   null,
-										   null,
-										   null,
-										   null,
-										   null);
+					AccountAuthenticator.AUTHTOKEN_TYPE_OAUTH2,
+					null,
+					null,
+					null,
+					null,
+					null);
 
 			Bundle loginBundle;
 			try {
@@ -110,8 +133,8 @@ public class LoginActivity extends RxAppCompatActivity {
 		public void onError(Throwable e) {
 			Snackbar
 				.make(findViewById(R.id.login_progress),
-					  R.string.error_login,
-					  Snackbar.LENGTH_LONG)
+					R.string.error_login,
+					Snackbar.LENGTH_LONG)
 				.show();
 		}
 

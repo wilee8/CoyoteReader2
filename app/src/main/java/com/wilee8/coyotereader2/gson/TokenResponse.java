@@ -14,13 +14,53 @@ public class TokenResponse implements Parcelable {
 	String tokenType;
 
 	@SerializedName("expires_in")
-	int expiresIn;
+	long expiresIn;
 
 	@SerializedName("refresh_token")
 	String refreshToken;
 
 	@SerializedName("scope")
 	String scope;
+
+	public String getAccessToken() {
+		return accessToken;
+	}
+
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
+	public long getExpiresIn() {
+		return expiresIn;
+	}
+
+	public void setExpiresIn(long expiresIn) {
+		this.expiresIn = expiresIn;
+	}
+
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
+	}
+
+	public String getScope() {
+		return scope;
+	}
+
+	public void setScope(String scope) {
+		this.scope = scope;
+	}
+
+	public String getTokenType() {
+		return tokenType;
+	}
+
+	public void setTokenType(String tokenType) {
+		this.tokenType = tokenType;
+	}
 
 	@Override
 	public int describeContents() {
@@ -31,7 +71,7 @@ public class TokenResponse implements Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(this.accessToken);
 		dest.writeString(this.tokenType);
-		dest.writeInt(this.expiresIn);
+		dest.writeLong(this.expiresIn);
 		dest.writeString(this.refreshToken);
 		dest.writeString(this.scope);
 	}
