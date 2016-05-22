@@ -4,10 +4,17 @@ import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsClient;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsServiceConnection;
+import android.support.customtabs.CustomTabsSession;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.ArrayMap;
 import android.view.View;
 
@@ -51,6 +58,12 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 	@SuppressWarnings("FieldCanBeLocal")
 	private static String OPTIONAL_SCOPES = "read write";
 
+	@SuppressWarnings("FieldCanBeLocal")
+	private static String PACKAGE_NAME = "com.android.chrome";
+	private CustomTabsServiceConnection mCustomTabsServiceConnection;
+	private CustomTabsClient            mCustomTabsClient;
+	private CustomTabsSession           mCustomTabsSession;
+
 	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +85,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		setContentView(R.layout.activity_authenticator);
 		mProgressView = findViewById(R.id.login_progress);
 
+		startCustomTabs();
+
 		mIntent = getIntent();
 		restartAuth(false);
 	}
@@ -81,6 +96,8 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		if ((mLoginSubscription != null) && (!mLoginSubscription.isUnsubscribed())) {
 			mLoginSubscription.unsubscribe();
 		}
+
+		stopCustomTabs();
 
 		super.onDestroy();
 	}
@@ -148,7 +165,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 			// figure out expiration time
 			// expires_in is seconds, need to divide milliseconds by 1000 to get current time in seconds
 			String expireString = Long.toString((System.currentTimeMillis() / 1000) + tokenResponse.getExpiresIn()
-							  - AccountAuthenticator.BUFFER_SECONDS);
+												- AccountAuthenticator.BUFFER_SECONDS);
 			userData.putString(AccountAuthenticator.USER_DATA_EXPIRATION_TIME, expireString);
 
 
@@ -186,18 +203,69 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 		}
 
 		try {
-			Intent intent = new Intent(
-				Intent.ACTION_VIEW,
-				Uri.parse(OAUTH_URL +
-						  "?client_id=" + URLEncoder.encode(BuildConfig.INOREADER_APP_ID, "utf-8") +
-						  "&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, "utf-8") +
-						  "&response_type=code" +
-						  "&scope=" + URLEncoder.encode(OPTIONAL_SCOPES, "utf-8") +
-						  "&state=" + URLEncoder.encode(BuildConfig.CSRF_PROTECTION_STRING, "utf-8")));
-			startActivity(intent);
+			launchURL(OAUTH_URL +
+					  "?client_id=" + URLEncoder.encode(BuildConfig.INOREADER_APP_ID, "utf-8") +
+					  "&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, "utf-8") +
+					  "&response_type=code" +
+					  "&scope=" + URLEncoder.encode(OPTIONAL_SCOPES, "utf-8") +
+					  "&state=" + URLEncoder.encode(BuildConfig.CSRF_PROTECTION_STRING, "utf-8"));
 		} catch (UnsupportedEncodingException e) {
 			// encoding is hard coded, so fix it
 		}
+	}
+
+	private void startCustomTabs() {
+		mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
+			@Override
+			public void onCustomTabsServiceConnected(ComponentName componentName, CustomTabsClient customTabsClient) {
+				mCustomTabsClient = customTabsClient;
+
+				mCustomTabsClient.warmup(0L);
+				mCustomTabsSession = mCustomTabsClient.newSession(null);
+			}
+
+			@Override
+			public void onServiceDisconnected(ComponentName componentName) {
+			}
+		};
+
+		if (!CustomTabsClient.bindCustomTabsService(this, PACKAGE_NAME, mCustomTabsServiceConnection)) {
+			mCustomTabsServiceConnection = null;
+		}
+	}
+
+	private void stopCustomTabs() {
+		if (mCustomTabsServiceConnection != null) {
+			unbindService(mCustomTabsServiceConnection);
+		}
+		mCustomTabsServiceConnection = null;
+		mCustomTabsClient = null;
+		mCustomTabsSession = null;
+	}
+
+	@SuppressWarnings("deprecation")
+	private void launchURL(String url) {
+		Uri uri = Uri.parse(url);
+		// right now only alternative is chrome tabs
+		// create pending intent for share action button
+		Intent actionIntent = new Intent(Intent.ACTION_SEND);
+		actionIntent.setType("text/plain");
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			actionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+		} else {
+			actionIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+		}
+		actionIntent.putExtra(Intent.EXTRA_TEXT, url);
+
+		// launch custom tab
+		CustomTabsIntent.Builder customTabsIntentBuilder =
+			new CustomTabsIntent.Builder(mCustomTabsSession)
+				.setToolbarColor(
+					ContextCompat.getColor(AuthenticatorActivity.this, R.color.primary))
+				.setShowTitle(true);
+
+		CustomTabsIntent customTabsIntent = customTabsIntentBuilder.build();
+		customTabsIntent.launchUrl(AuthenticatorActivity.this, uri);
 	}
 }
 

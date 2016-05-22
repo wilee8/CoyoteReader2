@@ -349,7 +349,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		// start custom tabs if needed
 		if (mBrowser.matches(
-			mContext.getResources().getString(R.string.pref_browser_default_value))) {
+			mContext.getResources().getString(R.string.pref_browser_chrome_tabs))) {
 			startCustomTabs();
 		}
 
