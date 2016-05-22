@@ -39,7 +39,8 @@
 				<category android:name="android.intent.category.DEFAULT" />
 				<data
 					android:host="coyotereaderrss.androidapp"
-					android:scheme="https"/>
+					android:scheme="https"
+					android:pathPattern="/*"/>
 			</intent-filter>
         </activity>
         <activity
