@@ -34,6 +34,8 @@ import com.trello.rxlifecycle.components.support.RxFragment;
 import com.wilee8.coyotereader2.containers.ArticleItem;
 import com.wilee8.coyotereader2.containers.ArticleScrollState;
 
+import org.parceler.Parcels;
+
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -166,17 +168,17 @@ public class ArticlePagerFragment extends RxFragment {
 			// Set title
 			titleFrame.setClickable(false);
 			titleFrame.setText(Html.fromHtml("<b><a href=\"" + item.getCanonical() + "\">"
-												 + item.getTitle() + "</a></b>"));
+											 + item.getTitle() + "</a></b>"));
 			titleFrame.setOnClickListener(new TitleOnClickListener(item.getCanonical()));
 			titleFrame.setBackground(ContextCompat.getDrawable(getActivity(),
-															   R.drawable.ripple_selector));
+				R.drawable.ripple_selector));
 
 			// Set author
 			String author = item.getAuthor();
 			if ((author != null) && (author.length() != 0)) {
 				authorFrame.setText(
 					String.format(getString(R.string.article_byline),
-								  Html.fromHtml(Html.fromHtml(author).toString()).toString()));
+						Html.fromHtml(Html.fromHtml(author).toString()).toString()));
 				authorFrame.setVisibility(View.VISIBLE);
 			}
 
@@ -193,7 +195,7 @@ public class ArticlePagerFragment extends RxFragment {
 			ws.setTextZoom(getResources().getInteger(R.integer.item_text_zoom));
 
 			summaryFrame.setBackgroundColor(ContextCompat.getColor(getActivity(),
-																   R.color.frame_background));
+				R.color.frame_background));
 			if ((mScrollX != -1) && (mScrollY != -1)) {
 				summaryFrame.setWebViewClient(new MyWebViewClient(mScrollX, mScrollY));
 				mScrollX = -1;
@@ -214,7 +216,7 @@ public class ArticlePagerFragment extends RxFragment {
 
 			// Set summary
 			String imageCss = "<style>img{display: inline;max-width: 95%; height: auto;display: block;margin-left: auto;margin-right: auto;}</style>" +
-				"<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
+							  "<style>iframe{display: inline;max-width: 95%;display: block;margin-left: auto; margin-right: auto;}</style>";
 			summaryFrame.loadUrl("about:blank");
 			summaryFrame.loadData(imageCss + item.getSummary(), "text/html; charset=UTF-8", null);
 
@@ -229,7 +231,7 @@ public class ArticlePagerFragment extends RxFragment {
 
 		@Override
 		public void restoreState(Parcelable state, ClassLoader loader) {
-			ArticleScrollState scrollState = (ArticleScrollState) state;
+			ArticleScrollState scrollState = Parcels.unwrap(state);
 			mScrollX = scrollState.getScrollX();
 			mScrollY = scrollState.getScrollY();
 		}
@@ -238,8 +240,10 @@ public class ArticlePagerFragment extends RxFragment {
 		public Parcelable saveState() {
 			ViewGroup currentPage = mPagerAdapter.getCurrentPage();
 			ScrollView articleScroll = (ScrollView) currentPage.findViewById(R.id.articleScroll);
-			return new ArticleScrollState(articleScroll.getScrollX(),
-															  articleScroll.getScrollY());
+			ArticleScrollState state = new ArticleScrollState(articleScroll.getScrollX(),
+				articleScroll.getScrollY());
+
+			return Parcels.wrap(state);
 		}
 
 		@Override
@@ -304,9 +308,9 @@ public class ArticlePagerFragment extends RxFragment {
 			actionIntent.putExtra(Intent.EXTRA_TEXT, url);
 			PendingIntent pendingIntent =
 				PendingIntent.getActivity(mContext,
-										  0,
-										  actionIntent,
-										  PendingIntent.FLAG_UPDATE_CURRENT);
+					0,
+					actionIntent,
+					PendingIntent.FLAG_UPDATE_CURRENT);
 			String shareLabel = mContext.getString(R.string.action_share);
 
 			// launch custom tab

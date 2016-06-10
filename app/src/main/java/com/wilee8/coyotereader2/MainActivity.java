@@ -58,6 +58,8 @@ import com.wilee8.coyotereader2.retrofitservices.InoreaderGsonService;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxGsonService;
 import com.wilee8.coyotereader2.retrofitservices.InoreaderRxService;
 
+import org.parceler.Parcels;
+
 import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -189,21 +191,21 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mUnreadCounts")) {
-				mUnreadCounts = savedInstanceState.getParcelable("mUnreadCounts");
+				mUnreadCounts = Parcels.unwrap(savedInstanceState.getParcelable("mUnreadCounts"));
 			} else {
 				needToFetchData = true;
 				mUnreadCounts = null;
 			}
 
 			if (savedInstanceState.containsKey("mTagList")) {
-				mTagList = savedInstanceState.getParcelable("mTagList");
+				mTagList = Parcels.unwrap(savedInstanceState.getParcelable("mTagList"));
 			} else {
 				needToFetchData = true;
 				mTagList = null;
 			}
 
 			if (savedInstanceState.containsKey("mSubscriptionList")) {
-				mSubscriptionList = savedInstanceState.getParcelable("mSubscriptionList");
+				mSubscriptionList = Parcels.unwrap(savedInstanceState.getParcelable("mSubscriptionList"));
 			} else {
 				needToFetchData = true;
 				mSubscriptionList = null;
@@ -217,14 +219,14 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mStreamPrefs")) {
-				mStreamPrefs = savedInstanceState.getParcelable("mStreamPrefs");
+				mStreamPrefs = Parcels.unwrap(savedInstanceState.getParcelable("mStreamPrefs"));
 			} else {
 				needToFetchData = true;
 				mStreamPrefs = null;
 			}
 
 			if (savedInstanceState.containsKey("mNavList")) {
-				mNavList = savedInstanceState.getParcelableArrayList("mNavList");
+				mNavList = Parcels.unwrap(savedInstanceState.getParcelable("mNavList"));
 			} else {
 				needToFetchData = true;
 				mNavList = null;
@@ -238,7 +240,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (savedInstanceState.containsKey("mItems")) {
-				mItems = savedInstanceState.getParcelableArrayList("mItems");
+				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 			}
 			// else punt so we don't write over data from FeedFragment
 
@@ -788,15 +790,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		outState.putInt("mContentFrame", mContentFrame);
 
 		if (mUnreadCounts != null) {
-			outState.putParcelable("mUnreadCounts", mUnreadCounts);
+			outState.putParcelable("mUnreadCounts", Parcels.wrap(mUnreadCounts));
 		}
 
 		if (mTagList != null) {
-			outState.putParcelable("mTagList", mTagList);
+			outState.putParcelable("mTagList", Parcels.wrap(mTagList));
 		}
 
 		if (mSubscriptionList != null) {
-			outState.putParcelable("mSubscriptionList", mSubscriptionList);
+			outState.putParcelable("mSubscriptionList", Parcels.wrap(mSubscriptionList));
 		}
 
 		if (mUserId != null) {
@@ -804,15 +806,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		if (mStreamPrefs != null) {
-			outState.putParcelable("mStreamPrefs", mStreamPrefs);
+			outState.putParcelable("mStreamPrefs", Parcels.wrap(mStreamPrefs));
 		}
 
 		if (mNavList != null) {
-			outState.putParcelableArrayList("mNavList", mNavList);
+			outState.putParcelable("mNavList", Parcels.wrap(mNavList));
 		}
 
 		if (mItems != null) {
-			outState.putParcelableArrayList("mItems", mItems);
+			outState.putParcelable("mItems", Parcels.wrap(mItems));
 		}
 
 		if (mTitles != null) {
