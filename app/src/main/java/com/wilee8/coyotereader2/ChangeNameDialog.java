@@ -204,17 +204,15 @@ public class ChangeNameDialog extends DialogFragment {
 
 			if (response.equalsIgnoreCase("OK")) {
 				if (mChangeSubscription) {
-					Snackbar
-						.make(mContext.findViewById(R.id.sceneRoot),
-							  R.string.change_subscription_name_successful,
-							  Snackbar.LENGTH_SHORT)
-						.show();
+					mCallback.showSnackbar(R.string.change_subscription_name_successful,
+						Snackbar.LENGTH_SHORT,
+						null,
+						0);
 				} else {
-					Snackbar
-						.make(mContext.findViewById(R.id.sceneRoot),
-							  R.string.change_folder_name_successful,
-							  Snackbar.LENGTH_SHORT)
-						.show();
+					mCallback.showSnackbar(R.string.change_folder_name_successful,
+						Snackbar.LENGTH_SHORT,
+						null,
+						0);
 				}
 
 				mCallback.refreshOnClick();
@@ -231,5 +229,7 @@ public class ChangeNameDialog extends DialogFragment {
 		void refreshOnClick();
 
 		InoreaderRxService getRxService();
+
+		void showSnackbar(int stringResId, int length, View.OnClickListener action, int actionStringResId);
 	}
 }

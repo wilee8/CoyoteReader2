@@ -271,11 +271,7 @@ public class FeedFragment extends RxFragment {
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(mContext.findViewById(R.id.sceneRoot),
-					  R.string.error_fetch_data,
-					  Snackbar.LENGTH_LONG)
-				.show();
+			mCallback.showSnackbar(R.string.error_fetch_data, Snackbar.LENGTH_LONG, null, 0);
 
 			unsubscribe();
 		}
@@ -306,6 +302,8 @@ public class FeedFragment extends RxFragment {
 		void onStarClicked(int position, Boolean starred);
 
 		InoreaderRxGsonService getRxGsonService();
+
+		void showSnackbar(int stringResId, int length, View.OnClickListener action, int actionStringResId);
 	}
 
 	private class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {

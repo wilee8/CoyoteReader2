@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -32,6 +33,7 @@ import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.transition.TransitionManager;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -113,6 +115,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private Boolean   mDualPane;
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
+	private ViewGroup mSnackbarRoot;
 
 	private static int FRAME_IDS[]            = {R.id.frame0, R.id.frame1, R.id.frame2};
 	// constant for what frame to go back to when automatically advancing, points to frame1
@@ -275,6 +278,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
 
 		mSceneRoot = (ViewGroup) findViewById(R.id.sceneRoot);
+		mSnackbarRoot = (ViewGroup) findViewById(R.id.snackbarRoot);
 
 		mShowRefresh = (mContentFrame == NAV_FRAGMENT_FRAME);
 
@@ -486,12 +490,10 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable throwable) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_fetch_data,
-					Snackbar.LENGTH_LONG)
-				.setAction(R.string.action_refresh, new SnackbarRefreshOnClickListener())
-				.show();
+			showSnackbar(R.string.error_fetch_data,
+				Snackbar.LENGTH_LONG,
+				new SnackbarRefreshOnClickListener(),
+				R.string.action_refresh);
 		}
 
 		@Override
@@ -1052,11 +1054,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	public void selectArticle(int position) {
 		if (mItems == null) {
 			// should never happen if we get to this point
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_null_items,
-					Snackbar.LENGTH_LONG)
-				.show();
+			showSnackbar(R.string.error_null_items, Snackbar.LENGTH_LONG, null, 0);
 		}
 
 		Bundle args = new Bundle();
@@ -1301,11 +1299,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_mark_unread,
-					Snackbar.LENGTH_LONG)
-				.show();
+			showSnackbar(R.string.error_mark_unread, Snackbar.LENGTH_LONG, null, 0);
 		}
 
 		@Override
@@ -1380,11 +1374,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				AlertDialog dialog = builder.create();
 				dialog.show();
 			} else {
-				Snackbar
-					.make(findViewById(R.id.sceneRoot),
-						R.string.notify_marking_all_read,
-						Snackbar.LENGTH_SHORT)
-					.show();
+				showSnackbar(R.string.notify_marking_all_read, Snackbar.LENGTH_SHORT, null, 0);
 				markAllAsReadConfirmed();
 			}
 		}
@@ -1472,11 +1462,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_update_starred,
-					Snackbar.LENGTH_LONG)
-				.show();
+			showSnackbar(R.string.error_update_starred, Snackbar.LENGTH_LONG, null, 0);
 
 			unsubscribe();
 		}
@@ -1629,11 +1615,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_login,
-					Snackbar.LENGTH_LONG)
-				.show();
+			showSnackbar(R.string.error_login, Snackbar.LENGTH_LONG, null, 0);
 		}
 
 		@Override
@@ -1706,11 +1688,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_unsubscribe,
-					Snackbar.LENGTH_LONG)
-				.show();
+			showSnackbar(R.string.error_unsubscribe, Snackbar.LENGTH_LONG, null, 0);
 		}
 
 		@Override
@@ -1724,12 +1702,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (response.equalsIgnoreCase("OK")) {
-				Snackbar
-					.make(findViewById(R.id.sceneRoot),
-						R.string.unsubscribe_successful,
-						Snackbar.LENGTH_SHORT)
-					.show();
-
+				showSnackbar(R.string.unsubscribe_successful, Snackbar.LENGTH_SHORT, null, 0);
 				refreshOnClick();
 			} else {
 				onError(null);
@@ -1773,11 +1746,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(findViewById(R.id.sceneRoot),
-					R.string.error_delete_folder,
-					Snackbar.LENGTH_LONG)
-				.show();
+			showSnackbar(R.string.error_delete_folder, Snackbar.LENGTH_LONG, null, 0);
 		}
 
 		@Override
@@ -1791,11 +1760,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 			}
 
 			if (response.equalsIgnoreCase("OK")) {
-				Snackbar
-					.make(findViewById(R.id.sceneRoot),
-						R.string.delete_folder_successful,
-						Snackbar.LENGTH_SHORT)
-					.show();
+				showSnackbar(R.string.delete_folder_successful, Snackbar.LENGTH_SHORT, null, 0);
 
 				refreshOnClick();
 			} else {
@@ -1826,5 +1791,24 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		ChangeNameDialog fragment = new ChangeNameDialog();
 		fragment.setArguments(args);
 		fragment.show(fm, null);
+	}
+
+	@Override
+	public void showSnackbar(int stringResId, int length, View.OnClickListener action, int actionStringResId) {
+		Snackbar snackbar = Snackbar .make(mSnackbarRoot, stringResId, length);
+
+		if (action != null) {
+			snackbar.setAction(actionStringResId, action);
+		}
+
+		if (mDualPane) {
+			View snackView = snackbar.getView();
+			CoordinatorLayout.LayoutParams params =
+				(CoordinatorLayout.LayoutParams) snackView.getLayoutParams();
+			params.gravity = Gravity.START | Gravity.BOTTOM;
+			snackView.setLayoutParams(params);
+		}
+
+		snackbar.show();
 	}
 }

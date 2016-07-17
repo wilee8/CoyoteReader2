@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AlertDialog;
+import android.view.View;
 
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.trello.rxlifecycle.components.support.RxDialogFragment;
@@ -154,6 +155,8 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 		SubscriptionList getSubscriptionList();
 
 		void addNewFolder(ArrayList<String> newFolderList);
+
+		void showSnackbar(int stringResId, int length, View.OnClickListener action, int actionStringResId);
 	}
 
 	private class FolderHolder {
@@ -270,11 +273,7 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 
 		@Override
 		public void onError(Throwable e) {
-			Snackbar
-				.make(mContext.findViewById(R.id.sceneRoot),
-					  R.string.error_change_folder,
-					  Snackbar.LENGTH_SHORT)
-				.show();
+			mCallback.showSnackbar(R.string.error_change_folder, Snackbar.LENGTH_SHORT, null, 0);
 		}
 
 		@Override
@@ -288,11 +287,10 @@ public class ChangeSubscriptionFolderDialog extends RxDialogFragment {
 			}
 
 			if (response.equalsIgnoreCase("OK")) {
-				Snackbar
-					.make(mContext.findViewById(R.id.sceneRoot),
-						  R.string.change_folder_successful,
-						  Snackbar.LENGTH_SHORT)
-					.show();
+				mCallback.showSnackbar(R.string.change_folder_successful,
+					Snackbar.LENGTH_SHORT,
+					null,
+					0);
 
 				mCallback.refreshOnClick();
 			} else {
