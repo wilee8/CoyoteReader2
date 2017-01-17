@@ -20,6 +20,7 @@
     <string name="error_new_folder_empty">Folder Name can\'t be empty</string>
     <string name="error_folder_name_empty">Folder name can\'t be empty</string>
     <string name="error_delete_folder">Error deleting folder</string>
+    <string name="error_account_permissions">Need account manager permissions</string>
 
     <!-- preferences -->
     <string name="auth_prefs">AuthPrefsFile</string>

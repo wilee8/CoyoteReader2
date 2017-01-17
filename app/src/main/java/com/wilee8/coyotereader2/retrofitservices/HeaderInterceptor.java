@@ -1,11 +1,14 @@
 package com.wilee8.coyotereader2.retrofitservices;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 
 import com.wilee8.coyotereader2.CoyoteReaderApplication;
 import com.wilee8.coyotereader2.R;
@@ -28,8 +31,14 @@ public class HeaderInterceptor implements Interceptor {
 		mAccountManager = accountManager;
 		mActivity = activity;
 
-		Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
-		mAccount = accounts[0];
+		// if we don't have account permissions we're hosed
+		if (ContextCompat.checkSelfPermission(mActivity,
+			Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
+			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+			mAccount = accounts[0];
+		} else {
+			mAccount = null;
+		}
 	}
 
 	@Override
@@ -37,6 +46,12 @@ public class HeaderInterceptor implements Interceptor {
 
 		// mutex here to make sure multiple
 		CoyoteReaderApplication.headerLock();
+
+		if (mAccount == null) {
+			// no permissions to get account information, punt
+			throw new IOException(CoyoteReaderApplication.getContext().getResources()
+				.getString(R.string.error_account_permissions));
+		}
 
 		Request.Builder builder;
 

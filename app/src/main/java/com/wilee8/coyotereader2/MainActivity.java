@@ -1,5 +1,6 @@
 package com.wilee8.coyotereader2;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerFuture;
@@ -13,17 +14,21 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.ArrayMap;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
@@ -113,6 +118,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private ActionBar mActionBar;
 
 	private Boolean   mDualPane;
+	private Boolean   mSideSnackbar;
 	private int       mContentFrame;
 	private ViewGroup mSceneRoot;
 	private ViewGroup mSnackbarRoot;
@@ -147,36 +153,13 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	private CustomTabsClient            mCustomTabsClient;
 	private CustomTabsSession           mCustomTabsSession;
 
+	private static final int MY_PERMISSIONS_REQUEST_GET_ACCOUNTS = 2;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		mContext = this;
-
-		mAccountManager = AccountManager.get(this);
-		Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
-
-		if (accounts.length == 0) {
-			Intent intent = new Intent(mContext, LoginActivity.class);
-			startActivity(intent);
-			finish();
-			return;
-		}
-
-		// get the saved settings
-		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-
-		mSettings = PreferenceManager.getDefaultSharedPreferences(this);
-		mSortAlpha = mSettings.getBoolean("pref_alpha", true);
-		mShowUnreadOnly = mSettings.getBoolean("pref_unread", false);
-		mConfirm = mSettings.getBoolean("pref_confirm", true);
-		mAdvance = mSettings.getBoolean("pref_advance", false);
-		mBrowser = mSettings.getString("pref_browser",
-			getResources().getString(R.string.pref_browser_default_value));
-
-		// listen for changed settings
-		mPrefListener = new DefPrefListener();
-		mSettings.registerOnSharedPreferenceChangeListener(mPrefListener);
 
 		setContentView(R.layout.activity_main);
 
@@ -242,8 +225,15 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				mTitles[0] = getResources().getString(R.string.app_name);
 			}
 
-			if (savedInstanceState.containsKey("mItems")) {
-				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
+			if (savedInstanceState.containsKey("mItems Size")) {
+				int size = savedInstanceState.getInt("mItems Size");
+
+				mItems = new ArrayList<>(size);
+				for (int i = 0; i < size; i++) {
+					mItems.add(i, (ArticleItem) Parcels.unwrap(savedInstanceState.
+						getParcelable("mItems " + Integer.toString(i))));
+				}
+//				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 			}
 			// else punt so we don't write over data from FeedFragment
 
@@ -276,6 +266,7 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		mDualPane = getResources().getBoolean(R.bool.dual_pane);
+		mSideSnackbar = getResources().getBoolean(R.bool.side_snackbar);
 
 		mSceneRoot = (ViewGroup) findViewById(R.id.sceneRoot);
 		mSnackbarRoot = (ViewGroup) findViewById(R.id.snackbarRoot);
@@ -353,10 +344,42 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 		mFab.setOnClickListener(new MarkAllReadClickListener());
 
+		// get the saved settings
+		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
+		mSettings = PreferenceManager.getDefaultSharedPreferences(this);
+		mSortAlpha = mSettings.getBoolean("pref_alpha", true);
+		mShowUnreadOnly = mSettings.getBoolean("pref_unread", false);
+		mConfirm = mSettings.getBoolean("pref_confirm", true);
+		mAdvance = mSettings.getBoolean("pref_advance", false);
+		mBrowser = mSettings.getString("pref_browser",
+			getResources().getString(R.string.pref_browser_default_value));
+
 		// start custom tabs if needed
 		if (mBrowser.matches(
 			mContext.getResources().getString(R.string.pref_browser_chrome_tabs))) {
 			startCustomTabs();
+		}
+
+		// listen for changed settings
+		mPrefListener = new DefPrefListener();
+		mSettings.registerOnSharedPreferenceChangeListener(mPrefListener);
+
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) !=
+			PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_ACCOUNTS},
+				MY_PERMISSIONS_REQUEST_GET_ACCOUNTS);
+			return;
+		}
+
+		mAccountManager = AccountManager.get(this);
+		Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+
+		if (accounts.length == 0) {
+			Intent intent = new Intent(mContext, LoginActivity.class);
+			startActivity(intent);
+			finish();
+			return;
 		}
 
 		createRetrofitServices();
@@ -786,6 +809,22 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 	}
 
 	@Override
+	public void onRequestPermissionsResult(int requestCode,
+		@NonNull String[] permissions, @NonNull int[] grantResults) {
+		switch (requestCode) {
+			case MY_PERMISSIONS_REQUEST_GET_ACCOUNTS: {
+				if ((grantResults.length > 0) &&
+					(grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+					refreshOnClick();
+				} else {
+					// can't contact server without account information
+					finish();
+				}
+			}
+		}
+	}
+
+	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
@@ -816,7 +855,14 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		}
 
 		if (mItems != null) {
-			outState.putParcelable("mItems", Parcels.wrap(mItems));
+			// Due to parcelable too large exceptions, parcel these separately
+			outState.putInt("mItems Size", mItems.size());
+
+			for (int i = 0; i < mItems.size(); i++) {
+				outState.putParcelable("mItems " + Integer.toString(i),
+					Parcels.wrap(mItems.get(i)));
+			}
+//			outState.putParcelable("mItems", Parcels.wrap(mItems));
 		}
 
 		if (mTitles != null) {
@@ -891,6 +937,24 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		mSubscriptionList = null;
 		mUserId = null;
 		mStreamPrefs = null;
+
+		if (ContextCompat.checkSelfPermission(this,
+			Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
+			mAccountManager = AccountManager.get(this);
+			Account[] accounts =
+				mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+
+			if (accounts.length == 0) {
+				Intent intent = new Intent(mContext, LoginActivity.class);
+				startActivity(intent);
+				finish();
+				return;
+			}
+		}
+
+		if (mRxGsonService == null) {
+			createRetrofitServices();
+		}
 
 		InitFinishedSubscriber initFinishedSubscriber = new InitFinishedSubscriber();
 		Observable.zip(mRxGsonService.unreadCounts(),
@@ -1549,56 +1613,64 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 		@SuppressWarnings("deprecation")
 		@Override
 		public void call(Subscriber<? super Void> subscriber) {
-			Account[] accounts = mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
+			if (ContextCompat.checkSelfPermission(mContext,
+				Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
+				Account[] accounts =
+					mAccountManager.getAccountsByType(AccountAuthenticator.ACCOUNT_TYPE);
 
-			for (Account account : accounts) {
+				for (Account account : accounts) {
 
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-					AccountManagerFuture<Bundle> accountManagerFuture =
-						mAccountManager.removeAccount(account, null, null, null);
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+						AccountManagerFuture<Bundle> accountManagerFuture =
+							mAccountManager.removeAccount(account, null, null, null);
 
-					Bundle result;
-					try {
-						result = accountManagerFuture.getResult();
-					} catch (OperationCanceledException | IOException | AuthenticatorException e) {
-						subscriber.onError(e);
-						return;
-					}
+						Bundle result;
+						try {
+							result = accountManagerFuture.getResult();
+						} catch (OperationCanceledException |
+							IOException | AuthenticatorException e) {
+							subscriber.onError(e);
+							return;
+						}
 
-					Boolean success =
-						result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, Boolean.FALSE);
+						Boolean success =
+							result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, Boolean.FALSE);
 
-					if (success) {
-						// account was successfully removed
-						subscriber.onNext(null);
+						if (success) {
+							// account was successfully removed
+							subscriber.onNext(null);
+						} else {
+							subscriber.onError(null);
+						}
+
+						subscriber.onCompleted();
 					} else {
-						subscriber.onError(null);
-					}
+						// this is deprecated, but need something for before API 22
+						AccountManagerFuture<Boolean> accountManagerFuture =
+							mAccountManager.removeAccount(account, null, null);
 
-					subscriber.onCompleted();
-				} else {
-					// this is deprecated, but need something for before API 22
-					AccountManagerFuture<Boolean> accountManagerFuture =
-						mAccountManager.removeAccount(account, null, null);
+						Boolean result;
+						try {
+							result = accountManagerFuture.getResult();
+						} catch (OperationCanceledException |
+							IOException | AuthenticatorException e) {
+							subscriber.onError(e);
+							return;
+						}
 
-					Boolean result;
-					try {
-						result = accountManagerFuture.getResult();
-					} catch (OperationCanceledException | IOException | AuthenticatorException e) {
-						subscriber.onError(e);
-						return;
-					}
-
-					if (result) {
-						// account was successfully removed
-						subscriber.onNext(null);
-					} else {
-						subscriber.onError(null);
+						if (result) {
+							// account was successfully removed
+							subscriber.onNext(null);
+						} else {
+							subscriber.onError(null);
+						}
 					}
 				}
-			}
 
-			subscriber.onCompleted();
+				subscriber.onCompleted();
+			} else {
+				subscriber.onError(null);
+			}
 		}
 	}
 
@@ -1795,13 +1867,13 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 
 	@Override
 	public void showSnackbar(int stringResId, int length, View.OnClickListener action, int actionStringResId) {
-		Snackbar snackbar = Snackbar .make(mSnackbarRoot, stringResId, length);
+		Snackbar snackbar = Snackbar.make(mSnackbarRoot, stringResId, length);
 
 		if (action != null) {
 			snackbar.setAction(actionStringResId, action);
 		}
 
-		if (mDualPane) {
+		if (mSideSnackbar) {
 			View snackView = snackbar.getView();
 			CoordinatorLayout.LayoutParams params =
 				(CoordinatorLayout.LayoutParams) snackView.getLayoutParams();
