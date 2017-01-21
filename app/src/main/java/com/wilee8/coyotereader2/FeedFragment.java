@@ -72,8 +72,16 @@ public class FeedFragment extends RxFragment {
 		mContext = getActivity();
 
 		if (savedInstanceState != null) {
-			if (savedInstanceState.containsKey("mItems")) {
-				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
+
+			if (savedInstanceState.containsKey("mItems Size")) {
+				int size = savedInstanceState.getInt("mItems Size");
+
+				mItems = new ArrayList<>(size);
+				for (int i = 0; i < size; i++) {
+					mItems.add(i, (ArticleItem) Parcels.unwrap(savedInstanceState.
+						getParcelable("mItems " + Integer.toString(i))));
+				}
+
 				mSelected = savedInstanceState.getInt("mSelected", -1);
 				mContinuation = savedInstanceState.getString("mContinuation", null);
 				mUpdated = savedInstanceState.getLong("mUpdated", -1);
@@ -155,7 +163,15 @@ public class FeedFragment extends RxFragment {
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
-		outState.putParcelable("mItems", Parcels.wrap(mItems));
+		if (mItems != null) {
+			// Due to parcelable too large exceptions, parcel these separately
+			outState.putInt("mItems Size", mItems.size());
+
+			for (int i = 0; i < mItems.size(); i++) {
+				outState.putParcelable("mItems " + Integer.toString(i),
+					Parcels.wrap(mItems.get(i)));
+			}
+		}
 		outState.putString("mContinuation", mContinuation);
 		outState.putInt("mSelected", mSelected);
 		outState.putLong("mUpdated", mUpdated);

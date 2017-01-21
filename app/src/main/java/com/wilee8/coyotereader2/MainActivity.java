@@ -233,7 +233,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 					mItems.add(i, (ArticleItem) Parcels.unwrap(savedInstanceState.
 						getParcelable("mItems " + Integer.toString(i))));
 				}
-//				mItems = Parcels.unwrap(savedInstanceState.getParcelable("mItems"));
 			}
 			// else punt so we don't write over data from FeedFragment
 
@@ -862,7 +861,6 @@ public class MainActivity extends RxAppCompatActivity implements NavFragment.Nav
 				outState.putParcelable("mItems " + Integer.toString(i),
 					Parcels.wrap(mItems.get(i)));
 			}
-//			outState.putParcelable("mItems", Parcels.wrap(mItems));
 		}
 
 		if (mTitles != null) {
