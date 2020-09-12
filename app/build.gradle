@@ -6,14 +6,15 @@ def CSRF_PROTECTION_STRING = '"' + CsrfProtectionString + '"' ?: '"Define CSRF P
 
 android {
 
-    compileSdkVersion 24
-    buildToolsVersion '26.0.3'
+    compileSdkVersion 23
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         multiDexEnabled true
         applicationId "com.wilee8.coyotereader2"
         minSdkVersion 17
-        targetSdkVersion 24
+        //noinspection OldTargetApi
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
@@ -37,22 +38,22 @@ android {
 def parcelerVersion = "1.1.5"
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.android.support:design:24.2.1'
-    compile 'com.android.support:recyclerview-v7:24.2.1'
-    compile 'com.android.support:preference-v14:24.2.1'
-    compile 'com.android.support:customtabs:24.2.1'
-    compile 'com.google.code.gson:gson:2.8.0'
-    compile 'io.reactivex:rxandroid:1.0.1'
-    compile 'com.trello:rxlifecycle:0.3.0'
-    compile 'com.trello:rxlifecycle-components:0.3.0'
-    compile 'com.squareup.retrofit2:retrofit:2.0.0'
-    compile 'com.squareup.retrofit2:adapter-rxjava:2.0.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.0.0'
-    compile 'com.squareup.okhttp3:okhttp:3.7.0'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'ch.acra:acra:4.6.2'
-    compile "org.parceler:parceler-api:${parcelerVersion}"
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:23.4.0'
+    implementation 'com.android.support:design:23.4.0'
+    implementation 'com.android.support:recyclerview-v7:23.4.0'
+    implementation 'com.android.support:preference-v14:23.4.0'
+    implementation 'com.android.support:customtabs:23.4.0'
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'io.reactivex:rxandroid:1.0.1'
+    implementation 'com.trello:rxlifecycle:0.3.0'
+    implementation 'com.trello:rxlifecycle-components:0.3.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.0.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.0.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'ch.acra:acra:4.6.2'
+    implementation "org.parceler:parceler-api:${parcelerVersion}"
     annotationProcessor "org.parceler:parceler:${parcelerVersion}"
 }
