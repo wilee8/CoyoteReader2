@@ -1,0 +1,16 @@
+CoyoteReader2.jks
+CoyoteReader2.iml
+build
+.gradle
+.idea
+local.properties
+gradle/wrapper/gradle-wrapper.jar
+gradle
+gradlew
+gradlew.bat
+app/app-release.apk
+app/app.iml
+app/manifest-merger-release-report.txt
+app/build
+*.swp
+
