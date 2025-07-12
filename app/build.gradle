@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 def INOREADER_APP_ID = '"' + InoreaderAppId + '"' ?: '"Define Inoreader App Id"'
 def INOREADER_APP_KEY = '"' + InoreaderAppKey + '"' ?: '"Define Inoreader App Key"'
-def CSRF_PROTECTION_STRING = '"' + CsrfProtectionString + '"' ?: '"Define CSRF Protection String"'
+def CSRF_PROTECTION_STRING = '"' + InoreaderCsrfProtectionString + '"' ?: '"Define CSRF Protection String"'
 
 android {
 
@@ -12,7 +12,7 @@ android {
         multiDexEnabled true
         applicationId "com.wilee8.coyotereader2"
         minSdkVersion 17
-        //noinspection OldTargetApi
+        //noinspection ExpiredTargetSdkVersion,OldTargetApi
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -32,6 +32,7 @@ android {
             buildConfigField 'String', 'CSRF_PROTECTION_STRING', CSRF_PROTECTION_STRING
         }
     }
+    namespace 'com.wilee8.coyotereader2'
 }
 
 def parcelerVersion = "1.1.5"
